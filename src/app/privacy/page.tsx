@@ -14,6 +14,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
+import MoergeLogo from "@/components/MoergeLogo";
 
 export default function PrivacyPolicyPage() {
   const { t } = useLanguage();
@@ -24,19 +25,17 @@ export default function PrivacyPolicyPage() {
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-rose-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-600 to-rose-800 text-white flex items-center justify-center shadow-md shadow-rose-600/20 group-hover:scale-105 transition">
-              <Sparkles className="w-5 h-5" />
-            </div>
+            <MoergeLogo size="md" variant="icon" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-black tracking-tight text-stone-900">
+                <span className="text-xl font-black tracking-tight text-stone-900 leading-none">
                   MOERGE
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
                   SECURITY & PRIVACY
                 </span>
               </div>
-              <p className="text-[11px] text-stone-500">
+              <p className="text-[11px] text-stone-500 mt-0.5">
                 {t("კონფიდენციალურობის პოლიტიკა", "Privacy Policy")}
               </p>
             </div>

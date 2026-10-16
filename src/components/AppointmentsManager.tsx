@@ -334,8 +334,8 @@ export default function AppointmentsManager({
         setToast(
           data.reconciliation?.action === "create"
             ? t(
-                `ვიზიტი განახლდა და 21-დღიანი შეხსენება დაიგეგმა ${data.reconciliation.scheduledForDate}-ისთვის.`,
-                `Appointment updated and 21-day reminder scheduled for ${data.reconciliation.scheduledForDate}.`
+                `ვიზიტი განახლდა და ავტომატური შეხსენება დაიგეგმა ${data.reconciliation.scheduledForDate}-ისთვის.`,
+                `Appointment updated and automatic reminder scheduled for ${data.reconciliation.scheduledForDate}.`
               )
             : data.reconciliation?.action === "update_existing"
             ? t(
@@ -400,14 +400,15 @@ export default function AppointmentsManager({
           newStatus === "completed" &&
           isEpilationTreatment(appt.treatment_type)
         ) {
+          const offsetDays = Math.max(0, reminderIntervalDays - 1);
           const targetDate = addCalendarDays(
             appt.treatment_date,
-            reminderIntervalDays
+            offsetDays
           );
           setToast(
             t(
-              `მონიშნულია დასრულებულად! 21-დღიანი შეხსენება დაიგეგმა ${targetDate}-ისთვის.`,
-              `Marked completed! 21-day email reminder automatically scheduled for ${targetDate}.`
+              `მონიშნულია დასრულებულად! შეხსენება დაიგეგმა მომდევნო ვიზიტამდე 1 დღით ადრე (${targetDate}-ს).`,
+              `Marked completed! Reminder scheduled 1 day prior to next visit (${targetDate}).`
             )
           );
         } else if (newStatus === "canceled") {
@@ -433,11 +434,11 @@ export default function AppointmentsManager({
     }
   }
 
-  // Compute preview of 21-day reminder date inside modal
+  // Compute preview of reminder date inside modal (1 day before next recommended cycle)
   const previewReminderDate = useMemo(() => {
     try {
       if (status === "completed" && isEpilationTreatment(treatmentType)) {
-        return addCalendarDays(treatmentDate, reminderIntervalDays);
+        return addCalendarDays(treatmentDate, Math.max(0, reminderIntervalDays - 1));
       }
       return null;
     } catch {
@@ -616,7 +617,7 @@ export default function AppointmentsManager({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-rose-600/20 transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            {t("ვიზიტის ჩაწერა (+21დ)", "Record Appointment (+21d)")}
+            {t("ვიზიტის ჩაწერა", "Record Appointment")}
           </button>
         </div>
       </div>
@@ -674,8 +675,8 @@ export default function AppointmentsManager({
                 </h3>
                 <p className="mt-1 text-xs text-stone-500">
                   {t(
-                    "ჩაწერეთ ეპილაციის ვიზიტი 21-დღიანი ავტომატური შეხსენების დასაგეგმად.",
-                    "Record an epilation appointment to automatically schedule a 21-day email reminder."
+                    "ჩაწერეთ ეპილაციის ვიზიტი ავტომატური ელ-ფოსტის შეხსენების დასაგეგმად.",
+                    "Record an epilation appointment to automatically schedule an email reminder."
                   )}
                 </p>
               </div>
@@ -695,8 +696,8 @@ export default function AppointmentsManager({
                       </th>
                       <th className="py-3.5 px-4">
                         {t(
-                          "მომდევნო ვიზიტი (+21 დღე) და შეხსენება",
-                          "Next Expected (+21d) & Reminder"
+                          "მომდევნო ციკლი და შეხსენება",
+                          "Next Expected Cycle & Reminder"
                         )}
                       </th>
                       <th className="py-3.5 px-6 text-right">
@@ -803,8 +804,8 @@ export default function AppointmentsManager({
                             ) : isEpilationTreatment(appt.treatment_type) ? (
                               <span className="text-stone-400">
                                 {t(
-                                  "მონიშნეთ დასრულებულად +21დ შეხსენებისთვის",
-                                  "Mark completed to schedule +21d reminder"
+                                  "მონიშნეთ დასრულებულად შეხსენების დასაგეგმად",
+                                  "Mark completed to schedule reminder"
                                 )}
                               </span>
                             ) : (
@@ -828,8 +829,8 @@ export default function AppointmentsManager({
                                     }
                                     className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer"
                                     title={t(
-                                      "დასრულებულად მონიშვნა და 21-დღიანი შეხსენების ჩართვა",
-                                      "Mark Completed & Schedule 21-Day Reminder"
+                                      "დასრულებულად მონიშვნა და შეხსენების ავტომატური დაგეგმვა",
+                                      "Mark Completed & Schedule Automated Reminder"
                                     )}
                                   >
                                     {t("დასრულება", "Complete")}
@@ -888,8 +889,8 @@ export default function AppointmentsManager({
               <h3 className="text-lg font-bold text-stone-900">{monthLabel}</h3>
               <p className="text-xs text-stone-500">
                 {t(
-                  "ნაჩვენებია როგორც დაჯავშნილი ვიზიტები, ისე 21-დღიანი შეხსენების თარიღები. დააჭირეთ ნებისმიერ დღეს ვიზიტის ჩასაწერად.",
-                  "Shows both booked treatments and 21-day reminder target dates. Click any date to record an appointment."
+                  "ნაჩვენებია დაჯავშნილი ვიზიტები და რეკომენდებული განმეორებითი ვიზიტის თარიღები. დააჭირეთ ნებისმიერ დღეს ვიზიტის ჩასაწერად.",
+                  "Shows booked treatments and upcoming recommended cycle dates. Click any date to record an appointment."
                 )}
               </p>
             </div>
@@ -971,7 +972,7 @@ export default function AppointmentsManager({
                         key={`ret-${ret.id}`}
                         className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-900 text-[10px] font-semibold truncate"
                       >
-                        +21d: {ret.client?.full_name}
+                        {t("ციკლი", "Cycle")}: {ret.client?.full_name}
                       </div>
                     ))}
                   </div>
@@ -1321,7 +1322,7 @@ export default function AppointmentsManager({
                         }
                       >
                         {isEpilation
-                          ? t("ეპილაცია (+21დ შეხსენება)", "Epilation (+21d reminder)")
+                          ? t("ეპილაცია (ავტო-შეხსენება)", "Epilation (Auto-reminder)")
                           : t("სტანდარტული ვიზიტი", "Standard visit")}
                       </span>
                     </div>
@@ -1341,8 +1342,8 @@ export default function AppointmentsManager({
                   >
                     <option value="completed">
                       {t(
-                        "დასრულებული (რთავს +21დ შეხსენებას)",
-                        "Completed (Triggers +21d Reminder)"
+                        "დასრულებული (ავტო-შეხსენების დაგეგმვა)",
+                        "Completed (Schedules Auto-Reminder)"
                       )}
                     </option>
                     <option value="scheduled">
@@ -1356,15 +1357,15 @@ export default function AppointmentsManager({
                 </div>
               </div>
 
-              {/* Dynamic 21-Day Reminder Preview Banner */}
+              {/* Dynamic Reminder Preview Banner */}
               {previewReminderDate ? (
                 <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 flex items-start gap-2.5">
                   <Sparkles className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                   <div>
                     <strong>
                       {t(
-                        "ავტომატური 21-დღიანი ელ-ფოსტის შეხსენება:",
-                        "Automatic 21-Day Email Reminder:"
+                        "ავტომატური ელ-ფოსტის შეხსენება (მომდევნო ციკლამდე 1 დღით ადრე):",
+                        "Automatic Email Reminder (1 day before next cycle):"
                       )}
                     </strong>{" "}
                     {t(
@@ -1381,8 +1382,8 @@ export default function AppointmentsManager({
               ) : (
                 <div className="p-3.5 rounded-2xl bg-stone-100 text-xs text-stone-600">
                   {t(
-                    "მხოლოდ დასრულებული ეპილაციის ვიზიტები ქმნის 21-დღიან ავტომატურ შეხსენებას.",
-                    "Only completed epilation appointments schedule an automatic 21-day reminder."
+                    "მხოლოდ დასრულებული ეპილაციის ვიზიტები ქმნის ავტომატურ შეხსენებას მომდევნო ციკლამდე 1 დღით ადრე.",
+                    "Only completed epilation appointments schedule an automatic reminder 1 day prior to the next cycle."
                   )}
                 </div>
               )}

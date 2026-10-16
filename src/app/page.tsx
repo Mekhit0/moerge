@@ -28,6 +28,7 @@ import {
   BellRing,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
+import MoergeLogo from "@/components/MoergeLogo";
 
 export default function MoergeLandingPage() {
   const { t } = useLanguage();
@@ -102,14 +103,12 @@ export default function MoergeLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-rose-600 via-rose-700 to-rose-900 text-white flex items-center justify-center shadow-lg shadow-rose-600/25 group-hover:scale-105 transition">
-              <Sparkles className="w-5 h-5" />
-            </div>
+            <MoergeLogo size="md" variant="icon" />
             <div>
-              <span className="text-xl sm:text-2xl font-black tracking-tight text-stone-900">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-stone-900 block leading-none">
                 MOERGE
               </span>
-              <p className="text-[11px] text-stone-500 hidden sm:block font-medium">
+              <p className="text-[11px] text-stone-500 hidden sm:block font-medium mt-1">
                 {t(
                   "სალონის მართვა & ჭკვიანი შეხსენებები",
                   "Smart Salon Booking & Automated Retention"
@@ -964,14 +963,9 @@ export default function MoergeLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 text-xs text-stone-600">
           {/* Brand info (2 cols on large) */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-600 to-rose-800 text-white flex items-center justify-center font-black">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <span className="text-xl font-black text-stone-900 tracking-tight">
-                MOERGE
-              </span>
-            </div>
+            <Link href="/" className="inline-block">
+              <MoergeLogo size="md" variant="full" />
+            </Link>
             <p className="text-stone-500 text-xs leading-relaxed max-w-sm">
               {t(
                 "MOERGE არის სალონების მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა. ჭკვიანი გრაფიკი, ნულოვანი გადაფარვა და გაზრდილი განმეორებითი ვიზიტები.",

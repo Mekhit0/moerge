@@ -4,6 +4,7 @@ import React, { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MailX, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
+import MoergeLogo from "@/components/MoergeLogo";
 
 function UnsubscribeContent() {
   const { t } = useLanguage();
@@ -76,9 +77,8 @@ function UnsubscribeContent() {
           )}
         </div>
 
-        <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-rose-600">
-          <Sparkles className="w-3.5 h-3.5" />
-          {t("ელ-ფოსტის პარამეტრები", "Email Preferences")}
+        <div className="mt-4 flex justify-center">
+          <MoergeLogo size="sm" variant="full" />
         </div>
 
         <h1 className="mt-2 text-2xl font-semibold text-stone-900">

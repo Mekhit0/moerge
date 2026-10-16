@@ -34,6 +34,7 @@ import {
   getTreatmentLabel,
   useLanguage,
 } from "@/lib/i18n";
+import MoergeLogo from "@/components/MoergeLogo";
 
 interface PublicSalonInfo {
   found: boolean;
@@ -320,11 +321,8 @@ function PublicBookingFormContent() {
       <header className="bg-white/95 backdrop-blur-md border-b border-rose-100 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white flex items-center justify-center shadow-md shadow-rose-500/20"
-            >
-              <Sparkles className="w-5 h-5" />
+            <Link href="/" className="shrink-0 hover:opacity-95 transition">
+              <MoergeLogo variant="icon" size="sm" />
             </Link>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 flex flex-wrap items-center gap-1 sm:gap-1.5">

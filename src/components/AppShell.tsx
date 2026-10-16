@@ -19,6 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
+import MoergeLogo from "./MoergeLogo";
 
 interface AppShellProps {
   salonName: string;
@@ -88,9 +89,7 @@ export default function AppShell({
         <div className="p-6 border-b border-rose-100/80">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white flex items-center justify-center shadow-md shadow-rose-500/20 shrink-0">
-                <Sparkles className="w-5 h-5" />
-              </div>
+              <MoergeLogo variant="icon" size="md" />
               <div className="min-w-0">
                 <div className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600 flex items-center gap-1.5">
                   <span>MOERGE</span>
@@ -210,9 +209,7 @@ export default function AppShell({
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-rose-100 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </div>
+            <MoergeLogo variant="icon" size="sm" />
             <div className="min-w-0">
               <div className="text-[9px] font-extrabold uppercase tracking-wider text-rose-600">
                 MOERGE

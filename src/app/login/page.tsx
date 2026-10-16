@@ -22,6 +22,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
+import MoergeLogo from "@/components/MoergeLogo";
 
 export default function LoginPage() {
   const { t } = useLanguage();
@@ -164,14 +165,9 @@ export default function LoginPage() {
 
         {/* Brand Pitch & Highlights */}
         <div className="relative z-10 my-8 sm:my-12 max-w-xl space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-600 via-rose-700 to-rose-900 text-white flex items-center justify-center font-black shadow-lg shadow-rose-600/30">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              MOERGE
-            </span>
-          </div>
+          <Link href="/" className="inline-block hover:opacity-95 transition">
+            <MoergeLogo size="lg" variant="full" theme="white" />
+          </Link>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.14] text-white">
             {t("მოარგეთ სალონი ", "Tailor Your Salon with ")}
