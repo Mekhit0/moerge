@@ -127,4 +127,44 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
       expect(result.success).toBe(false);
     });
   });
+
+  describe("4. Showcase Demo Isolation & Zero Network/DB Leakage", () => {
+    it("returns mock demo salon information when no slug is provided or slug is 'demo'", async () => {
+      const { GET } = await import("../src/app/api/public/book/route");
+      const req = new Request("http://localhost:3000/api/public/book");
+      const res = await GET(req as any);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.found).toBe(true);
+      expect(data.demo).toBe(true);
+      expect(data.salon_name).toBe("Lumière Studio");
+      expect(data.availability.booked_times).toEqual(["11:00:00", "15:00:00"]);
+    });
+
+    it("intercepts demo submissions and produces simulated confirmation without database writes or email dispatch", async () => {
+      const { POST } = await import("../src/app/api/public/book/route");
+      const req = new Request("http://localhost:3000/api/public/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          salon_slug: "demo",
+          full_name: "ტესტერ დემო",
+          email: "demo.tester@example.com",
+          phone: "+995 555 12 34 56",
+          treatment_date: "2026-10-30",
+          treatment_time: "12:00",
+          treatment_type: "laser_epilation",
+          email_consent: true,
+        }),
+      });
+      const res = await POST(req as any);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.demo).toBe(true);
+      expect(data.booking).toBeDefined();
+      expect(data.booking.salon_name).toContain("Demo Showcase");
+      expect(data.booking.confirmation_email_sent).toBe(false);
+    });
+  });
 });
+

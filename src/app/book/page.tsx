@@ -154,9 +154,35 @@ function PublicBookingFormContent() {
     salonInfo.slot_interval_minutes,
   ]);
 
+  const isDemo = !salonSlugParam || salonSlugParam === "demo";
+
   const fetchAvailability = useCallback(
     async (dateStr: string) => {
       setLoadingAvailability(true);
+      if (isDemo) {
+        setSalonInfo({
+          found: true,
+          salon_name: "Lumière Studio",
+          timezone: "Asia/Tbilisi",
+          brand_color: "#e11d48",
+          reminder_interval_days: 21,
+          booking_title: t("საჩვენებელი ონლაინ ჯავშანი", "Interactive Demo Booking"),
+          booking_subtitle: t(
+            "ეს არის საჩვენებელი სიმულაცია. შეგიძლიათ გამოსცადოთ ჯავშანი და თავისუფალი საათების დეტექტორი — მონაცემები არ ინახება ბაზაში და არ ტოვებს თქვენს ბრაუზერს.",
+            "This is an interactive demo. Experience the booking flow and conflict detector — all simulations stay in your browser without writing to any database."
+          ),
+          salon_address: t("თბილისი, ჭავჭავაძის გამზ. 34", "Tbilisi, Chavchavadze Ave. 34"),
+          salon_phone: "+995 555 00 11 22",
+          working_hours_start: "10:00",
+          working_hours_end: "20:00",
+          slot_interval_minutes: 60,
+          custom_services: DEFAULT_CUSTOM_SERVICES,
+        });
+        setBookedTimesOnDate(["11:00:00", "15:00:00"]);
+        setLoadingAvailability(false);
+        return;
+      }
+
       try {
         const params = new URLSearchParams();
         if (salonSlugParam) params.set("salon", salonSlugParam);
@@ -174,7 +200,7 @@ function PublicBookingFormContent() {
         setLoadingAvailability(false);
       }
     },
-    [salonSlugParam]
+    [salonSlugParam, isDemo, t]
   );
 
   useEffect(() => {
@@ -210,6 +236,24 @@ function PublicBookingFormContent() {
     }
 
     setSubmitting(true);
+
+    // MOCK DEMO MODE: Never leaves the user's browser, never sends emails, never writes to DB
+    if (isDemo) {
+      await new Promise((resolve) => setTimeout(resolve, 550));
+      const mockResult: BookingResult = {
+        appointment_id: `demo-${Date.now().toString(36)}`,
+        client_id: `demo-client-${Date.now().toString(36)}`,
+        salon_name: salonInfo.salon_name || "Lumière Studio",
+        is_returning_client: false,
+        treatment_date: treatmentDate,
+        treatment_time: treatmentTime,
+        treatment_type: activeService ? (activeService.id || activeService.type) : "laser_epilation",
+        confirmation_email_sent: true,
+      };
+      setBookingConfirmation(mockResult);
+      setSubmitting(false);
+      return;
+    }
 
     const serviceName = lang === "ka" ? activeService.name_ka : activeService.name_en;
     const composedNotes = [
@@ -316,6 +360,32 @@ function PublicBookingFormContent() {
       </header>
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-10">
+        {/* Mock Demo Simulator Notice */}
+        {isDemo && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-rose-50 border border-amber-200/80 text-amber-900 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-lg bg-amber-500 text-white font-bold text-[11px] shrink-0 tracking-wide uppercase">
+                Demo
+              </span>
+              <div>
+                <span className="font-bold text-stone-900">
+                  {t("საჩვენებელი რეჟიმი (Mock Showcase)", "Interactive Demo Showcase")}:
+                </span>{" "}
+                <span className="text-stone-700">
+                  {t(
+                    "ეს ფორმა მუშაობს 100% ლოკალურად თქვენს ბრაუზერში. მონაცემები არ ინახება ბაზაში და არ იგზავნება რეალური წერილები.",
+                    "This booking form operates 100% locally in your browser. No data is stored in the database, and zero emails are sent."
+                  )}
+                </span>
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-amber-200 text-[11px] font-bold text-amber-800 whitespace-nowrap shrink-0 shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              {t("ლოკალური სიმულაცია (0 მეილი)", "Browser-Only (0 Emails)")}
+            </div>
+          </div>
+        )}
+
         {/* Salon Custom Banner */}
         <div className="mb-8 bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -437,8 +507,27 @@ function PublicBookingFormContent() {
               </div>
             </div>
 
-            {(activeService.is_epilation ||
-              isEpilationTreatment(bookingConfirmation.treatment_type)) &&
+            {isDemo ? (
+              <div className="mt-5 p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-left space-y-1.5 text-xs text-amber-950">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    {t(
+                      "სიმულაცია დასრულდა (მონაცემები არ გასულა ბრაუზერიდან)",
+                      "Demo Simulation Complete (Zero Network Writes)"
+                    )}
+                  </span>
+                </div>
+                <p className="text-[11px] text-stone-600 leading-relaxed">
+                  {t(
+                    "ეს იყო საჩვენებელი სიმულაცია. არანაირი ჩანაწერი არ შექმნილა ბაზაში და არცერთი ელ-ფოსტა არ გაგზავნილა. რეალურ სალონურ ბმულზე კი მომხმარებლების ჯავშნები ავტომატურად ისახება ადმინ პანელში და იგზავნება რეალური წერილები.",
+                    "This was a client-side demo simulation. No records were written to any database, and no actual emails were sent. Live salon links will automatically log appointments to the dashboard and trigger real customer notifications."
+                  )}
+                </p>
+              </div>
+            ) : (
+              (activeService.is_epilation ||
+                isEpilationTreatment(bookingConfirmation.treatment_type)) &&
               emailConsent && (
                 <div className="mt-5 p-4 rounded-2xl bg-rose-50/70 border border-rose-100 text-xs text-rose-900 leading-relaxed">
                   <strong>
@@ -452,7 +541,8 @@ function PublicBookingFormContent() {
                     "Once your session is completed, we will automatically send you a courtesy email reminder when it's time for your next appointment."
                   )}
                 </div>
-              )}
+              )
+            )}
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button

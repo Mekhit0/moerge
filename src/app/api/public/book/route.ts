@@ -9,6 +9,28 @@ export async function GET(request: NextRequest) {
   const slug = searchParams.get("salon") ?? null;
   const dateParam = searchParams.get("date");
 
+  if (!slug || slug === "demo") {
+    return NextResponse.json({
+      found: true,
+      demo: true,
+      salon_name: "Lumière Studio",
+      timezone: "Asia/Tbilisi",
+      brand_color: "#e11d48",
+      reminder_interval_days: 21,
+      booking_title: "საჩვენებელი ონლაინ ჯავშანი | Demo Booking",
+      booking_subtitle:
+        "ეს არის საჩვენებელი სიმულაცია. შეგიძლიათ გამოსცადოთ ჯავშნის პროცესი — მონაცემები არ ინახება ბაზაში და არ ტოვებს თქვენს ბრაუზერს.",
+      salon_address: "თბილისი, ჭავჭავაძის გამზ. 34",
+      salon_phone: "+995 555 00 11 22",
+      working_hours_start: "10:00",
+      working_hours_end: "20:00",
+      slot_interval_minutes: 60,
+      availability: {
+        booked_times: ["11:00:00", "15:00:00"],
+      },
+    });
+  }
+
   const supabase = createAdminOrRpcSupabaseClient();
 
   const { data: infoData, error: infoError } = await supabase.rpc(
@@ -80,6 +102,24 @@ export async function POST(request: NextRequest) {
     parsed.data.treatment_time.length === 5
       ? `${parsed.data.treatment_time}:00`
       : parsed.data.treatment_time;
+
+  // Mock / Demo showcase submissions stay strictly in the browser/mock layer
+  if (!parsed.data.salon_slug || parsed.data.salon_slug === "demo") {
+    return NextResponse.json({
+      booking: {
+        appointment_id: `demo-${Date.now().toString(36)}`,
+        client_id: `demo-client-${Date.now().toString(36)}`,
+        salon_name: "Lumière Studio (Demo Showcase)",
+        is_returning_client: false,
+        treatment_date: parsed.data.treatment_date,
+        treatment_time: normalizedTime.slice(0, 5),
+        treatment_type: parsed.data.treatment_type,
+        confirmation_email_sent: false,
+      },
+      demo: true,
+      message: "Demo booking simulated successfully. No data stored, no emails dispatched.",
+    });
+  }
 
   const supabase = createAdminOrRpcSupabaseClient();
   const { data, error } = await supabase.rpc("submit_public_booking", {

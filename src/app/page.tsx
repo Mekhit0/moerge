@@ -32,6 +32,8 @@ import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 export default function MoergeLandingPage() {
   const { t } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [heroSlot, setHeroSlot] = useState<"11:00" | "12:00" | "13:00">("12:00");
+  const [heroConflictMsg, setHeroConflictMsg] = useState<string | null>(null);
 
   const faqs = [
     {
@@ -305,30 +307,77 @@ export default function MoergeLandingPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-                    {t("საათების არჩევა (Smart Slots)", "Real-Time Slot Guard")}
+                    {t("საათების არჩევა (სატესტო სიმულატორი)", "Interactive Slot Guard")}
                   </span>
                   <span className="text-[11px] text-stone-400">Asia/Tbilisi</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-stone-100 border border-stone-200 text-stone-400 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHeroConflictMsg(
+                        t(
+                          "⚠️ 11:00 უკვე დაკავებულია — MOERGE ავტომატურად ბლოკავს გადაფარვას!",
+                          "⚠️ 11:00 is already booked — MOERGE blocks overlapping slots!"
+                        )
+                      )
+                    }
+                    className="p-2 sm:p-2.5 rounded-xl bg-stone-100 hover:bg-red-50/70 border border-stone-200 hover:border-red-200 text-stone-400 hover:text-red-600 flex items-center justify-between transition cursor-pointer"
+                    title={t("დაკავებული საათი (დააჭირეთ ტესტირებისთვის)", "Booked slot (click to test conflict guard)")}
+                  >
                     <span className="line-through font-bold">11:00</span>
                     <span className="text-[10px] text-red-500 font-bold">
                       {t("დაკავებულია", "Booked")}
                     </span>
-                  </div>
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-rose-600 text-white font-bold flex items-center justify-between shadow-xs">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHeroSlot("12:00");
+                      setHeroConflictMsg(null);
+                    }}
+                    className={`p-2 sm:p-2.5 rounded-xl font-bold flex items-center justify-between transition cursor-pointer ${
+                      heroSlot === "12:00"
+                        ? "bg-rose-600 text-white shadow-xs"
+                        : "bg-emerald-50 border border-emerald-200 text-emerald-900 hover:bg-emerald-100"
+                    }`}
+                  >
                     <span>12:00</span>
-                    <span className="text-[10px] text-rose-100">
-                      {t("არჩეულია", "Selected")}
+                    <span
+                      className={`text-[10px] ${
+                        heroSlot === "12:00" ? "text-rose-100" : "text-emerald-700"
+                      }`}
+                    >
+                      {heroSlot === "12:00" ? t("არჩეულია", "Selected") : t("თავისუფალი", "Free")}
                     </span>
-                  </div>
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold flex items-center justify-between">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHeroSlot("13:00");
+                      setHeroConflictMsg(null);
+                    }}
+                    className={`p-2 sm:p-2.5 rounded-xl font-bold flex items-center justify-between transition cursor-pointer ${
+                      heroSlot === "13:00"
+                        ? "bg-rose-600 text-white shadow-xs"
+                        : "bg-emerald-50 border border-emerald-200 text-emerald-900 hover:bg-emerald-100"
+                    }`}
+                  >
                     <span>13:00</span>
-                    <span className="text-[10px] text-emerald-700">
-                      {t("თავისუფალი", "Free")}
+                    <span
+                      className={`text-[10px] ${
+                        heroSlot === "13:00" ? "text-rose-100" : "text-emerald-700"
+                      }`}
+                    >
+                      {heroSlot === "13:00" ? t("არჩეულია", "Selected") : t("თავისუფალი", "Free")}
                     </span>
-                  </div>
+                  </button>
                 </div>
+                {heroConflictMsg && (
+                  <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-900 animate-in fade-in">
+                    {heroConflictMsg}
+                  </div>
+                )}
               </div>
 
               {/* Automated Smart Reminder Simulation */}
