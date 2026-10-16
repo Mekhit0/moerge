@@ -1,0 +1,147 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { salonSettingsSchema } from "@/lib/validation";
+
+export async function GET(request: NextRequest) {
+  const ctx = await getAuthenticatedSalonContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const host =
+    request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (host?.includes("localhost") ? "http" : "https");
+  const baseUrl = host
+    ? `${proto}://${host}`
+    : process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app";
+  const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${ctx.salonSlug}`;
+
+  const hasSavedKey = Boolean(
+    ctx.settings.resend_api_key &&
+      ctx.settings.resend_api_key.startsWith("re_")
+  );
+  const hasEnvKey = Boolean(
+    process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")
+  );
+
+  return NextResponse.json({
+    settings: {
+      ...ctx.settings,
+      booking_url: autoBookingUrl,
+      salon_slug: ctx.salonSlug,
+      resend_api_key: hasSavedKey ? "********" : null,
+    },
+    resendConfigured: hasSavedKey || hasEnvKey,
+    webhookSecretConfigured: Boolean(
+      process.env.RESEND_WEBHOOK_SECRET &&
+        process.env.RESEND_WEBHOOK_SECRET.startsWith("whsec_")
+    ),
+  });
+}
+
+export async function PUT(request: NextRequest) {
+  const ctx = await getAuthenticatedSalonContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  const parsed = salonSettingsSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        error:
+          parsed.error.issues[0]?.message ?? "Invalid settings configuration.",
+        issues: parsed.error.issues,
+      },
+      { status: 400 }
+    );
+  }
+
+  // Compute immutable auto-generated booking URL derived from salon slug and host
+  const host =
+    request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (host?.includes("localhost") ? "http" : "https");
+  const baseUrl = host
+    ? `${proto}://${host}`
+    : process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app";
+  const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${ctx.salonSlug}`;
+
+  // Preserve existing resend_api_key if user submitted the masked placeholder "********"
+  let resendApiKeyToSave = ctx.settings.resend_api_key ?? null;
+  if (parsed.data.resend_api_key !== undefined) {
+    if (parsed.data.resend_api_key === "********") {
+      resendApiKeyToSave = ctx.settings.resend_api_key ?? null;
+    } else if (!parsed.data.resend_api_key) {
+      resendApiKeyToSave = null;
+    } else {
+      resendApiKeyToSave = parsed.data.resend_api_key;
+    }
+  }
+
+  const { data: updatedSettings, error } = await ctx.supabase
+    .from("salon_settings")
+    .update({
+      salon_name: parsed.data.salon_name,
+      sender_display_name: parsed.data.sender_display_name,
+      verified_sender_email: parsed.data.verified_sender_email,
+      timezone: parsed.data.timezone || "Asia/Tbilisi",
+      reminder_interval_days: parsed.data.reminder_interval_days,
+      email_subject: parsed.data.email_subject,
+      email_body_template: parsed.data.email_body_template,
+      booking_url: autoBookingUrl,
+      brand_color: parsed.data.brand_color,
+      auto_reminders_enabled: parsed.data.auto_reminders_enabled,
+      dry_run_mode: parsed.data.dry_run_mode,
+      test_recipient_email: parsed.data.test_recipient_email,
+      booking_title: parsed.data.booking_title,
+      booking_subtitle: parsed.data.booking_subtitle,
+      salon_address: parsed.data.salon_address,
+      salon_phone: parsed.data.salon_phone,
+      working_hours_start: parsed.data.working_hours_start,
+      working_hours_end: parsed.data.working_hours_end,
+      slot_interval_minutes: parsed.data.slot_interval_minutes,
+      custom_services: parsed.data.custom_services,
+      resend_api_key: resendApiKeyToSave,
+      send_booking_confirmation_email:
+        parsed.data.send_booking_confirmation_email ?? true,
+    })
+    .eq("salon_id", ctx.salonId)
+    .select("*")
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Keep salons.name synchronized with salon_settings.salon_name
+  await ctx.supabase
+    .from("salons")
+    .update({ name: parsed.data.salon_name })
+    .eq("id", ctx.salonId);
+
+  return NextResponse.json({
+    settings: {
+      ...updatedSettings,
+      booking_url: autoBookingUrl,
+      salon_slug: ctx.salonSlug,
+      resend_api_key: updatedSettings.resend_api_key ? "********" : null,
+    },
+    resendConfigured: Boolean(
+      (updatedSettings.resend_api_key &&
+        String(updatedSettings.resend_api_key).startsWith("re_")) ||
+        (process.env.RESEND_API_KEY &&
+          process.env.RESEND_API_KEY.startsWith("re_"))
+    ),
+  });
+}
