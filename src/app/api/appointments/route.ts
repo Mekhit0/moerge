@@ -108,6 +108,9 @@ export async function POST(request: NextRequest) {
           phone: newClientParsed.data.phone,
           notes: newClientParsed.data.notes,
           email_consent: newClientParsed.data.email_consent,
+          unsubscribed_at: newClientParsed.data.email_consent
+            ? null
+            : new Date().toISOString(),
           created_by: ctx.user.id,
         })
         .select("*")
