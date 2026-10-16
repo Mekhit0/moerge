@@ -16,12 +16,12 @@ export default async function DashboardLayout({
 
   return (
     <AppShell
-      salonName={ctx.settings.salon_name}
-      timezone={ctx.settings.timezone}
-      autoRemindersEnabled={ctx.settings.auto_reminders_enabled}
-      dryRunMode={ctx.settings.dry_run_mode}
-      staffName={ctx.user.fullName}
-      staffEmail={ctx.user.email}
+      salonName={ctx.settings?.salon_name || ctx.salonName || "My Salon"}
+      timezone={ctx.settings?.timezone || "Asia/Tbilisi"}
+      autoRemindersEnabled={Boolean(ctx.settings?.auto_reminders_enabled ?? true)}
+      dryRunMode={Boolean(ctx.settings?.dry_run_mode ?? false)}
+      staffName={ctx.user?.fullName || "Staff"}
+      staffEmail={ctx.user?.email || ""}
     >
       {children}
     </AppShell>

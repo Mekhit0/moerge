@@ -368,7 +368,7 @@ export default function DashboardClient({
                         </div>
                         <div className="text-[11px] text-stone-400">
                           {t("სტატუსი:", "Status:")}{" "}
-                          {REMINDER_STATUS_I18N[lang][rem.status] ?? rem.status}
+                          {(REMINDER_STATUS_I18N[lang] || REMINDER_STATUS_I18N["ka"])[rem.status] ?? rem.status}
                         </div>
                       </div>
                     </div>
@@ -435,15 +435,15 @@ export default function DashboardClient({
                               : "bg-stone-100 text-stone-600"
                           }`}
                         >
-                          {APPOINTMENT_STATUS_I18N[lang][appt.status] ??
+                          {(APPOINTMENT_STATUS_I18N[lang] || APPOINTMENT_STATUS_I18N["ka"])[appt.status] ??
                             appt.status}
                         </span>
                       </div>
                       <div className="text-xs text-stone-500">
-                        {TREATMENT_LABELS_I18N[lang][appt.treatment_type] ??
+                        {(TREATMENT_LABELS_I18N[lang] || TREATMENT_LABELS_I18N["ka"])[appt.treatment_type] ??
                           appt.treatment_type}{" "}
                         &bull; {appt.treatment_date} •{" "}
-                        {appt.treatment_time.slice(0, 5)}
+                        {appt.treatment_time ? String(appt.treatment_time).slice(0, 5) : ""}
                       </div>
                     </div>
                     <div className="text-left sm:text-right">

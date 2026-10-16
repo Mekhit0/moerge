@@ -44,34 +44,34 @@ export default async function DashboardPage() {
   const appointments = (appointmentsData ?? []) as Appointment[];
 
   const nowMs = Date.now();
-  const scheduledReminders = reminders.filter((r) => r.status === "scheduled");
+  const scheduledReminders = reminders.filter((r) => r && r.status === "scheduled");
   const dueNowCount = scheduledReminders.filter(
-    (r) => new Date(r.scheduled_send_at).getTime() <= nowMs
+    (r) => r.scheduled_send_at && new Date(r.scheduled_send_at).getTime() <= nowMs
   ).length;
   const sentOrDelivered = reminders.filter((r) =>
-    ["sent", "delivered"].includes(r.status)
+    r && ["sent", "delivered"].includes(r.status)
   );
-  const deliveredOnly = reminders.filter((r) => r.status === "delivered");
+  const deliveredOnly = reminders.filter((r) => r && r.status === "delivered");
   const failedOrBounced = reminders.filter((r) =>
-    ["failed", "bounced"].includes(r.status)
+    r && ["failed", "bounced"].includes(r.status)
   );
 
   return (
     <DashboardClient
-      salonName={ctx.settings.salon_name}
-      timezone={ctx.settings.timezone}
-      reminderIntervalDays={ctx.settings.reminder_interval_days}
-      dryRunMode={ctx.settings.dry_run_mode}
+      salonName={ctx.settings?.salon_name || ctx.salonName || "My Salon"}
+      timezone={ctx.settings?.timezone || "Asia/Tbilisi"}
+      reminderIntervalDays={ctx.settings?.reminder_interval_days ?? 21}
+      dryRunMode={Boolean(ctx.settings?.dry_run_mode ?? false)}
       stats={{
         totalClients: clients.length,
-        activeClients: clients.filter((c) => !c.is_archived).length,
+        activeClients: clients.filter((c) => c && !c.is_archived).length,
         upcomingReminders: scheduledReminders.length,
         dueNowCount,
         sentSuccessfully: sentOrDelivered.length,
         deliveredCount: deliveredOnly.length,
         failedDeliveries: failedOrBounced.length,
       }}
-      recentClients={clients.filter((c) => !c.is_archived).slice(0, 6)}
+      recentClients={clients.filter((c) => c && !c.is_archived).slice(0, 6)}
       upcomingReminders={scheduledReminders.slice(0, 6)}
       upcomingAppointments={appointments.slice(0, 6)}
     />
