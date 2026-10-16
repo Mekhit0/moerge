@@ -193,7 +193,7 @@ export default function MoergeLandingPage() {
             {/* Hero CTAs */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
-                href="/login"
+                href="/login?mode=signup"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-xl shadow-rose-600/25 hover:shadow-rose-600/35 transition cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
@@ -703,7 +703,7 @@ export default function MoergeLandingPage() {
                 </p>
               </div>
               <Link
-                href="/login"
+                href="/login?mode=signup"
                 className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:underline"
               >
                 {t("რეგისტრაცია →", "Register Salon →")}
@@ -944,7 +944,7 @@ export default function MoergeLandingPage() {
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <Link
-              href="/login"
+              href="/login?mode=signup"
               className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-rose-50 text-rose-950 font-bold text-sm shadow-xl transition"
             >
               {t("სალონის რეგისტრაცია (უფასო სატესტო)", "Register Salon (Free Trial)")}

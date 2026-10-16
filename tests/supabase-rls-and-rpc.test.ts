@@ -300,21 +300,21 @@ describe("Supabase Row Level Security (RLS), Multi-Tenant Isolation & Public Boo
 
     const runId = Date.now();
     const rateLimitEmail = `ratelimit_${runId}@example.com`;
-    const rateLimitDate = new Date(Date.now() + 450 * 24 * 60 * 60 * 1000 + (runId % 50) * 86400000)
-      .toISOString()
-      .split("T")[0];
+    const baseDays = 600 + (runId % 500);
 
-    const slots = ["10:00:00", "11:00:00", "12:00:00", "13:00:00", "14:00:00"];
-
-    // First 5 bookings succeed
+    // First 5 bookings on distinct days succeed
     for (let i = 0; i < 5; i++) {
+      const distinctDate = new Date(Date.now() + (baseDays + i * 2) * 86400000)
+        .toISOString()
+        .split("T")[0];
+
       const { data, error } = await anonClient.rpc("submit_public_booking", {
         p_salon_slug: null,
         p_full_name: `Rate Tester ${i + 1}`,
         p_email: rateLimitEmail,
         p_phone: "+995 555 12 34 56",
-        p_treatment_date: rateLimitDate,
-        p_treatment_time: slots[i],
+        p_treatment_date: distinctDate,
+        p_treatment_time: "11:00:00",
         p_treatment_type: "laser_epilation",
         p_notes: `Rate test booking ${i + 1}`,
         p_email_consent: true,
@@ -324,6 +324,10 @@ describe("Supabase Row Level Security (RLS), Multi-Tenant Isolation & Public Boo
       expect((data as { success?: boolean })?.success).toBe(true);
     }
 
+    const sixthDate = new Date(Date.now() + (baseDays + 20) * 86400000)
+      .toISOString()
+      .split("T")[0];
+
     // 6th booking within the same hour MUST fail due to rate limit
     const { data: sixthData, error: sixthError } = await anonClient.rpc(
       "submit_public_booking",
@@ -332,8 +336,8 @@ describe("Supabase Row Level Security (RLS), Multi-Tenant Isolation & Public Boo
         p_full_name: "Rate Tester 6",
         p_email: rateLimitEmail,
         p_phone: "+995 555 12 34 56",
-        p_treatment_date: rateLimitDate,
-        p_treatment_time: "15:00:00",
+        p_treatment_date: sixthDate,
+        p_treatment_time: "11:00:00",
         p_treatment_type: "laser_epilation",
         p_notes: "6th booking should be rejected",
         p_email_consent: true,
@@ -364,5 +368,62 @@ describe("Supabase Row Level Security (RLS), Multi-Tenant Isolation & Public Boo
     });
     const invalidRes = await GET(invalidReq as any);
     expect([401, 500]).toContain(invalidRes.status);
+  });
+
+  it("handles new user registration with auto-confirmation through /api/auth/register", async () => {
+    const { POST: registerPost } = await import("../src/app/api/auth/register/route");
+
+    // 1. Invalid email
+    const badEmailReq = new Request("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "not-an-email",
+        password: "ValidPassword123!",
+      }),
+    });
+    const badEmailRes = await registerPost(badEmailReq as any);
+    expect(badEmailRes.status).toBe(400);
+
+    // 2. Short password
+    const shortPassReq = new Request("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "valid@example.com",
+        password: "short",
+      }),
+    });
+    const shortPassRes = await registerPost(shortPassReq as any);
+    expect(shortPassRes.status).toBe(400);
+
+    // 3. Valid registration (if service role key is present)
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const runId = Date.now();
+      const testRegEmail = `new_owner_${runId}@example.com`;
+      const regReq = new Request("http://localhost/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: testRegEmail,
+          password: "SecureSalonPassword2026!",
+          fullName: "New Owner Test",
+          salonName: "Test Beauty Lounge",
+        }),
+      });
+
+      const regRes = await registerPost(regReq as any);
+      expect(regRes.status).toBe(200);
+      const regJson = await regRes.json();
+      expect(regJson.success).toBe(true);
+      expect(regJson.user?.email).toBe(testRegEmail);
+
+      // Clean up test user
+      const { createAdminOrRpcSupabaseClient } = await import("../src/lib/supabase/server");
+      const adminClient = createAdminOrRpcSupabaseClient();
+      if (regJson.user?.id) {
+        await adminClient.auth.admin.deleteUser(regJson.user.id);
+      }
+    }
   });
 });

@@ -39,6 +39,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
+      if (params.get("mode") === "signup") {
+        setMode("signup");
+      }
       if (params.get("confirmed") === "true") {
         setInfoMessage(
           t(
@@ -82,42 +85,52 @@ export default function LoginPage() {
         router.push("/dashboard");
         router.refresh();
       } else {
-        const redirectUrl =
-          typeof window !== "undefined"
-            ? `${window.location.origin}/auth/callback`
-            : "https://moerge.vercel.app/auth/callback";
-
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: {
-              full_name: fullName.trim() || "Salon Owner",
-              salon_name: salonName.trim() || "My Beauty Salon",
-            },
-          },
+        // Secure server-side registration with pre-confirmed email (bypasses failing SMTP restrictions)
+        const regRes = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+            fullName: fullName.trim(),
+            salonName: salonName.trim(),
+          }),
         });
 
-        if (signUpError) {
-          setError(signUpError.message);
+        const regData = await regRes.json();
+
+        if (!regRes.ok) {
+          setError(
+            regData.error ||
+              t(
+                "რეგისტრაციისას დაფიქსირდა შეცდომა. გთხოვთ სცადოთ თავიდან.",
+                "Registration failed. Please try again."
+              )
+          );
           setLoading(false);
           return;
         }
 
-        if (data.session) {
-          router.push("/dashboard");
-          router.refresh();
-        } else {
+        // Auto sign-in immediately upon registration
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (signInError) {
           setInfoMessage(
             t(
-              "სალონის ანგარიში წარმატებით შეიქმნა! გთხოვთ შეამოწმოთ თქვენი ელ-ფოსტა ვერიფიკაციის ბმულისთვის.",
-              "Salon account created successfully! Please check your inbox to confirm your email."
+              "სალონის ანგარიში წარმატებით შეიქმნა! გთხოვთ გაიაროთ ავტორიზაცია.",
+              "Salon account created successfully! Please sign in with your credentials."
             )
           );
           setMode("signin");
           setLoading(false);
+          return;
         }
+
+        router.push("/dashboard");
+        router.refresh();
       }
     } catch (err) {
       setError(
