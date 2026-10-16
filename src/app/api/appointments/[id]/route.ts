@@ -90,7 +90,8 @@ export async function PATCH(
     (matchedService ? (matchedService.name_ka || matchedService.name_en) : existingAppt.service_name ?? null);
   const priceGel = parsed.data.price_gel ?? matchedService?.price_gel ?? existingAppt.price_gel ?? null;
 
-  const intervalDays = ctx.settings.reminder_interval_days || 21;
+  const intervalDays =
+    matchedService?.reminder_days ?? ctx.settings.reminder_interval_days ?? 21;
   const timeZone = ctx.settings.timezone || "Asia/Tbilisi";
 
   const nextExpectedDate =

@@ -61,25 +61,27 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
   // 2. Correct handling of time zones and date boundaries
   describe("2. Time Zone & Date Boundary Handling", () => {
     it("computes 09:00 local salon time in America/New_York (EDT vs EST across DST boundary)", () => {
-      // Before Nov 1, 2026 DST fallback: 2026-10-22 is EDT (UTC-4) -> 09:00 EDT = 13:00 UTC
+      // Before Nov 1, 2026 DST fallback: 2026-10-01 with 21-day cycle -> reminder sent 1 day before (20 days) = 2026-10-21 (EDT UTC-4) -> 09:00 EDT = 13:00 UTC
       const edtSchedule = calculateReminderSchedule(
         "2026-10-01",
         21,
         "America/New_York",
         9
       );
-      expect(edtSchedule.scheduledForDate).toBe("2026-10-22");
-      expect(edtSchedule.scheduledSendAtIso).toBe("2026-10-22T13:00:00.000Z");
+      expect(edtSchedule.scheduledForDate).toBe("2026-10-21");
+      expect(edtSchedule.procedureDueDate).toBe("2026-10-22");
+      expect(edtSchedule.scheduledSendAtIso).toBe("2026-10-21T13:00:00.000Z");
 
-      // After Nov 1, 2026 DST fallback: 2026-11-10 is EST (UTC-5) -> 09:00 EST = 14:00 UTC
+      // After Nov 1, 2026 DST fallback: 2026-10-20 with 21-day cycle -> reminder sent 1 day before (20 days) = 2026-11-09 (EST UTC-5) -> 09:00 EST = 14:00 UTC
       const estSchedule = calculateReminderSchedule(
         "2026-10-20",
         21,
         "America/New_York",
         9
       );
-      expect(estSchedule.scheduledForDate).toBe("2026-11-10");
-      expect(estSchedule.scheduledSendAtIso).toBe("2026-11-10T14:00:00.000Z");
+      expect(estSchedule.scheduledForDate).toBe("2026-11-09");
+      expect(estSchedule.procedureDueDate).toBe("2026-11-10");
+      expect(estSchedule.scheduledSendAtIso).toBe("2026-11-09T14:00:00.000Z");
     });
 
     it("computes 09:00 local salon time in Asia/Tbilisi (UTC+4) and Europe/Paris", () => {
@@ -187,9 +189,9 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
 
       expect(action.action).toBe("create");
       if (action.action === "create") {
-        expect(action.scheduledForDate).toBe("2026-10-22");
+        expect(action.scheduledForDate).toBe("2026-10-21");
         expect(action.idempotencyKey).toBe(
-          `rem:${salonId}:${appointmentId}:2026-10-22`
+          `rem:${salonId}:${appointmentId}:2026-10-21`
         );
       }
     });
@@ -206,9 +208,9 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
           {
             id: "rem-existing-1",
             status: "scheduled",
-            scheduled_for_date: "2026-10-22",
-            scheduled_send_at: "2026-10-22T09:00:00.000Z",
-            idempotency_key: `rem:${salonId}:${appointmentId}:2026-10-22`,
+            scheduled_for_date: "2026-10-21",
+            scheduled_send_at: "2026-10-21T09:00:00.000Z",
+            idempotency_key: `rem:${salonId}:${appointmentId}:2026-10-21`,
           },
         ],
         intervalDays: 21,
@@ -218,7 +220,7 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       expect(action.action).toBe("update_existing");
       if (action.action === "update_existing") {
         expect(action.reminderId).toBe("rem-existing-1");
-        expect(action.scheduledForDate).toBe("2026-10-26");
+        expect(action.scheduledForDate).toBe("2026-10-25");
       }
     });
 
@@ -257,7 +259,7 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       const key = generateReminderIdempotencyKey(
         salonId,
         appointmentId,
-        "2026-10-22"
+        "2026-10-21"
       );
       const action = planReminderReconciliation({
         salonId,
@@ -270,8 +272,8 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
           {
             id: "rem-1",
             status: "scheduled",
-            scheduled_for_date: "2026-10-22",
-            scheduled_send_at: "2026-10-22T09:00:00.000Z",
+            scheduled_for_date: "2026-10-21",
+            scheduled_send_at: "2026-10-21T09:00:00.000Z",
             idempotency_key: key,
           },
         ],

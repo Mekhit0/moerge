@@ -228,7 +228,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const intervalDays = ctx.settings.reminder_interval_days || 21;
+  const intervalDays =
+    matchedService?.reminder_days ?? ctx.settings.reminder_interval_days ?? 21;
   const timeZone = ctx.settings.timezone || "Asia/Tbilisi";
 
   const nextExpectedDate =

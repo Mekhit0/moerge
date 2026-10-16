@@ -1322,10 +1322,16 @@ export default function SettingsManager({
             <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 flex items-center justify-between gap-3">
               <div>
                 <label className="block text-xs font-bold text-stone-900 mb-0.5">
-                  {t("ნაგულისხმევი შეხსენების ციკლი", "Default Care Reminder Cycle")}
+                  {t(
+                    "პროცედურის გამეორების ციკლი (შეხსენება მიდის 1 დღით ადრე)",
+                    "Procedure Cycle (Reminder sent 1 day before)"
+                  )}
                 </label>
                 <p className="text-[11px] text-stone-500">
-                  {t("დღეების რაოდენობა ვიზიტის შემდეგ", "Days elapsed after treatment")}
+                  {t(
+                    `მაგ. ${reminderIntervalDays} დღის არჩევისას, კლიენტს შეხსენების მეილი მიუვა ${Math.max(1, Number(reminderIntervalDays) - 1)}-ე დღეს.`,
+                    `e.g. with ${reminderIntervalDays} days, reminder is sent on day ${Math.max(1, Number(reminderIntervalDays) - 1)}.`
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">

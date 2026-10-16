@@ -110,7 +110,7 @@ export default function ClientProfileView({
 
           <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 min-w-[220px]">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
-              {t("21-დღიანი ეპილაციის ციკლი", "21-Day Epilation Cycle")}
+              {t("ავტომატური შეხსენების ციკლი", "Care Reminder Cycle")}
             </div>
             <div className="mt-2 text-xs text-stone-600">
               {t("ბოლო ვიზიტი:", "Last completed:")}{" "}

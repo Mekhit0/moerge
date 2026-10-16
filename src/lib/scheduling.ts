@@ -10,9 +10,11 @@ import {
 } from "./validation";
 
 export interface CalculatedReminderSchedule {
-  scheduledForDate: string; // YYYY-MM-DD in salon timezone
-  scheduledSendAtIso: string; // Exact UTC ISO timestamp for 09:00 local salon time
-  intervalDays: number;
+  scheduledForDate: string; // YYYY-MM-DD in salon timezone (sent 1 day before procedure due date)
+  scheduledSendAtIso: string; // Exact UTC ISO timestamp for local morning dispatch
+  intervalDays: number; // Procedure cycle interval (e.g. 21 days)
+  procedureDueDate: string; // YYYY-MM-DD when the next procedure is actually due
+  leadDays: number; // Lead time in days before procedureDueDate (default 1)
   timeZone: string;
 }
 
@@ -23,8 +25,8 @@ export function addCalendarDays(dateStr: string, days: number): string {
   if (!isValidCalendarDate(dateStr)) {
     throw new Error(`Invalid treatment date "${dateStr}". Expected YYYY-MM-DD.`);
   }
-  if (!Number.isInteger(days) || days < 1 || days > 365) {
-    throw new Error(`Invalid reminder interval "${days}". Expected integer between 1 and 365.`);
+  if (!Number.isInteger(days) || days < 0 || days > 365) {
+    throw new Error(`Invalid reminder interval "${days}". Expected integer between 0 and 365.`);
   }
 
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -107,25 +109,42 @@ export function getTodayInTimeZone(timeZone: string, referenceNow: Date = new Da
 }
 
 /**
- * Calculates the 21-day (or custom salon interval) reminder date and UTC send timestamp
- * from a completed appointment's treatment date in the salon's configured time zone.
+ * Calculates the reminder date and UTC send timestamp from a completed appointment's
+ * treatment date in the salon's configured time zone.
+ *
+ * Requirements:
+ * The procedure has a repetition cycle of `intervalDays` (default 21 days).
+ * The reminder email is sent 1 day before the target procedure date:
+ * target send date = treatmentDate + (intervalDays - 1) days.
  */
 export function calculateReminderSchedule(
   treatmentDateStr: string,
   intervalDays = 21,
   timeZone = "UTC",
-  sendHourLocal = 9
+  sendHourLocal = 9,
+  leadDays = 1
 ): CalculatedReminderSchedule {
   if (!isValidTimeZone(timeZone)) {
     throw new Error(`Invalid salon time zone "${timeZone}".`);
   }
-  const scheduledForDate = addCalendarDays(treatmentDateStr, intervalDays);
+  const safeInterval =
+    Number.isInteger(intervalDays) && intervalDays >= 1 ? intervalDays : 21;
+  const safeLead = Number.isInteger(leadDays) && leadDays >= 0 ? leadDays : 1;
+
+  // Next procedure is due at treatmentDate + safeInterval
+  const procedureDueDate = addCalendarDays(treatmentDateStr, safeInterval);
+
+  // Reminder email is sent 1 day prior to procedure due date (at least 0 days from treatment)
+  const daysUntilReminder = Math.max(0, safeInterval - safeLead);
+  const scheduledForDate = addCalendarDays(treatmentDateStr, daysUntilReminder);
   const utcSendAt = zonedDateTimeToUtc(scheduledForDate, timeZone, sendHourLocal, 0);
 
   return {
     scheduledForDate,
     scheduledSendAtIso: utcSendAt.toISOString(),
-    intervalDays,
+    intervalDays: safeInterval,
+    procedureDueDate,
+    leadDays: safeLead,
     timeZone: timeZone.trim(),
   };
 }

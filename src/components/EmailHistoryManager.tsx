@@ -277,14 +277,14 @@ export default function EmailHistoryManager({
           <h2 className="text-2xl font-bold text-stone-900 flex items-center gap-2.5">
             <MailCheck className="w-6 h-6 text-rose-600" />
             {t(
-              "ელ-ფოსტის შეხსენებების ისტორია და რიგი",
-              "Email Reminder History & Delivery Queue"
+              "ავტომატური შეხსენებების მონიტორინგი და ისტორია",
+              "Automated Reminder Monitoring & Delivery Audit"
             )}
           </h2>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-stone-500 max-w-2xl">
             {t(
-              `აკონტროლეთ 21-დღიანი შეხსენებები, Resend-ის სტატუსები, Webhook მიწოდება და თავიდან გაგზავნის ისტორია (${timezone}).`,
-              `Track scheduled 21-day reminders, Resend API acceptance, webhook delivery events, and retry history (${timezone}).`
+              `სისტემა სრულად ავტომატურად უგზავნის კლიენტებს შეხსენებებს პროცედურის ვადის მოახლოებამდე 1 დღით ადრე. აქ შეგიძლიათ თვალი ადევნოთ ავტომატური გაგზავნის ისტორიას, Resend-ის სტატუსებს და მიწოდების ჟურნალს (${timezone}).`,
+              `The system automatically dispatches reminder emails to clients 1 day prior to their procedure due date. Track background deliveries, provider statuses, and audit logs here (${timezone}).`
             )}
           </p>
         </div>
@@ -293,13 +293,40 @@ export default function EmailHistoryManager({
           type="button"
           onClick={handleRunDueQueue}
           disabled={runningDue}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-rose-600/20 transition cursor-pointer"
+          title={t(
+            "სისტემა შეხსენებებს ისედაც ავტომატურად აგზავნის ყოველდღე. ეს ღილაკი მხოლოდ ტესტირებისთვის ან დაუყოვნებლივი შემოწმებისთვისაა.",
+            "The system dispatches reminders automatically. This action is for instant testing/manual trigger only."
+          )}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 disabled:opacity-60 text-xs font-semibold border border-stone-200 transition cursor-pointer shrink-0"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-3.5 h-3.5 text-stone-500" />
           {runningDue
             ? t("მუშავდება...", "Running Worker...")
-            : t("დროული შეხსენებების გაგზავნა", "Process Due Reminders Now")}
+            : t("ხელით გაშვება (სატესტოდ)", "Run Worker Manually (Test)")}
         </button>
+      </div>
+
+      {/* Background Automation Indicator Card */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-600/20">
+            <CheckCircle2 className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-stone-900 flex items-center gap-2">
+              <span>{t("100% ავტომატური ფონური სისტემა აქტიურია", "100% Automated Background Service Active")}</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                CRON WORKER
+              </span>
+            </div>
+            <p className="text-stone-600 text-xs mt-0.5 leading-relaxed">
+              {t(
+                "შეხსენებები იგზავნება ფონურ რეჟიმში. პერსონალის მხრიდან ხელით ჩარევა ან გაგზავნის ღილაკზე დაჭერა საჭირო არ არის — კლიენტებს შეხსენების მეილი ავტომატურად მისდით.",
+                "Reminders are dispatched automatically in the background. No manual intervention or clicking is needed — your clients receive reminders seamlessly."
+              )}
+            </p>
+          </div>
+        </div>
       </div>
 
       {dryRunMode && (
@@ -429,8 +456,8 @@ export default function EmailHistoryManager({
             </h3>
             <p className="mt-1 text-xs text-stone-500">
               {t(
-                "დასრულებული ეპილაციის ვიზიტები ავტომატურად აგენერირებს 21-დღიან შეხსენებებს აქ.",
-                "Completed epilation appointments automatically generate 21-day reminders here."
+                "დასრულებული პროცედურები ავტომატურად აგენერირებს შეხსენებებს, რომლებიც იგზავნება მომდევნო ვიზიტამდე 1 დღით ადრე.",
+                "Completed appointments automatically generate reminders, which are dispatched 1 day prior to the next procedure."
               )}
             </p>
           </div>

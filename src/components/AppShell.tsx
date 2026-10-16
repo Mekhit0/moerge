@@ -63,7 +63,7 @@ export default function AppShell({
     },
     {
       href: "/email-history",
-      label: t("ელ-ფოსტის ისტორია", "Email History"),
+      label: t("ავტომატური შეხსენებები", "Automated Reminders"),
       icon: MailCheck,
     },
     {

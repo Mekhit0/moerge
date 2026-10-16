@@ -286,8 +286,8 @@ export default function ClientsManager({
                     "You do not have any archived clients."
                   )
                 : t(
-                    "დაარეგისტრირეთ კლიენტი სახელითა და ელ-ფოსტით 21-დღიანი შეხსენებების ჩასართავად.",
-                    "Register a client with their full name and email address to start scheduling 21-day epilation reminders."
+                    "დაარეგისტრირეთ კლიენტი სახელითა და ელ-ფოსტით ავტომატური შეხსენებების ჩასართავად.",
+                    "Register a client with their full name and email address to start scheduling automated reminders."
                   )}
             </p>
           </div>
@@ -498,8 +498,8 @@ export default function ClientsManager({
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
                   {t(
-                    "ელ-ფოსტის მისამართი * (21-დღიანი შეხსენებებისთვის)",
-                    "Email Address * (Used for 21-Day Reminders)"
+                    "ელ-ფოსტის მისამართი * (ავტომატური შეხსენებებისთვის)",
+                    "Email Address * (Used for Automated Reminders)"
                   )}
                 </label>
                 <input

@@ -299,14 +299,14 @@ export default function DashboardClient({
                 <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
                   <Mail className="w-4 h-4 text-rose-600" />
                   {t(
-                    "მომავალი 21-დღიანი ელ-ფოსტის შეხსენებები",
-                    "Upcoming 21-Day Email Reminders"
+                    "მომავალი ავტომატური შეხსენებები",
+                    "Upcoming Automated Reminders"
                   )}
                 </h3>
                 <p className="text-xs text-stone-500">
                   {t(
-                    "დასრულებული ეპილაციის ვიზიტებიდან დაგეგმილი ავტომატური წერილები",
-                    "Scheduled emails queued from completed epilation treatments"
+                    "დასრულებული ვიზიტებიდან დაგეგმილი ფონური წერილები (იგზავნება 1 დღით ადრე)",
+                    "Automated emails scheduled from completed visits (dispatched 1 day before due date)"
                   )}
                 </p>
               </div>
@@ -329,8 +329,8 @@ export default function DashboardClient({
                 </p>
                 <p className="mt-1 text-xs text-stone-500">
                   {t(
-                    "მონიშნეთ ეპილაციის ვიზიტი დასრულებულად 21-დღიანი შეხსენების დასაგეგმად.",
-                    "Mark an epilation appointment as completed to schedule a 21-day reminder."
+                    "მონიშნეთ ვიზიტი დასრულებულად შეხსენების ავტომატურად დასაგეგმად.",
+                    "Mark an appointment as completed to automatically schedule a reminder."
                   )}
                 </p>
               </div>
@@ -391,8 +391,8 @@ export default function DashboardClient({
                 </h3>
                 <p className="text-xs text-stone-500">
                   {t(
-                    "ჩანიშნული სეანსები და მომდევნო 21-დღიანი დაბრუნების თარიღები",
-                    "Scheduled sessions and next expected 21-day return dates"
+                    "ჩანიშნული სეანსები და მომდევნო რეკომენდებული დაბრუნების თარიღები",
+                    "Scheduled sessions and next expected return dates"
                   )}
                 </p>
               </div>
