@@ -21,8 +21,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [salonName, setSalonName] = useState("");
-  const [email, setEmail] = useState("staff@lumieresalon.com");
-  const [password, setPassword] = useState("SalonStaff2026!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,13 +112,6 @@ export default function LoginPage() {
       );
       setLoading(false);
     }
-  }
-
-  function fillDemoCredentials() {
-    setMode("signin");
-    setEmail("staff@lumieresalon.com");
-    setPassword("SalonStaff2026!");
-    setError(null);
   }
 
   return (
@@ -304,7 +297,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="staff@lumieresalon.com"
+                  placeholder="info@yoursalon.ge"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition"
                 />
               </div>
@@ -342,35 +335,6 @@ export default function LoginPage() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Pre-seeded Demo Staff Credentials Helper */}
-          <div className="mt-6 p-4 rounded-2xl bg-rose-50/70 border border-rose-100">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-rose-900 uppercase tracking-wider">
-                {t(
-                  "სადემონსტრაციო სალონის ანგარიში",
-                  "Demo Salon Staff Account"
-                )}
-              </span>
-              <button
-                type="button"
-                onClick={fillDemoCredentials}
-                className="text-xs font-medium text-rose-600 hover:text-rose-800 underline cursor-pointer"
-              >
-                {t("ავტო-შევსება", "Auto-fill")}
-              </button>
-            </div>
-            <div className="mt-1.5 text-xs text-stone-600 space-y-0.5 font-mono">
-              <div>Email: staff@lumieresalon.com</div>
-              <div>Pass: SalonStaff2026!</div>
-              <div className="text-[11px] text-stone-400 font-sans mt-1">
-                {t(
-                  "სალონი: Lumière Epilation Studio",
-                  "Salon: Lumière Epilation Studio"
-                )}
-              </div>
-            </div>
-          </div>
 
           <div className="mt-6 text-center">
             <button
