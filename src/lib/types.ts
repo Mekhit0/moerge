@@ -40,6 +40,7 @@ export type EmailEventType =
 export interface CustomBookingService {
   id: string;
   type: TreatmentType;
+  category?: string;
   name_ka: string;
   name_en: string;
   desc_ka: string;
@@ -47,6 +48,7 @@ export interface CustomBookingService {
   price_gel: number;
   duration_minutes: number;
   is_epilation: boolean;
+  reminder_days?: number | null;
   enabled: boolean;
 }
 

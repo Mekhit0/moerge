@@ -179,7 +179,7 @@ export function checkReminderEligibility(
 
   const isEpilation =
     typeof appointment.is_epilation === "boolean"
-      ? appointment.is_epilation && isEpilationTreatment(appointment.treatment_type)
+      ? appointment.is_epilation
       : isEpilationTreatment(appointment.treatment_type);
 
   if (!isEpilation) {

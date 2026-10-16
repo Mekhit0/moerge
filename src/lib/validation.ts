@@ -105,13 +105,15 @@ export const appointmentInputSchema = z.object({
 export const customBookingServiceSchema = z.object({
   id: z.string().trim().min(1),
   type: z.string().trim().min(1).default("custom"),
-  name_ka: z.string().trim().min(1).max(150),
-  name_en: z.string().trim().min(1).max(150),
-  desc_ka: z.string().trim().max(400).default(""),
-  desc_en: z.string().trim().max(400).default(""),
+  category: z.string().trim().max(80).optional().default("general"),
+  name_ka: z.string().trim().min(1, "სერვისის დასახელება სავალდებულოა").max(150),
+  name_en: z.string().trim().max(150).optional().default(""),
+  desc_ka: z.string().trim().max(500).optional().default(""),
+  desc_en: z.string().trim().max(500).optional().default(""),
   price_gel: z.coerce.number().min(0).max(10000).default(0),
   duration_minutes: z.coerce.number().int().min(5).max(480).default(45),
   is_epilation: z.boolean().default(false),
+  reminder_days: z.coerce.number().int().min(0).max(365).optional().nullable(),
   enabled: z.boolean().default(true),
 });
 
@@ -122,6 +124,16 @@ export const salonSettingsSchema = z
       .trim()
       .min(2, "Salon name must be at least 2 characters.")
       .max(120, "Salon name cannot exceed 120 characters."),
+    salon_slug: z
+      .string()
+      .trim()
+      .min(2, "Salon slug must be at least 2 characters.")
+      .max(60, "Salon slug cannot exceed 60 characters.")
+      .regex(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        "Slug must only contain lowercase letters, numbers, and hyphens (e.g. 'my-salon')"
+      )
+      .optional(),
     sender_display_name: z
       .string()
       .trim()

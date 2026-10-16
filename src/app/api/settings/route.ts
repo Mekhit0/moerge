@@ -78,7 +78,37 @@ export async function POST(request: NextRequest) {
   const baseUrl = host
     ? `${proto}://${host}`
     : process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app";
-  const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${ctx.salonSlug}`;
+  let effectiveSlug = ctx.salonSlug;
+  if (parsed.data.salon_slug) {
+    const requestedSlug = parsed.data.salon_slug.toLowerCase().trim();
+    if (requestedSlug !== ctx.salonSlug) {
+      const { data: conflict } = await ctx.supabase
+        .from("salons")
+        .select("id")
+        .eq("slug", requestedSlug)
+        .neq("id", ctx.salonId)
+        .maybeSingle();
+
+      if (conflict) {
+        return NextResponse.json(
+          {
+            error:
+              "ეს ბმული (slug) უკვე დაკავებულია სხვა სალონის მიერ. გთხოვთ აირჩიოთ სხვა. / This slug is already in use by another salon.",
+          },
+          { status: 409 }
+        );
+      }
+
+      await ctx.supabase
+        .from("salons")
+        .update({ slug: requestedSlug })
+        .eq("id", ctx.salonId);
+
+      effectiveSlug = requestedSlug;
+    }
+  }
+
+  const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${effectiveSlug}`;
 
   // If a new key or null was provided (not the masked placeholder "********"), update resend_api_key via service client
   let adminClient;
@@ -155,7 +185,7 @@ export async function POST(request: NextRequest) {
     settings: {
       ...updatedSettings,
       booking_url: autoBookingUrl,
-      salon_slug: ctx.salonSlug,
+      salon_slug: effectiveSlug,
       resend_api_key: hasSavedKey ? "********" : null,
     },
     resendConfigured: Boolean(
@@ -165,3 +195,5 @@ export async function POST(request: NextRequest) {
     ),
   });
 }
+
+export const PUT = POST;
