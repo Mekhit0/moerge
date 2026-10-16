@@ -35,10 +35,9 @@ export default async function AppointmentsPage() {
       reminderIntervalDays={ctx.settings.reminder_interval_days}
       timezone={ctx.settings.timezone || "Asia/Tbilisi"}
       customServices={
-        Array.isArray(ctx.settings.custom_services) &&
-        ctx.settings.custom_services.length > 0
+        Array.isArray(ctx.settings.custom_services)
           ? ctx.settings.custom_services
-          : DEFAULT_CUSTOM_SERVICES
+          : []
       }
       workingHoursStart={ctx.settings.working_hours_start || "10:00"}
       workingHoursEnd={ctx.settings.working_hours_end || "20:00"}

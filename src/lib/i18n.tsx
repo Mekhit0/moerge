@@ -1,7 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { TreatmentType, AppointmentStatus, ReminderStatus } from "./types";
+import {
+  TreatmentType,
+  StandardTreatmentType,
+  AppointmentStatus,
+  ReminderStatus,
+  CustomBookingService,
+} from "./types";
 
 export type AppLocale = "ka" | "en";
 
@@ -25,7 +31,7 @@ export const GEORGIAN_DEFAULT_EMAIL_BODY = `გამარჯობა {{client
 
 export const TREATMENT_LABELS_I18N: Record<
   AppLocale,
-  Record<TreatmentType, string>
+  Record<string, string>
 > = {
   ka: {
     epilation: "კლასიკური ეპილაცია",
@@ -49,9 +55,26 @@ export const TREATMENT_LABELS_I18N: Record<
   },
 };
 
+export function getTreatmentLabel(
+  type: string,
+  lang: AppLocale,
+  customServices?: CustomBookingService[]
+): string {
+  if (customServices && customServices.length > 0) {
+    const found = customServices.find(
+      (s) => s.id === type || s.type === type || s.name_ka === type || s.name_en === type
+    );
+    if (found) {
+      return lang === "ka" ? found.name_ka : found.name_en;
+    }
+  }
+  const dict = TREATMENT_LABELS_I18N[lang];
+  return dict[type] || type;
+}
+
 export const TREATMENT_DESC_I18N: Record<
   AppLocale,
-  Record<TreatmentType, string>
+  Record<string, string | undefined>
 > = {
   ka: {
     laser_epilation:
@@ -85,7 +108,7 @@ export const TREATMENT_DESC_I18N: Record<
 
 export const APPOINTMENT_STATUS_I18N: Record<
   AppLocale,
-  Record<AppointmentStatus, string>
+  Record<string, string>
 > = {
   ka: {
     scheduled: "დაგეგმილი",
@@ -103,7 +126,7 @@ export const APPOINTMENT_STATUS_I18N: Record<
 
 export const REMINDER_STATUS_I18N: Record<
   AppLocale,
-  Record<ReminderStatus, string>
+  Record<string, string>
 > = {
   ka: {
     scheduled: "დაგეგმილი",
@@ -124,6 +147,16 @@ export const REMINDER_STATUS_I18N: Record<
     canceled: "Canceled",
   },
 };
+
+export function getAppointmentStatusLabel(status: string, lang: AppLocale): string {
+  const dict = lang === "ka" ? APPOINTMENT_STATUS_I18N.ka : APPOINTMENT_STATUS_I18N.en;
+  return dict[status] || status;
+}
+
+export function getReminderStatusLabel(status: string, lang: AppLocale): string {
+  const dict = lang === "ka" ? REMINDER_STATUS_I18N.ka : REMINDER_STATUS_I18N.en;
+  return dict[status] || status;
+}
 
 interface LanguageContextValue {
   lang: AppLocale;

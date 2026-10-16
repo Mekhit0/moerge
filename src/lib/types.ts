@@ -2,7 +2,7 @@ export type SubscriptionTier = "starter" | "professional" | "enterprise";
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
 export type SalonRole = "owner" | "admin" | "staff";
 
-export type TreatmentType =
+export type StandardTreatmentType =
   | "epilation"
   | "laser_epilation"
   | "wax_epilation"
@@ -11,6 +11,8 @@ export type TreatmentType =
   | "massage"
   | "manicure"
   | "consultation";
+
+export type TreatmentType = StandardTreatmentType | (string & {});
 
 export type AppointmentStatus = "scheduled" | "completed" | "missed" | "canceled";
 
@@ -139,6 +141,10 @@ export interface Appointment {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  service_id?: string | null;
+  service_name?: string | null;
+  price_gel?: number | null;
+  duration_minutes?: number | null;
   client?: Pick<Client, "id" | "full_name" | "email" | "phone" | "is_archived" | "email_consent">;
   reminders?: Reminder[];
 }
@@ -287,6 +293,197 @@ export const DEFAULT_CUSTOM_SERVICES: CustomBookingService[] = [
     duration_minutes: 20,
     is_epilation: false,
     enabled: true,
+  },
+];
+
+export interface ServiceTemplatePreset {
+  id: string;
+  title_ka: string;
+  title_en: string;
+  desc_ka: string;
+  desc_en: string;
+  badge_ka: string;
+  badge_en: string;
+  services: CustomBookingService[];
+}
+
+export const SERVICE_PRESET_TEMPLATES: ServiceTemplatePreset[] = [
+  {
+    id: "laser_clinic",
+    title_ka: "ლაზერული ეპილაციის კლინიკა",
+    title_en: "Laser Epilation Clinic",
+    desc_ka: "დიოდური და ალექსანდრიტის ლაზერული ეპილაცია + 21-დღიანი ავტომატური ციკლი",
+    desc_en: "Diode & Alexandrite laser removal with 21-day automated care cycle",
+    badge_ka: "პოპულარული",
+    badge_en: "Popular",
+    services: [
+      {
+        id: "svc_laser_full",
+        type: "laser_epilation",
+        name_ka: "დიოდური ლაზერული ეპილაცია (მთლიანი სხეული)",
+        name_en: "Diode Laser Epilation (Full Body)",
+        desc_ka: "უახლესი თაობის მოყინვის მეთოდით, უმტკივნეულო პროცედურა. მოქმედებს 21-დღიანი შეხსენება.",
+        desc_en: "Medical-grade cooling diode laser hair removal. Includes 21-day care cycle reminder.",
+        price_gel: 95,
+        duration_minutes: 45,
+        is_epilation: true,
+        enabled: true,
+      },
+      {
+        id: "svc_laser_combo",
+        type: "laser_epilation",
+        name_ka: "ლაზერული ეპილაცია (ფეხები + ღრმა ბიკინი + იღლიები)",
+        name_en: "Laser Epilation (Legs + Deep Bikini + Underarms)",
+        desc_ka: "ყველაზე მოთხოვნადი კომბინირებული პაკეტი, 21-დღიანი ციკლით.",
+        desc_en: "Most popular combo package with 21-day care cycle.",
+        price_gel: 65,
+        duration_minutes: 35,
+        is_epilation: true,
+        enabled: true,
+      },
+      {
+        id: "svc_laser_zones",
+        type: "epilation",
+        name_ka: "ლაზერული ეპილაცია (ცალკეული ზონები)",
+        name_en: "Laser Epilation (Selected Zones)",
+        desc_ka: "სახე, იღლია ან ხელები — სწრაფი და ეფექტური სეანსი.",
+        desc_en: "Targeted zone epilation session with soothing balm.",
+        price_gel: 35,
+        duration_minutes: 20,
+        is_epilation: true,
+        enabled: true,
+      },
+      {
+        id: "svc_consultation",
+        type: "consultation",
+        name_ka: "უფასო კონსულტაცია და სატესტო იმპულსი",
+        name_en: "Free Consultation & Laser Patch Test",
+        desc_ka: "კანის ტიპის შეფასება და ლაზერის სატესტო სინჯი.",
+        desc_en: "Complimentary skin assessment & laser patch test.",
+        price_gel: 0,
+        duration_minutes: 15,
+        is_epilation: false,
+        enabled: true,
+      },
+    ],
+  },
+  {
+    id: "sugaring_waxing",
+    title_ka: "შუგარინგი და ცვილით ეპილაცია",
+    title_en: "Sugaring & Waxing Studio",
+    desc_ka: "ორგანული ბიო-შაქრის პასტა და პრემიუმ ცვილი + 21-დღიანი შეხსენების ციკლი",
+    desc_en: "Organic sugar paste & luxury warm wax with 21-day care cycle",
+    badge_ka: "ორგანული",
+    badge_en: "Organic",
+    services: [
+      {
+        id: "svc_sugaring_bikini",
+        type: "sugaring_epilation",
+        name_ka: "შუგარინგი (ღრმა ბიკინი + იღლიები)",
+        name_en: "Sugaring (Deep Bikini + Underarms)",
+        desc_ka: "ნაზი ორგანული შაქრის პასტით ეპილაცია მგრძნობიარე კანისთვის.",
+        desc_en: "Gentle organic sugar paste epilation for sensitive skin.",
+        price_gel: 45,
+        duration_minutes: 30,
+        is_epilation: true,
+        enabled: true,
+      },
+      {
+        id: "svc_sugaring_full",
+        type: "sugaring_epilation",
+        name_ka: "შუგარინგი (მთლიანი სხეული)",
+        name_en: "Full Body Organic Sugaring",
+        desc_ka: "სრული ბიო-ეპილაცია ორგანული შაქრით. მოქმედებს 21-დღიანი შეხსენება.",
+        desc_en: "Full body gentle sugaring hair removal. Includes 21-day reminder.",
+        price_gel: 80,
+        duration_minutes: 60,
+        is_epilation: true,
+        enabled: true,
+      },
+      {
+        id: "svc_wax_legs",
+        type: "wax_epilation",
+        name_ka: "ცვილით ეპილაცია (ფეხები + ხელები)",
+        name_en: "Warm Wax Epilation (Legs & Arms)",
+        desc_ka: "დაბალტემპერატურული ვარდის ცვილით სწრაფი დეპილაცია.",
+        desc_en: "Low-temperature warm wax epilation.",
+        price_gel: 40,
+        duration_minutes: 35,
+        is_epilation: true,
+        enabled: true,
+      },
+      {
+        id: "svc_wax_face",
+        type: "wax_epilation",
+        name_ka: "სახის ზონების დეპილაცია (ცვილი)",
+        name_en: "Facial Zone Waxing",
+        desc_ka: "ზედა ტუჩი, წარბები, ლოყები.",
+        desc_en: "Upper lip, eyebrows, facial zones.",
+        price_gel: 15,
+        duration_minutes: 15,
+        is_epilation: true,
+        enabled: true,
+      },
+    ],
+  },
+  {
+    id: "beauty_spa",
+    title_ka: "სილამაზის სალონი & სპა",
+    title_en: "Beauty Salon & Spa",
+    desc_ka: "მანიკიური, პედიკიური, სახის ღრმა წმენდა და სარელაქსაციო მასაჟი",
+    desc_en: "Manicure, pedicure, deep facial cleansing and relaxation massage",
+    badge_ka: "უნივერსალური",
+    badge_en: "Full Service",
+    services: [
+      {
+        id: "svc_manicure_gel",
+        type: "manicure",
+        name_ka: "მანიკიური (შილაკი / გელ-ლაქი)",
+        name_en: "Gel Manicure & Nail Styling",
+        desc_ka: "აპარატული ან კომბინირებული მანიკიური გელ-ლაქის დაფარვით.",
+        desc_en: "Hardware or combo manicure with durable gel polish.",
+        price_gel: 35,
+        duration_minutes: 60,
+        is_epilation: false,
+        enabled: true,
+      },
+      {
+        id: "svc_pedicure",
+        type: "manicure",
+        name_ka: "პედიკიური (სრული მოვლა)",
+        name_en: "Complete Spa Pedicure",
+        desc_ka: "ტერფის დამუშავება, სკრაბი და გელ-ლაქი.",
+        desc_en: "Foot care, exfoliating scrub, and polish.",
+        price_gel: 50,
+        duration_minutes: 60,
+        is_epilation: false,
+        enabled: true,
+      },
+      {
+        id: "svc_facial_deep",
+        type: "facial",
+        name_ka: "სახის ღრმა წმენდა და დატენიანება",
+        name_en: "Deep Cleansing Facial & Hydration",
+        desc_ka: "ულტრაბგერითი წმენდა, პილინგი და აღმდგენი ნიღაბი.",
+        desc_en: "Ultrasonic exfoliation, peel, and barrier recovery mask.",
+        price_gel: 90,
+        duration_minutes: 60,
+        is_epilation: false,
+        enabled: true,
+      },
+      {
+        id: "svc_massage_relax",
+        type: "massage",
+        name_ka: "სარელაქსაციო მასაჟი (მთლიანი სხეული)",
+        name_en: "Full Body Relaxation Massage",
+        desc_ka: "არომათერაპია და კუნთების დაჭიმულობის მოხსნა.",
+        desc_en: "Aromatherapy soothing full-body oil massage.",
+        price_gel: 70,
+        duration_minutes: 60,
+        is_epilation: false,
+        enabled: true,
+      },
+    ],
   },
 ];
 

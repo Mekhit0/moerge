@@ -21,9 +21,9 @@ import {
   Reminder,
 } from "@/lib/types";
 import {
-  APPOINTMENT_STATUS_I18N,
-  REMINDER_STATUS_I18N,
-  TREATMENT_LABELS_I18N,
+  getAppointmentStatusLabel,
+  getReminderStatusLabel,
+  getTreatmentLabel,
   useLanguage,
 } from "@/lib/i18n";
 
@@ -368,7 +368,7 @@ export default function DashboardClient({
                         </div>
                         <div className="text-[11px] text-stone-400">
                           {t("სტატუსი:", "Status:")}{" "}
-                          {(REMINDER_STATUS_I18N[lang] || REMINDER_STATUS_I18N["ka"])[rem.status] ?? rem.status}
+                          {getReminderStatusLabel(rem.status, lang)}
                         </div>
                       </div>
                     </div>
@@ -435,15 +435,23 @@ export default function DashboardClient({
                               : "bg-stone-100 text-stone-600"
                           }`}
                         >
-                          {(APPOINTMENT_STATUS_I18N[lang] || APPOINTMENT_STATUS_I18N["ka"])[appt.status] ??
-                            appt.status}
+                          {getAppointmentStatusLabel(appt.status, lang)}
                         </span>
                       </div>
-                      <div className="text-xs text-stone-500">
-                        {(TREATMENT_LABELS_I18N[lang] || TREATMENT_LABELS_I18N["ka"])[appt.treatment_type] ??
-                          appt.treatment_type}{" "}
-                        &bull; {appt.treatment_date} •{" "}
-                        {appt.treatment_time ? String(appt.treatment_time).slice(0, 5) : ""}
+                      <div className="text-xs text-stone-500 flex items-center gap-1.5 flex-wrap">
+                        <span>
+                          {appt.service_name ||
+                            getTreatmentLabel(appt.treatment_type, lang)}
+                        </span>
+                        {appt.price_gel !== null && appt.price_gel !== undefined && (
+                          <span className="font-semibold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded">
+                            {appt.price_gel} ₾
+                          </span>
+                        )}
+                        <span>&bull;</span>
+                        <span>{appt.treatment_date}</span>
+                        <span>•</span>
+                        <span>{appt.treatment_time ? String(appt.treatment_time).slice(0, 5) : ""}</span>
                       </div>
                     </div>
                     <div className="text-left sm:text-right">

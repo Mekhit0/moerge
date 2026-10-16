@@ -157,7 +157,34 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Smart slot conflict check on the same date (within 45 minutes)
+  // Resolve custom service details if present in salon catalog
+  const customServices = Array.isArray(ctx.settings.custom_services)
+    ? ctx.settings.custom_services
+    : [];
+  const matchedService = customServices.find(
+    (s) =>
+      s.id === parsed.data.service_id ||
+      s.id === parsed.data.treatment_type ||
+      s.type === parsed.data.treatment_type
+  );
+
+  const durationMinutes =
+    parsed.data.duration_minutes ??
+    matchedService?.duration_minutes ??
+    45;
+
+  const isEpilation =
+    parsed.data.is_epilation !== undefined
+      ? parsed.data.is_epilation
+      : (matchedService?.is_epilation ?? isEpilationTreatment(parsed.data.treatment_type));
+
+  const serviceId = parsed.data.service_id ?? matchedService?.id ?? null;
+  const serviceName =
+    parsed.data.service_name ??
+    (matchedService ? (matchedService.name_ka || matchedService.name_en) : null);
+  const priceGel = parsed.data.price_gel ?? matchedService?.price_gel ?? null;
+
+  // Smart slot conflict check on the same date with dynamic duration
   if (
     ["scheduled", "completed"].includes(parsed.data.status) &&
     body.force_overlap !== true
@@ -180,7 +207,7 @@ export async function POST(request: NextRequest) {
     const evalSlot = evaluateSmartSlotAvailability(
       parsed.data.treatment_time,
       bookedTimes,
-      45,
+      durationMinutes,
       candidateSlots
     );
 
@@ -198,7 +225,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const isEpilation = isEpilationTreatment(parsed.data.treatment_type);
   const intervalDays = ctx.settings.reminder_interval_days || 21;
   const timeZone = ctx.settings.timezone || "Asia/Tbilisi";
 
@@ -227,6 +253,10 @@ export async function POST(request: NextRequest) {
       next_expected_date: nextExpectedDate,
       notes: parsed.data.notes,
       created_by: ctx.user.id,
+      service_id: serviceId,
+      service_name: serviceName,
+      price_gel: priceGel,
+      duration_minutes: durationMinutes,
     })
     .select("*")
     .single();

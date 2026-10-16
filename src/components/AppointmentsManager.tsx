@@ -37,11 +37,12 @@ import {
   generateDynamicTimeSlots,
 } from "@/lib/scheduling";
 import {
-  APPOINTMENT_STATUS_I18N,
-  REMINDER_STATUS_I18N,
-  TREATMENT_LABELS_I18N,
+  getTreatmentLabel,
+  getAppointmentStatusLabel,
+  getReminderStatusLabel,
   useLanguage,
 } from "@/lib/i18n";
+import Link from "next/link";
 
 interface AppointmentsManagerProps {
   initialAppointments: Appointment[];
@@ -102,9 +103,13 @@ export default function AppointmentsManager({
     new Date().toISOString().slice(0, 10)
   );
   const [treatmentTime, setTreatmentTime] = useState("11:00");
-  const [treatmentType, setTreatmentType] = useState<TreatmentType>(
-    customServices[0]?.type || "laser_epilation"
-  );
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [treatmentType, setTreatmentType] = useState<TreatmentType>("laser_epilation");
+  const [serviceName, setServiceName] = useState<string>("");
+  const [servicePrice, setServicePrice] = useState<number>(0);
+  const [serviceDuration, setServiceDuration] = useState<number>(45);
+  const [isEpilation, setIsEpilation] = useState<boolean>(true);
+
   const [status, setStatus] = useState<AppointmentStatus>("completed");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -158,10 +163,10 @@ export default function AppointmentsManager({
       evaluateSmartSlotAvailability(
         treatmentTime,
         bookedTimesOnModalDate,
-        45,
+        serviceDuration || 45,
         dynamicSlots
       ),
-    [treatmentTime, bookedTimesOnModalDate, dynamicSlots]
+    [treatmentTime, bookedTimesOnModalDate, dynamicSlots, serviceDuration]
   );
 
   function openNewModal(
@@ -180,6 +185,26 @@ export default function AppointmentsManager({
     const targetDate = defaultDate ?? new Date().toISOString().slice(0, 10);
     setTreatmentDate(targetDate);
 
+    const firstEnabledService =
+      customServices.find((s) => s.enabled !== false) || customServices[0];
+
+    const initialDuration = firstEnabledService?.duration_minutes || 45;
+    if (firstEnabledService) {
+      setSelectedServiceId(firstEnabledService.id);
+      setTreatmentType(firstEnabledService.type);
+      setIsEpilation(firstEnabledService.is_epilation);
+      setServicePrice(firstEnabledService.price_gel);
+      setServiceDuration(firstEnabledService.duration_minutes);
+      setServiceName(lang === "ka" ? firstEnabledService.name_ka : firstEnabledService.name_en);
+    } else {
+      setSelectedServiceId("custom");
+      setTreatmentType("custom");
+      setIsEpilation(true);
+      setServicePrice(0);
+      setServiceDuration(45);
+      setServiceName("");
+    }
+
     // Pick first available dynamic slot on that date
     const dayBooked = appointments
       .filter(
@@ -192,16 +217,13 @@ export default function AppointmentsManager({
     const check = evaluateSmartSlotAvailability(
       defaultSlot,
       dayBooked,
-      45,
+      initialDuration,
       dynamicSlots
     );
     setTreatmentTime(
       check.isAvailable ? defaultSlot : check.availableSlots[0] ?? defaultSlot
     );
 
-    const firstEnabledService =
-      customServices.find((s) => s.enabled !== false) || customServices[0];
-    setTreatmentType(firstEnabledService?.type || "laser_epilation");
     setStatus(defaultStatus);
     setNotes("");
     setFormError(null);
@@ -214,7 +236,32 @@ export default function AppointmentsManager({
     setClientId(appt.client_id);
     setTreatmentDate(appt.treatment_date);
     setTreatmentTime(appt.treatment_time.slice(0, 5));
+
+    const matchedService = customServices.find(
+      (s) =>
+        s.id === appt.service_id ||
+        s.id === appt.treatment_type ||
+        s.type === appt.treatment_type
+    );
+
+    setSelectedServiceId(appt.service_id || matchedService?.id || appt.treatment_type);
     setTreatmentType(appt.treatment_type);
+    setIsEpilation(
+      appt.is_epilation ??
+        matchedService?.is_epilation ??
+        isEpilationTreatment(appt.treatment_type)
+    );
+    setServicePrice(appt.price_gel ?? matchedService?.price_gel ?? 0);
+    setServiceDuration(appt.duration_minutes ?? matchedService?.duration_minutes ?? 45);
+    setServiceName(
+      appt.service_name ||
+        (matchedService
+          ? lang === "ka"
+            ? matchedService.name_ka
+            : matchedService.name_en
+          : appt.treatment_type)
+    );
+
     setStatus(appt.status);
     setNotes(appt.notes ?? "");
     setFormError(null);
@@ -231,6 +278,11 @@ export default function AppointmentsManager({
         treatment_date: treatmentDate,
         treatment_time: treatmentTime,
         treatment_type: treatmentType,
+        service_id: selectedServiceId || null,
+        service_name: serviceName || null,
+        price_gel: servicePrice ?? null,
+        duration_minutes: serviceDuration ?? 45,
+        is_epilation: isEpilation,
         status,
         notes: notes.trim() || null,
       };
@@ -366,9 +418,10 @@ export default function AppointmentsManager({
             )
           );
         } else {
+          const statusText = getAppointmentStatusLabel(newStatus, lang);
           setToast(
             t(
-              `ვიზიტის სტატუსი შეიცვალა: ${APPOINTMENT_STATUS_I18N[lang][newStatus]}`,
+              `ვიზიტის სტატუსი შეიცვალა: ${statusText}`,
               `Appointment marked as ${newStatus}.`
             )
           );
@@ -444,32 +497,61 @@ export default function AppointmentsManager({
     year: "numeric",
   });
 
-  // Build combined service options from custom salon catalog + standard treatments
+  // Build service options strictly from the salon's active customServices catalog
   const serviceOptions = useMemo(() => {
-    const list: Array<{ value: TreatmentType; label: string; isEpil: boolean }> = [];
+    const list: Array<{
+      id: string;
+      value: string;
+      type: TreatmentType;
+      name: string;
+      label: string;
+      price: number;
+      duration: number;
+      isEpil: boolean;
+    }> = [];
+
     for (const srv of customServices) {
       if (srv.enabled === false) continue;
-      const val = lang === "ka" ? srv.name_ka : srv.name_en;
+      const srvName = lang === "ka" ? srv.name_ka : srv.name_en;
       list.push({
-        value: srv.type,
-        label: `${val} (${srv.price_gel} ₾ • ${srv.duration_minutes} ${t("წთ", "min")})`,
+        id: srv.id,
+        value: srv.id,
+        type: srv.type,
+        name: srvName,
+        label: `${srvName} (${srv.price_gel} ₾ • ${srv.duration_minutes} ${t("წთ", "min")})`,
+        price: srv.price_gel,
+        duration: srv.duration_minutes,
         isEpil: srv.is_epilation,
       });
     }
-    const standardKeys = Object.keys(
-      TREATMENT_LABELS_I18N[lang]
-    ) as TreatmentType[];
-    for (const k of standardKeys) {
-      if (!list.some((item) => item.value === k)) {
+
+    // If editing a historical appointment whose service is not in active catalog
+    if (editingAppt) {
+      const exists = list.some(
+        (o) =>
+          o.id === editingAppt.service_id ||
+          o.id === editingAppt.treatment_type ||
+          o.type === editingAppt.treatment_type
+      );
+      if (!exists) {
+        const legacyLabel =
+          editingAppt.service_name ||
+          getTreatmentLabel(editingAppt.treatment_type, lang, customServices);
         list.push({
-          value: k,
-          label: TREATMENT_LABELS_I18N[lang][k],
-          isEpil: isEpilationTreatment(k),
+          id: editingAppt.service_id || editingAppt.treatment_type,
+          value: editingAppt.service_id || editingAppt.treatment_type,
+          type: editingAppt.treatment_type,
+          name: legacyLabel,
+          label: `${legacyLabel} (${t("ისტორიული", "Historical")})`,
+          price: editingAppt.price_gel ?? 0,
+          duration: editingAppt.duration_minutes ?? 45,
+          isEpil: editingAppt.is_epilation,
         });
       }
     }
+
     return list;
-  }, [customServices, lang, t]);
+  }, [customServices, lang, t, editingAppt]);
 
   return (
     <div className="space-y-6">
@@ -574,7 +656,7 @@ export default function AppointmentsManager({
               >
                 {st === "all"
                   ? t("ყველა", "All")
-                  : APPOINTMENT_STATUS_I18N[lang][st] ?? st}
+                  : getAppointmentStatusLabel(st, lang)}
               </button>
             ))}
           </div>
@@ -642,10 +724,26 @@ export default function AppointmentsManager({
                           </td>
 
                           <td className="py-4 px-4">
-                            <div className="font-medium text-stone-900">
-                              {TREATMENT_LABELS_I18N[lang][
-                                appt.treatment_type
-                              ] ?? appt.treatment_type}
+                            <div className="font-medium text-stone-900 flex items-center gap-1.5 flex-wrap">
+                              <span>
+                                {appt.service_name ||
+                                  getTreatmentLabel(
+                                    appt.treatment_type,
+                                    lang,
+                                    customServices
+                                  )}
+                              </span>
+                              {appt.price_gel !== null &&
+                                appt.price_gel !== undefined && (
+                                  <span className="text-[11px] px-2 py-0.5 rounded-md bg-rose-50 border border-rose-100 font-bold text-rose-700">
+                                    {appt.price_gel} ₾
+                                  </span>
+                                )}
+                              {appt.duration_minutes && (
+                                <span className="text-[11px] text-stone-400">
+                                  • {appt.duration_minutes} {t("წთ", "min")}
+                                </span>
+                              )}
                             </div>
                             <div className="text-xs text-stone-500">
                               {appt.treatment_date} •{" "}
@@ -670,8 +768,7 @@ export default function AppointmentsManager({
                                   : "bg-stone-100 text-stone-600"
                               }`}
                             >
-                              {APPOINTMENT_STATUS_I18N[lang][appt.status] ??
-                                appt.status}
+                              {getAppointmentStatusLabel(appt.status, lang)}
                             </span>
                           </td>
 
@@ -687,9 +784,10 @@ export default function AppointmentsManager({
                                     <Clock className="w-3 h-3 text-rose-500" />
                                     {t("შეხსენება:", "Email reminder:")}{" "}
                                     <strong className="uppercase">
-                                      {REMINDER_STATUS_I18N[lang][
-                                        activeReminder.status
-                                      ] ?? activeReminder.status}
+                                      {getReminderStatusLabel(
+                                        activeReminder.status,
+                                        lang
+                                      )}
                                     </strong>{" "}
                                     ({activeReminder.scheduled_for_date})
                                   </div>
@@ -1161,22 +1259,73 @@ export default function AppointmentsManager({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
-                    {t("პროცედურა / სერვისი *", "Treatment / Service *")}
-                  </label>
-                  <select
-                    value={treatmentType}
-                    onChange={(e) =>
-                      setTreatmentType(e.target.value as TreatmentType)
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  >
-                    {serviceOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600">
+                      {t("პროცედურა / სერვისი *", "Treatment / Service *")}
+                    </label>
+                    <Link
+                      href="/settings"
+                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 underline"
+                      target="_blank"
+                    >
+                      {t("მართვა / შაბლონები", "Manage / Templates")}
+                    </Link>
+                  </div>
+                  {serviceOptions.length === 0 ? (
+                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                      {t(
+                        "სერვისები არ გაქვთ დამატებული. გადადით პარამეტრებში ან აირჩიეთ მზა შაბლონი.",
+                        "No services configured. Please go to Settings or choose a template."
+                      )}
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedServiceId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedServiceId(val);
+                        const opt = serviceOptions.find((o) => o.id === val);
+                        if (opt) {
+                          setTreatmentType(opt.type);
+                          setIsEpilation(opt.isEpil);
+                          setServicePrice(opt.price);
+                          setServiceDuration(opt.duration);
+                          setServiceName(opt.name);
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
+                    >
+                      {serviceOptions.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {serviceDuration > 0 && (
+                    <div className="mt-1.5 flex items-center gap-2 text-[11px] text-stone-500 flex-wrap">
+                      <span>
+                        {t("ხანგრძლივობა:", "Duration:")}{" "}
+                        <strong>{serviceDuration} {t("წთ", "min")}</strong>
+                      </span>
+                      <span>•</span>
+                      <span>
+                        {t("ფასი:", "Price:")} <strong>{servicePrice} ₾</strong>
+                      </span>
+                      <span>•</span>
+                      <span
+                        className={
+                          isEpilation
+                            ? "text-rose-600 font-semibold"
+                            : "text-stone-500"
+                        }
+                      >
+                        {isEpilation
+                          ? t("ეპილაცია (+21დ შეხსენება)", "Epilation (+21d reminder)")
+                          : t("სტანდარტული ვიზიტი", "Standard visit")}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div>

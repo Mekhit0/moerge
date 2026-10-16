@@ -47,6 +47,11 @@ export async function PATCH(
       (body.treatment_type as string | undefined) ?? existingAppt.treatment_type,
     status: (body.status as string | undefined) ?? existingAppt.status,
     notes: body.notes !== undefined ? body.notes : existingAppt.notes,
+    service_id: body.service_id !== undefined ? body.service_id : existingAppt.service_id,
+    service_name: body.service_name !== undefined ? body.service_name : existingAppt.service_name,
+    price_gel: body.price_gel !== undefined ? body.price_gel : existingAppt.price_gel,
+    duration_minutes: body.duration_minutes !== undefined ? body.duration_minutes : existingAppt.duration_minutes,
+    is_epilation: body.is_epilation !== undefined ? body.is_epilation : existingAppt.is_epilation,
   };
 
   const parsed = appointmentInputSchema.safeParse(mergedPayload);
@@ -57,9 +62,36 @@ export async function PATCH(
     );
   }
 
-  const isEpilation = isEpilationTreatment(parsed.data.treatment_type);
+  // Resolve custom service metadata if present in salon catalog
+  const customServices = Array.isArray(ctx.settings.custom_services)
+    ? ctx.settings.custom_services
+    : [];
+  const matchedService = customServices.find(
+    (s) =>
+      s.id === parsed.data.service_id ||
+      s.id === parsed.data.treatment_type ||
+      s.type === parsed.data.treatment_type
+  );
+
+  const durationMinutes =
+    parsed.data.duration_minutes ??
+    matchedService?.duration_minutes ??
+    existingAppt.duration_minutes ??
+    45;
+
+  const isEpilation =
+    parsed.data.is_epilation !== undefined
+      ? parsed.data.is_epilation
+      : (matchedService?.is_epilation ?? isEpilationTreatment(parsed.data.treatment_type));
+
+  const serviceId = parsed.data.service_id ?? matchedService?.id ?? existingAppt.service_id ?? null;
+  const serviceName =
+    parsed.data.service_name ??
+    (matchedService ? (matchedService.name_ka || matchedService.name_en) : existingAppt.service_name ?? null);
+  const priceGel = parsed.data.price_gel ?? matchedService?.price_gel ?? existingAppt.price_gel ?? null;
+
   const intervalDays = ctx.settings.reminder_interval_days || 21;
-  const timeZone = ctx.settings.timezone || "UTC";
+  const timeZone = ctx.settings.timezone || "Asia/Tbilisi";
 
   const nextExpectedDate =
     parsed.data.status === "completed" && isEpilation
@@ -91,7 +123,7 @@ export async function PATCH(
       .in("status", ["scheduled", "completed"]);
 
     const bookedTimes = (sameDayAppts ?? []).map((a) => String(a.treatment_time));
-    const check = evaluateSmartSlotAvailability(normalizedTime, bookedTimes, 45);
+    const check = evaluateSmartSlotAvailability(normalizedTime, bookedTimes, durationMinutes);
     if (!check.isAvailable) {
       return NextResponse.json(
         {
@@ -120,6 +152,10 @@ export async function PATCH(
           : null,
       next_expected_date: nextExpectedDate,
       notes: parsed.data.notes,
+      service_id: serviceId,
+      service_name: serviceName,
+      price_gel: priceGel,
+      duration_minutes: durationMinutes,
     })
     .eq("id", id)
     .eq("salon_id", ctx.salonId)

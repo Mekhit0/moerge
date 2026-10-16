@@ -84,16 +84,7 @@ export const appointmentInputSchema = z.object({
     .trim()
     .default("10:00")
     .refine((v) => TIME_REGEX.test(v), "Treatment time must be in HH:MM format."),
-  treatment_type: z.enum([
-    "epilation",
-    "laser_epilation",
-    "wax_epilation",
-    "sugaring_epilation",
-    "facial",
-    "massage",
-    "manicure",
-    "consultation",
-  ]),
+  treatment_type: z.string().trim().min(1, "Service / Treatment type is required"),
   status: z
     .enum(["scheduled", "completed", "missed", "canceled"])
     .default("scheduled"),
@@ -104,27 +95,23 @@ export const appointmentInputSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => (v && v.length > 0 ? v : null)),
+  service_id: z.string().trim().optional().nullable(),
+  service_name: z.string().trim().optional().nullable(),
+  price_gel: z.coerce.number().min(0).max(10000).optional().nullable(),
+  duration_minutes: z.coerce.number().int().min(5).max(480).optional().nullable(),
+  is_epilation: z.boolean().optional(),
 });
 
 export const customBookingServiceSchema = z.object({
   id: z.string().trim().min(1),
-  type: z.enum([
-    "epilation",
-    "laser_epilation",
-    "wax_epilation",
-    "sugaring_epilation",
-    "facial",
-    "massage",
-    "manicure",
-    "consultation",
-  ]),
+  type: z.string().trim().min(1).default("custom"),
   name_ka: z.string().trim().min(1).max(150),
   name_en: z.string().trim().min(1).max(150),
   desc_ka: z.string().trim().max(400).default(""),
   desc_en: z.string().trim().max(400).default(""),
   price_gel: z.coerce.number().min(0).max(10000).default(0),
-  duration_minutes: z.coerce.number().int().min(10).max(240).default(45),
-  is_epilation: z.boolean().default(true),
+  duration_minutes: z.coerce.number().int().min(5).max(480).default(45),
+  is_epilation: z.boolean().default(false),
   enabled: z.boolean().default(true),
 });
 
@@ -251,7 +238,7 @@ export const salonSettingsSchema = z
     custom_services: z
       .array(customBookingServiceSchema)
       .optional()
-      .default(DEFAULT_CUSTOM_SERVICES),
+      .default([]),
     resend_api_key: z
       .string()
       .trim()
@@ -310,16 +297,8 @@ export const publicBookingInputSchema = z.object({
     .trim()
     .default("10:00")
     .refine((v) => TIME_REGEX.test(v), "Please select a valid appointment time."),
-  treatment_type: z.enum([
-    "epilation",
-    "laser_epilation",
-    "wax_epilation",
-    "sugaring_epilation",
-    "facial",
-    "massage",
-    "manicure",
-    "consultation",
-  ]),
+  treatment_type: z.string().trim().min(1, "Please select a service."),
+  service_id: z.string().trim().optional().nullable(),
   notes: z
     .string()
     .trim()

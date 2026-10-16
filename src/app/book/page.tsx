@@ -31,7 +31,7 @@ import {
 } from "@/lib/scheduling";
 import {
   LanguageSwitcher,
-  TREATMENT_LABELS_I18N,
+  getTreatmentLabel,
   useLanguage,
 } from "@/lib/i18n";
 
@@ -127,18 +127,18 @@ function PublicBookingFormContent() {
     useState<BookingResult | null>(null);
 
   const enabledServices = useMemo(() => {
-    const list =
-      Array.isArray(salonInfo.custom_services) &&
-      salonInfo.custom_services.length > 0
-        ? salonInfo.custom_services.filter((s) => s.enabled !== false)
-        : DEFAULT_CUSTOM_SERVICES;
-    return list.length > 0 ? list : DEFAULT_CUSTOM_SERVICES;
+    if (Array.isArray(salonInfo.custom_services) && salonInfo.custom_services.length > 0) {
+      const active = salonInfo.custom_services.filter((s) => s.enabled !== false);
+      if (active.length > 0) return active;
+    }
+    return Array.isArray(salonInfo.custom_services) ? salonInfo.custom_services : [];
   }, [salonInfo.custom_services]);
 
   const activeService = useMemo(() => {
     return (
       enabledServices.find((s) => s.id === selectedServiceId) ||
-      enabledServices[0]
+      enabledServices[0] ||
+      null
     );
   }, [enabledServices, selectedServiceId]);
 
@@ -230,7 +230,8 @@ function PublicBookingFormContent() {
           phone: phone.trim() || null,
           treatment_date: treatmentDate,
           treatment_time: treatmentTime,
-          treatment_type: activeService.type,
+          treatment_type: activeService ? (activeService.id || activeService.type) : "custom",
+          service_id: activeService?.id || null,
           notes: composedNotes.slice(0, 1000) || null,
           email_consent: emailConsent,
         }),
@@ -398,9 +399,11 @@ function PublicBookingFormContent() {
                   {t("პროცედურა:", "Treatment:")}
                 </span>
                 <strong className="text-stone-900">
-                  {TREATMENT_LABELS_I18N[lang][
-                    bookingConfirmation.treatment_type
-                  ] ?? bookingConfirmation.treatment_type}
+                  {getTreatmentLabel(
+                    bookingConfirmation.treatment_type,
+                    lang,
+                    salonInfo.custom_services
+                  )}
                 </strong>
               </div>
               <div className="flex items-center justify-between">

@@ -21,8 +21,8 @@ import {
   TreatmentType,
 } from "@/lib/types";
 import {
-  REMINDER_STATUS_I18N,
-  TREATMENT_LABELS_I18N,
+  getReminderStatusLabel,
+  getTreatmentLabel,
   useLanguage,
 } from "@/lib/i18n";
 
@@ -377,7 +377,7 @@ export default function EmailHistoryManager({
             >
               {st === "all"
                 ? t("ყველა", "All")
-                : REMINDER_STATUS_I18N[lang][st] ?? st}
+                : getReminderStatusLabel(st, lang)}
             </button>
           ))}
         </div>
@@ -491,9 +491,10 @@ export default function EmailHistoryManager({
                       <td className="py-4 px-4 text-xs">
                         <div className="font-medium text-stone-800">
                           {rem.appointment?.treatment_type
-                            ? TREATMENT_LABELS_I18N[lang][
-                                rem.appointment.treatment_type as TreatmentType
-                              ] ?? rem.appointment.treatment_type
+                            ? getTreatmentLabel(
+                                rem.appointment.treatment_type,
+                                lang
+                              )
                             : t("ეპილაცია", "Epilation")}
                         </div>
                         <div className="text-stone-500 mt-0.5">
@@ -525,7 +526,7 @@ export default function EmailHistoryManager({
                         <span
                           className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeClasses}`}
                         >
-                          {REMINDER_STATUS_I18N[lang][rem.status] ?? rem.status}
+                          {getReminderStatusLabel(rem.status, lang)}
                         </span>
                         {rem.failure_reason && (
                           <div className="mt-1.5 text-xs text-red-700 max-w-xs leading-snug">

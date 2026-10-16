@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 import { Appointment, Client, EmailLog } from "@/lib/types";
 import {
-  APPOINTMENT_STATUS_I18N,
-  REMINDER_STATUS_I18N,
-  TREATMENT_LABELS_I18N,
+  getTreatmentLabel,
+  getAppointmentStatusLabel,
+  getReminderStatusLabel,
   useLanguage,
 } from "@/lib/i18n";
 
@@ -153,9 +153,14 @@ export default function ClientProfileView({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-stone-900">
-                        {TREATMENT_LABELS_I18N[lang][appt.treatment_type] ??
-                          appt.treatment_type}
+                        {appt.service_name ||
+                          getTreatmentLabel(appt.treatment_type, lang)}
                       </span>
+                      {appt.price_gel !== null && appt.price_gel !== undefined && (
+                        <span className="text-xs px-2 py-0.5 rounded bg-rose-50 font-bold text-rose-700">
+                          {appt.price_gel} ₾
+                        </span>
+                      )}
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                           appt.status === "completed"
@@ -165,8 +170,7 @@ export default function ClientProfileView({
                             : "bg-stone-100 text-stone-600"
                         }`}
                       >
-                        {APPOINTMENT_STATUS_I18N[lang][appt.status] ??
-                          appt.status}
+                        {getAppointmentStatusLabel(appt.status, lang)}
                       </span>
                     </div>
                     <div className="text-xs text-stone-500 mt-0.5">
@@ -181,7 +185,7 @@ export default function ClientProfileView({
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 font-medium">
                         <Clock className="w-3 h-3" />
                         {t("შეხსენება", "Reminder")} (
-                        {REMINDER_STATUS_I18N[lang][rem.status] ?? rem.status}):{" "}
+                        {getReminderStatusLabel(rem.status, lang)}):{" "}
                         {rem.scheduled_for_date}
                       </div>
                     ) : (

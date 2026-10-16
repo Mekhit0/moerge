@@ -33,12 +33,15 @@ import {
   DEFAULT_EMAIL_SUBJECT,
   SalonSettings,
   TreatmentType,
+  SERVICE_PRESET_TEMPLATES,
+  ServiceTemplatePreset,
 } from "@/lib/types";
 import { renderReminderEmail } from "@/lib/email-template";
 import {
   GEORGIAN_DEFAULT_EMAIL_BODY,
   GEORGIAN_DEFAULT_EMAIL_SUBJECT,
   TREATMENT_LABELS_I18N,
+  getTreatmentLabel,
   useLanguage,
 } from "@/lib/i18n";
 
@@ -146,10 +149,9 @@ export default function SettingsManager({
     initialSettings.slot_interval_minutes || 60
   );
   const [customServices, setCustomServices] = useState<CustomBookingService[]>(
-    Array.isArray(initialSettings.custom_services) &&
-      initialSettings.custom_services.length > 0
+    Array.isArray(initialSettings.custom_services)
       ? initialSettings.custom_services
-      : DEFAULT_CUSTOM_SERVICES
+      : []
   );
 
   // Resend API & Booking Confirmation State
@@ -261,8 +263,20 @@ export default function SettingsManager({
   }
 
   function handleRemoveService(index: number) {
-    if (customServices.length <= 1) return;
     setCustomServices((prev) => prev.filter((_, idx) => idx !== index));
+  }
+
+  function handleClearAllServices() {
+    setCustomServices([]);
+  }
+
+  function handleApplyPresetTemplate(preset: ServiceTemplatePreset) {
+    // Replace with cloned preset services and generate clean unique IDs
+    const cloned = preset.services.map((s, i) => ({
+      ...s,
+      id: `${preset.id}_${i}_${Date.now()}`,
+    }));
+    setCustomServices(cloned);
   }
 
   async function handleSendLiveTestEmail() {
@@ -825,15 +839,85 @@ export default function SettingsManager({
               </div>
             </div>
 
-            {/* Custom Services Catalog */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-stone-700">
-                  {t(
-                    "სერვისების და ფასების კატალოგი (₾ GEL)",
-                    "Services & Pricing Catalog (₾ GEL)"
+            {/* Custom Services & Template Presets */}
+            <div className="space-y-4">
+              {/* Presets Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-50/70 via-stone-50 to-white border border-rose-100/80 shadow-xs space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-rose-900 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-rose-600" />
+                      {t("სერვისების მზა შაბლონები (1-დაწკაპებით)", "Ready-made Service Presets (1-Click)")}
+                    </h4>
+                    <p className="text-[11px] text-stone-500 mt-0.5">
+                      {t(
+                        "აირჩიეთ მზა თემფლეითი თქვენი სალონის სპეციფიკის მიხედვით ან შექმენით სერვისები თავიდან.",
+                        "Apply a curated preset tailored to your salon type, or craft services from scratch."
+                      )}
+                    </p>
+                  </div>
+
+                  {customServices.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllServices}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-stone-200 hover:border-red-300 bg-white hover:bg-red-50 text-stone-600 hover:text-red-700 text-[11px] font-semibold transition cursor-pointer self-start sm:self-auto"
+                    >
+                      <Trash2 className="w-3 h-3 text-red-500" />
+                      {t("ყველას გასუფთავება", "Clear All")}
+                    </button>
                   )}
-                </label>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {SERVICE_PRESET_TEMPLATES.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleApplyPresetTemplate(preset)}
+                      className="p-3 rounded-xl border border-rose-100 hover:border-rose-300 bg-white hover:bg-rose-50/40 text-left transition cursor-pointer shadow-2xs group flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="font-bold text-xs text-stone-800 group-hover:text-rose-700 transition">
+                            {lang === "ka" ? preset.title_ka : preset.title_en}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-700 font-semibold border border-rose-100">
+                            {lang === "ka" ? preset.badge_ka : preset.badge_en}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-stone-500 line-clamp-2 leading-relaxed">
+                          {lang === "ka" ? preset.desc_ka : preset.desc_en}
+                        </p>
+                      </div>
+                      <div className="mt-2 text-[10px] font-semibold text-rose-600 flex items-center gap-1">
+                        <Plus className="w-3 h-3" />
+                        {t(`${preset.services.length} სერვისის ჩატვირთვა`, `Load ${preset.services.length} services`)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Catalog Header */}
+              <div className="flex items-center justify-between pt-1">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-stone-800 flex items-center gap-2">
+                    {t(
+                      "სერვისების და ფასების კატალოგი (₾ GEL)",
+                      "Services & Pricing Catalog (₾ GEL)"
+                    )}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 font-bold text-stone-600">
+                      {customServices.length}
+                    </span>
+                  </label>
+                  <p className="text-[11px] text-stone-500">
+                    {t(
+                      "აქ განსაზღვრული სერვისები პირდაპირ გამოჩნდება ადმინის ჯავშნების ფანჯარაში და ონლაინ /book ბმულზე.",
+                      "Services listed here appear directly in the admin booking modal and on your public /book page."
+                    )}
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={handleAddService}
@@ -844,173 +928,212 @@ export default function SettingsManager({
                 </button>
               </div>
 
-              <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
-                {customServices.map((srv, idx) => (
-                  <div
-                    key={srv.id || idx}
-                    className={`p-4 rounded-2xl border transition ${
-                      srv.enabled
-                        ? "bg-white border-stone-200"
-                        : "bg-stone-50 border-stone-200 opacity-60"
-                    }`}
+              {/* Service List or Empty State */}
+              {customServices.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50/60">
+                  <LayoutTemplate className="w-8 h-8 text-stone-400 mx-auto mb-2" />
+                  <h4 className="text-sm font-semibold text-stone-800">
+                    {t("სერვისების სია ცარიელია", "No services configured")}
+                  </h4>
+                  <p className="text-xs text-stone-500 mt-1 max-w-md mx-auto">
+                    {t(
+                      "აირჩიეთ ერთ-ერთი მზა შაბლონი ზემოთ ან დაამატეთ თქვენი ინდივიდუალური სერვისები.",
+                      "Choose one of the presets above or start adding custom services for your salon."
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAddService}
+                    className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold shadow-xs hover:bg-rose-700 cursor-pointer"
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                      <div className="sm:col-span-4">
-                        <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
-                          {t("დასახელება (ქართ.)", "Name (Georgian)")}
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={srv.name_ka}
-                          onChange={(e) =>
-                            handleUpdateService(idx, {
-                              name_ka: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs font-semibold"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-4">
-                        <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
-                          {t("დასახელება (ინგლ.)", "Name (English)")}
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={srv.name_en}
-                          onChange={(e) =>
-                            handleUpdateService(idx, {
-                              name_en: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
-                          {t("ფასი (₾)", "Price (₾)")}
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={srv.price_gel}
-                          onChange={(e) =>
-                            handleUpdateService(idx, {
-                              price_gel: Number(e.target.value),
-                            })
-                          }
-                          className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs font-bold text-rose-700"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
-                          {t("დრო (წთ)", "Minutes")}
-                        </label>
-                        <input
-                          type="number"
-                          min={10}
-                          max={240}
-                          step={5}
-                          value={srv.duration_minutes}
-                          onChange={(e) =>
-                            handleUpdateService(idx, {
-                              duration_minutes: Number(e.target.value),
-                            })
-                          }
-                          className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2.5">
-                      <input
-                        type="text"
-                        placeholder={t("აღწერა ქართულად", "Georgian description")}
-                        value={srv.desc_ka}
-                        onChange={(e) =>
-                          handleUpdateService(idx, { desc_ka: e.target.value })
-                        }
-                        className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs text-stone-600"
-                      />
-                      <input
-                        type="text"
-                        placeholder={t("აღწერა ინგლისურად", "English description")}
-                        value={srv.desc_en}
-                        onChange={(e) =>
-                          handleUpdateService(idx, { desc_en: e.target.value })
-                        }
-                        className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs text-stone-600"
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-2 border-t border-stone-100 text-xs">
-                      <div className="flex items-center gap-4">
-                        <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                    <Plus className="w-3.5 h-3.5" />
+                    {t("პირველი სერვისის დამატება", "Add First Service")}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+                  {customServices.map((srv, idx) => (
+                    <div
+                      key={srv.id || idx}
+                      className={`p-4 rounded-2xl border transition ${
+                        srv.enabled
+                          ? "bg-white border-stone-200"
+                          : "bg-stone-50 border-stone-200 opacity-60"
+                      }`}
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                        <div className="sm:col-span-4">
+                          <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
+                            {t("დასახელება (ქართ.) *", "Name (Georgian) *")}
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={srv.enabled}
+                            type="text"
+                            required
+                            value={srv.name_ka}
                             onChange={(e) =>
                               handleUpdateService(idx, {
-                                enabled: e.target.checked,
+                                name_ka: e.target.value,
                               })
                             }
-                            className="rounded border-stone-300 text-rose-600"
+                            className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs font-semibold"
                           />
-                          <span className="font-medium text-stone-700">
-                            {t("ჩართულია /book-ზე", "Visible on /book")}
-                          </span>
-                        </label>
+                        </div>
 
-                        <label className="inline-flex items-center gap-1.5">
-                          <span className="font-medium text-stone-600">
-                            {t("კატეგორია:", "Category:")}
-                          </span>
-                          <select
-                            value={srv.type}
-                            onChange={(e) => {
-                              const nextType = e.target.value as TreatmentType;
+                        <div className="sm:col-span-4">
+                          <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
+                            {t("დასახელება (ინგლ.) *", "Name (English) *")}
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={srv.name_en}
+                            onChange={(e) =>
                               handleUpdateService(idx, {
-                                type: nextType,
-                                is_epilation: nextType.includes("epilation"),
-                              });
-                            }}
-                            className="px-2 py-1 rounded-lg border border-stone-200 bg-white text-xs"
-                          >
-                            {(
-                              Object.keys(TREATMENT_LABELS_I18N[lang]) as TreatmentType[]
-                            ).map((k) => (
-                              <option key={k} value={k}>
-                                {TREATMENT_LABELS_I18N[lang][k]}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        {srv.type.includes("epilation") && (
-                          <span className="font-medium text-rose-700 flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
-                            {t("21-დღიანი შეხსენება", "21-Day Reminder")}
-                          </span>
-                        )}
+                                name_en: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
+                            {t("ფასი (₾)", "Price (₾)")}
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={srv.price_gel}
+                            onChange={(e) =>
+                              handleUpdateService(idx, {
+                                price_gel: Number(e.target.value),
+                              })
+                            }
+                            className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs font-bold text-rose-700"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] font-semibold uppercase text-stone-400 mb-0.5">
+                            {t("დრო (წთ)", "Minutes")}
+                          </label>
+                          <input
+                            type="number"
+                            min={5}
+                            max={480}
+                            step={5}
+                            value={srv.duration_minutes}
+                            onChange={(e) =>
+                              handleUpdateService(idx, {
+                                duration_minutes: Number(e.target.value),
+                              })
+                            }
+                            className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs"
+                          />
+                        </div>
                       </div>
 
-                      {customServices.length > 1 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2.5">
+                        <input
+                          type="text"
+                          placeholder={t("აღწერა ქართულად", "Georgian description")}
+                          value={srv.desc_ka}
+                          onChange={(e) =>
+                            handleUpdateService(idx, { desc_ka: e.target.value })
+                          }
+                          className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs text-stone-600"
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("აღწერა ინგლისურად", "English description")}
+                          value={srv.desc_en}
+                          onChange={(e) =>
+                            handleUpdateService(idx, { desc_en: e.target.value })
+                          }
+                          className="w-full px-3 py-1.5 rounded-lg border border-stone-200 text-xs text-stone-600"
+                        />
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-2.5 border-t border-stone-100 text-xs">
+                        <div className="flex flex-wrap items-center gap-4">
+                          <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={srv.enabled}
+                              onChange={(e) =>
+                                handleUpdateService(idx, {
+                                  enabled: e.target.checked,
+                                })
+                              }
+                              className="rounded border-stone-300 text-rose-600"
+                            />
+                            <span className="font-medium text-stone-700">
+                              {t("ჩართულია /book-ზე", "Visible on /book")}
+                            </span>
+                          </label>
+
+                          <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={srv.is_epilation}
+                              onChange={(e) =>
+                                handleUpdateService(idx, {
+                                  is_epilation: e.target.checked,
+                                })
+                              }
+                              className="rounded border-stone-300 text-rose-600"
+                            />
+                            <span
+                              className={`font-semibold flex items-center gap-1 ${
+                                srv.is_epilation ? "text-rose-700" : "text-stone-500"
+                              }`}
+                            >
+                              <Sparkles className="w-3 h-3 text-rose-500" />
+                              {t("21-დღიანი ციკლი", "21-Day Cycle")}
+                            </span>
+                          </label>
+
+                          <label className="inline-flex items-center gap-1.5">
+                            <span className="font-medium text-stone-500">
+                              {t("კატეგორია:", "Category:")}
+                            </span>
+                            <select
+                              value={srv.type}
+                              onChange={(e) => {
+                                const nextType = e.target.value as TreatmentType;
+                                handleUpdateService(idx, {
+                                  type: nextType,
+                                  is_epilation:
+                                    nextType.includes("epilation") || srv.is_epilation,
+                                });
+                              }}
+                              className="px-2 py-1 rounded-lg border border-stone-200 bg-white text-xs"
+                            >
+                              {(
+                                Object.keys(TREATMENT_LABELS_I18N.ka) as TreatmentType[]
+                              ).map((k) => (
+                                <option key={k} value={k}>
+                                  {getTreatmentLabel(k, lang)}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+
                         <button
                           type="button"
                           onClick={() => handleRemoveService(idx)}
-                          className="inline-flex items-center gap-1 text-stone-400 hover:text-red-600 transition cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                          title={t("სერვისის წაშლა", "Delete service")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           {t("წაშლა", "Remove")}
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
