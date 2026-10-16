@@ -1,36 +1,42 @@
-# Lumière Studio — Salon Epilation Appointment Reminder System
+# MOERGE — Salon Appointment Reminder & Intelligent Booking Platform
 
-A full-stack, multi-tenant-ready web application built with **Next.js (App Router + TypeScript)**, **Tailwind CSS**, **Supabase (PostgreSQL + Auth + Row Level Security)**, and **Resend** that automatically reminds beauty salon clients by **email** to book their next epilation appointment **21 calendar days** after a completed treatment.
+A modern, multi-tenant SaaS platform built with **Next.js 15 (App Router + TypeScript)**, **Tailwind CSS**, **Supabase (PostgreSQL + Auth + Row Level Security)**, and **Resend** designed for beauty salons and aesthetic clinics. Automatically sends personalized **email reminders** to clients for upcoming maintenance and follow-up treatments, eliminates double-bookings with smart scheduling buffers, and safeguards customer data through strict multi-tenant isolation.
 
-> **Important Channel Policy:** Email is the sole notification channel. Phone numbers are optional on client profiles for desk reference only and are never used for SMS, WhatsApp, or push notifications.
+> **Notification Channel Policy:** Email is the primary notification channel. Client phone numbers are optional for desk reference and are never spammed.
 
 ---
 
-## 1. Architecture & Core Features
+## 1. Architecture & Security Model
 
-- **Authentication & Multi-Tenant Authorization:**
-  - Powered by **Supabase Auth** (`@supabase/ssr`) and Next.js Middleware (`src/middleware.ts`).
-  - All 8 tables (`salons`, `user_profiles`, `salon_memberships`, `salon_settings`, `clients`, `appointments`, `reminders`, `email_logs`) are scoped by `salon_id` and protected by PostgreSQL **Row Level Security (RLS)** (`public.user_has_salon_access(salon_id)`).
-  - Server endpoints resolve the staff user's authorized `salon_id` on the server (`getAuthenticatedSalonContext()`) and never trust client-supplied salon IDs.
-- **21-Day Precision Reminder Scheduling (`src/lib/scheduling.ts`):**
-  - Only **completed epilation** treatments (`epilation`, `laser_epilation`, `wax_epilation`, `sugaring_epilation`) for active, consented clients trigger a reminder.
-  - Calculates the target date as `treatment_date + 21 calendar days` (or the salon's configured interval) and converts `09:00` local salon time in the salon's IANA time zone (e.g., `America/New_York`, `Europe/Paris`, `Asia/Tbilisi`) to an exact UTC `scheduled_send_at` timestamp, accurately accounting for Daylight Saving Time (DST) transitions.
-  - Editing, rescheduling, or canceling an appointment reconciles the existing reminder in-place (`planReminderReconciliation`) and enforces a partial unique index (`idx_unique_active_reminder_per_appointment`) so duplicate active reminders are impossible.
-- **Idempotent Background Email Worker & Safe Retry (`src/lib/reminder-worker.ts`):**
-  - Uses `FOR UPDATE SKIP LOCKED` inside `public.claim_due_reminders` so concurrent cron runs never double-claim or double-send the same reminder.
-  - Passes a deterministic `Idempotency-Key` header (`rem:<salon_id>:<appointment_id>:<scheduled_date>:attempt:<n>`) to the Resend API.
-  - Separately tracks API acceptance (`status = 'sent'`, `event_type = 'api_accepted'`) vs. actual webhook-confirmed delivery (`status = 'delivered'`, `event_type = 'delivered'`) vs. bounces (`status = 'bounced'`).
-  - Retries temporary failures (429 / 5xx / network timeouts) using exponential backoff (`15m`, `60m`, `240m`, up to 3 attempts) while immediately halting on permanent failures (4xx / invalid recipient / unverified domain / hard bounce).
-- **Privacy, Consent & One-Click Unsubscribe:**
-  - Every reminder email includes `List-Unsubscribe` headers and a personalized `/unsubscribe?token=<uuid>` link that opts the client out and cancels any pending scheduled reminders.
+- **Multi-Tenant Row Level Security (RLS):**
+  - All core tables (`salons`, `user_profiles`, `salon_memberships`, `salon_settings`, `clients`, `appointments`, `reminders`, `email_logs`, `public_booking_rate_limits`) are isolated by `salon_id` and verified using PostgreSQL RLS policies (`public.user_has_salon_access(salon_id)`).
+  - Server endpoints resolve the authenticated staff member's `salon_id` via `getAuthenticatedSalonContext()` on the server and reject untrusted client IDs.
+- **RPC Access Lockdown (Migration 11):**
+  - Sensitive internal worker procedures (`claim_due_reminders`, `process_email_webhook_event`, `record_reminder_send_result`) have execution privileges revoked from `PUBLIC`, `anon`, and `authenticated`. They are strictly callable only by `service_role`.
+  - Public RPCs (`get_public_salon_booking_info`, `get_salon_date_availability`, `submit_public_booking`, `unsubscribe_client_by_token`) are strictly parameterized and guarded against injection.
+- **Resend API Key Protection:**
+  - Column-level privileges revoke direct `SELECT` on `salon_settings.resend_api_key` for `anon` and `authenticated` roles.
+  - Client-facing APIs and settings pages only see masked indicators (`"********"` or `null`). Real keys are accessed exclusively via backend service role clients.
+- **Timing-Safe Cron & Webhook Secret Validation:**
+  - Both `/api/cron/process-reminders` and `/api/webhooks/resend` enforce timing-safe secret comparisons (`crypto.timingSafeEqual`) to prevent timing attacks.
+  - If `CRON_SECRET` or `SUPABASE_SERVICE_ROLE_KEY` is not configured, endpoints return clear `500` server errors without leaking data or falling back silently.
+- **Public Booking DDoS & Spam Protection:**
+  - **Cloudflare Turnstile:** Verifies bot challenge tokens when `TURNSTILE_SECRET_KEY` is present.
+  - **DB-Level Rate Limiting:** Enforces a maximum of 5 bookings per hour per normalized email and per client IP via `public.public_booking_rate_limits`.
+  - **Email Confirmation Throttling:** Throttles outgoing booking confirmation emails to a maximum of 3 emails per 10-minute window per recipient.
+  - **Trusted Client IP Extraction:** Inspects `x-real-ip`, Next.js `request.ip`, and `x-forwarded-for` (first hop) securely.
+- **Idempotent Background Email Worker (`src/lib/reminder-worker.ts`):**
+  - Background workers utilize `FOR UPDATE SKIP LOCKED` inside `public.claim_due_reminders` to avoid race conditions or double-sending.
+  - Passes deterministic `Idempotency-Key` headers to the Resend API.
+  - Handles exponential backoff retries for transient errors (429/5xx) while stopping on permanent failures (invalid email, hard bounce).
 
 ---
 
 ## 2. Local Development Setup
 
 ### Prerequisites
-- Node.js `v20+` (tested with `v24.14.0`) and `npm`
-- A Supabase project (migrations are located in `supabase/migrations/`)
+- Node.js `v20+` (tested with Node `20+` / `24+`) and `npm`
+- A Supabase project with PostgreSQL
 
 ### Step 1: Install Dependencies
 ```bash
@@ -42,82 +48,66 @@ Copy `.env.example` to `.env.local`:
 ```bash
 cp .env.example .env.local
 ```
-Fill in your environment variables in `.env.local`:
-- `NEXT_PUBLIC_SUPABASE_URL` — Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Your Supabase publishable/anon key
-- `SUPABASE_SERVICE_ROLE_KEY` — Server-only service role key (optional locally when using the built-in `SECURITY DEFINER` RPCs, recommended for production)
-- `RESEND_API_KEY` — Your Resend API key (`re_...`)
-- `RESEND_WEBHOOK_SECRET` — Your Resend Svix webhook signing secret (`whsec_...`)
-- `CRON_SECRET` — Shared secret authenticating `/api/cron/process-reminders`
-- `EMAIL_DRY_RUN="true"` — Keeps development safe by simulating sends without emailing real clients
+
+Configure your environment variables:
+- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase publishable / anon key
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (required in production for cron worker, webhooks, and rate limits)
+- `RESEND_API_KEY` — Resend API key (`re_...`)
+- `RESEND_WEBHOOK_SECRET` — Resend Svix webhook signing secret (`whsec_...`)
+- `CRON_SECRET` — Strong shared secret authenticating `/api/cron/process-reminders`
+- `TURNSTILE_SECRET_KEY` — Cloudflare Turnstile secret key (optional in local dev)
+- `EMAIL_DRY_RUN="true"` — Safe dry-run mode for development
+- `TEST_STAFF_EMAIL` & `TEST_STAFF_PASSWORD` — Optional test credentials for authenticated RLS test suite
 
 ### Step 3: Apply Database Migrations
-Apply the SQL files in `supabase/migrations/` in order via the Supabase CLI (`supabase db push`) or the Supabase SQL Editor:
-1. `supabase/migrations/20261016000001_salon_reminder_schema.sql`
-2. `supabase/migrations/20261016000002_seed_initial_salon_and_staff.sql`
-3. `supabase/migrations/20261016000003_cron_schedule_template.sql`
+Apply the migrations in `supabase/migrations/` in numerical order:
+1. `20261016000001_salon_reminder_schema.sql` — Core multi-tenant tables, types, and initial RLS policies.
+2. `20261016000002_seed_initial_salon_and_staff.sql` — Initial schema helper seed data.
+3. `20261016000003_cron_schedule_template.sql` — Helper RPC template for `pg_cron` setup.
+4. `20261016000004_public_booking_ecosystem.sql` — Public booking info, slug resolution, and availability lookup.
+5. `20261016000005_smart_availability_and_conflict_check.sql` — Dynamic time-slot conflict evaluation & buffer checks.
+6. `20261016000006_moerge_production_booking_and_tbilisi_tz.sql` — Asia/Tbilisi timezone standard & returning client detection.
+7. `20261016000007_moerge_multi_tenant_salon_registration.sql` — Multi-tenant self-service onboarding and salon creation RPCs.
+8. `20261016000008_moerge_production_ready_live_delivery.sql` — Production email logging & live delivery statuses.
+9. `20261016000009_smart_custom_services_and_templates.sql` — Dynamic salon services, procedures catalog & interval customization.
+10. `20261016000010_add_client_created_by.sql` — Audit trail for client creation (`created_by`).
+11. `20261016000011_security_hardening.sql` — Security lockdown: revokes internal RPCs to `service_role`, protects `resend_api_key` column, deactivates legacy demo user, adds `public_booking_rate_limits` table with hourly rate limits.
 
-### Step 4: Run the Development Server & Tests
+### Step 4: Run the Development Server & Test Suite
 ```bash
 npm run dev
 ```
-Open `http://localhost:3000`. You can log in immediately using the pre-seeded salon staff account:
-- **Email:** `staff@lumieresalon.com`
-- **Password:** `SalonStaff2026!`
+Open `http://localhost:3000` to access the application.
 
-Run the automated test suite at any time:
+Run the test suite:
 ```bash
 npm test
 ```
-
----
-
-## 3. Configuring Resend & Verifying Your Sender Domain
-
-1. Create an account at [https://resend.com](https://resend.com) and navigate to **Domains** &rarr; **Add Domain** (e.g., `lumieresalon.com`).
-2. Add the provided **SPF**, **DKIM**, and **DMARC** DNS records to your domain registrar and click **Verify DNS Records**.
-3. Navigate to **API Keys** &rarr; **Create API Key** (Sending access) and set `RESEND_API_KEY="re_..."` in `.env.local` and your production hosting environment.
-4. Navigate to **Webhooks** &rarr; **Add Webhook** in Resend:
-   - **Endpoint URL:** `https://your-production-domain.com/api/webhooks/resend`
-   - **Events to subscribe to:** `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.complained`
-   - Copy the **Signing Secret** (`whsec_...`) and set `RESEND_WEBHOOK_SECRET` in your environment variables.
-5. In the application **Settings** page (`/settings`), set your **Verified Sender Email Address** (e.g., `reminders@lumieresalon.com`), uncheck **Dry-Run Mode**, and click **Save Salon Settings**.
-
----
-
-## 4. Configuring the Scheduled Reminder Job (Cron)
-
-Reminders are processed automatically in the background by `/api/cron/process-reminders` without requiring any staff member to have a browser tab open. Two scheduling options are supported out of the box:
-
-### Option A: Vercel Cron (Automatic on Vercel Deployment)
-The included `vercel.json` configures Vercel Cron to invoke `/api/cron/process-reminders` every 15 minutes (`*/15 * * * *`). When `CRON_SECRET` is configured in Vercel Environment Variables, Vercel automatically sends `Authorization: Bearer <CRON_SECRET>`.
-
-### Option B: Supabase Cron (`pg_cron` + `pg_net`)
-1. In the Supabase Dashboard, go to **Database** &rarr; **Extensions** and enable `pg_cron` and `pg_net`.
-2. In the Supabase **SQL Editor**, generate and run the schedule command using the included helper function:
-```sql
-SELECT public.configure_reminder_cron_job(
-  'https://your-production-domain.com',
-  'your-cron-secret'
-);
+Run type-checking:
+```bash
+npx tsc --noEmit
 ```
-Copy and execute the returned `SELECT cron.schedule(...)` SQL statement to trigger `/api/cron/process-reminders` every 15 minutes directly from Supabase PostgreSQL.
 
 ---
 
-## 5. Deployment Instructions (Vercel)
+## 3. Production Deployment & Human Configuration Checklist
 
-1. Push this repository to GitHub / GitLab / Bitbucket.
-2. Import the project into [Vercel](https://vercel.com/new).
-3. Configure the environment variables from `.env.example` in the Vercel Project Settings.
-4. Deploy. Vercel will build the Next.js application and register the `/api/cron/process-reminders` cron schedule defined in `vercel.json`.
+Before activating live email delivery in production, complete the following configuration steps:
 
----
-
-## 6. Remaining Tasks Requiring Human Configuration
-
-Before switching from **Dry-Run Mode** to live client emailing in production, a human administrator must complete the following external steps:
-1. **Verify Sender Domain in Resend:** Add DNS records (DKIM/SPF) in your domain provider for your salon's sender domain and verify it in Resend.
-2. **Provide Live Resend Credentials:** Set a real `RESEND_API_KEY` (`re_...`) and `RESEND_WEBHOOK_SECRET` (`whsec_...`) in your production environment variables.
-3. **Set Production `CRON_SECRET` & `SUPABASE_SERVICE_ROLE_KEY`:** Replace `CRON_SECRET` with a strong random secret and add `SUPABASE_SERVICE_ROLE_KEY` in production environment variables.
-4. **Disable Dry-Run Mode:** In `/settings` (and `.env` `EMAIL_DRY_RUN="false"`), disable Dry-Run Mode once your sender domain is verified.
+1. **Verify Sender Domain in Resend:**
+   - Register your domain (e.g., `yourdomain.ge`) in Resend.
+   - Add the required DKIM, SPF, and DMARC DNS records at your domain registrar.
+2. **Set Production Secrets:**
+   - In your hosting provider (e.g., Vercel), set:
+     - `CRON_SECRET`: Generate a cryptographically random string (e.g., `openssl rand -hex 32`).
+     - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase project service role secret.
+     - `RESEND_API_KEY`: Production Resend key (`re_...`).
+     - `RESEND_WEBHOOK_SECRET`: Resend webhook signing secret (`whsec_...`).
+     - `TURNSTILE_SECRET_KEY`: Turnstile secret key from Cloudflare.
+3. **Configure Scheduled Cron:**
+   - **Vercel Cron:** Automatically configured via `vercel.json` to trigger `/api/cron/process-reminders` every 15 minutes.
+   - **Supabase Cron (`pg_cron`):** Alternatively configure via `SELECT public.configure_reminder_cron_job(...)`.
+4. **Disable Dry-Run Mode:**
+   - In production environment variables, set `EMAIL_DRY_RUN="false"`.
+   - In `/settings`, ensure the **Verified Sender Email Address** matches your verified domain.

@@ -13,7 +13,8 @@ export default async function SettingsPage() {
 
   const hasSavedResendKey = Boolean(
     ctx.settings.resend_api_key &&
-      String(ctx.settings.resend_api_key).startsWith("re_")
+      (String(ctx.settings.resend_api_key).startsWith("re_") ||
+        ctx.settings.resend_api_key === "********")
   );
   const hasEnvResendKey = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")

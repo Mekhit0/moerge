@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import {
+  createAdminOrRpcSupabaseClient,
+  getAuthenticatedSalonContext,
+} from "@/lib/supabase/server";
 import { isValidCalendarDate } from "@/lib/validation";
 import {
   generateReminderIdempotencyKey,
@@ -200,13 +203,18 @@ export async function POST(
       .eq("salon_id", ctx.salonId);
   }
 
-  const cronSecret =
-    process.env.CRON_SECRET || "lumiere-salon-cron-secret-2026-secure";
+  let adminClient;
+  try {
+    adminClient = createAdminOrRpcSupabaseClient();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Service client unavailable";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 
-  const { data: claimedData, error: claimError } = await ctx.supabase.rpc(
+  const { data: claimedData, error: claimError } = await adminClient.rpc(
     "claim_due_reminders",
     {
-      p_cron_secret: cronSecret,
+      p_cron_secret: null,
       p_limit: 1,
       p_salon_id: ctx.salonId,
       p_specific_reminder_id: id,
@@ -232,8 +240,8 @@ export async function POST(
   );
   const result = await processClaimedReminder(jobs[0], { transport });
 
-  await ctx.supabase.rpc("record_reminder_send_result", {
-    p_cron_secret: cronSecret,
+  await adminClient.rpc("record_reminder_send_result", {
+    p_cron_secret: null,
     p_reminder_id: result.reminderId,
     p_outcome: result.outcome,
     p_provider_message_id: result.providerMessageId,

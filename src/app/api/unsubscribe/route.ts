@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminOrRpcSupabaseClient } from "@/lib/supabase/server";
+import { createPublicServerSupabaseClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = createAdminOrRpcSupabaseClient();
+  const supabase = createPublicServerSupabaseClient();
   const { data, error } = await supabase.rpc("unsubscribe_client_by_token", {
     p_token: parsed.data.token,
   });

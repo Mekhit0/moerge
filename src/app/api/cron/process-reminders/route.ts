@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import {
   createAdminOrRpcSupabaseClient,
   getAuthenticatedSalonContext,
@@ -9,16 +10,32 @@ import {
   processClaimedReminder,
 } from "@/lib/reminder-worker";
 
+function timingSafeMatch(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 async function handleProcessDueReminders(request: NextRequest) {
-  const configuredSecret =
-    process.env.CRON_SECRET || "lumiere-salon-cron-secret-2026-secure";
+  const configuredSecret = process.env.CRON_SECRET;
+  if (!configuredSecret || configuredSecret.trim().length === 0) {
+    return NextResponse.json(
+      { error: "Server configuration error: CRON_SECRET is not configured." },
+      { status: 500 }
+    );
+  }
+
   const authHeader = request.headers.get("authorization") ?? "";
   const bearerToken = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : "";
 
   let isCronAuthenticated =
-    bearerToken.length > 0 && bearerToken === configuredSecret;
+    bearerToken.length > 0 && timingSafeMatch(bearerToken, configuredSecret.trim());
   let targetSalonId: string | null = null;
 
   // Also allow authenticated salon staff to trigger due reminders for their own salon
@@ -37,12 +54,29 @@ async function handleProcessDueReminders(request: NextRequest) {
     );
   }
 
-  const supabase = createAdminOrRpcSupabaseClient();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!serviceRoleKey || serviceRoleKey.length < 10) {
+    return NextResponse.json(
+      {
+        error:
+          "Server configuration error: SUPABASE_SERVICE_ROLE_KEY is required for background reminder processing.",
+      },
+      { status: 500 }
+    );
+  }
+
+  let supabase;
+  try {
+    supabase = createAdminOrRpcSupabaseClient();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Database configuration error";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 
   const { data: claimedData, error: claimError } = await supabase.rpc(
     "claim_due_reminders",
     {
-      p_cron_secret: "lumiere-salon-cron-secret-2026-secure",
+      p_cron_secret: null,
       p_limit: 25,
       p_salon_id: targetSalonId,
       p_specific_reminder_id: null,
@@ -66,7 +100,7 @@ async function handleProcessDueReminders(request: NextRequest) {
     const res = await processClaimedReminder(job, { transport });
 
     await supabase.rpc("record_reminder_send_result", {
-      p_cron_secret: "lumiere-salon-cron-secret-2026-secure",
+      p_cron_secret: null,
       p_reminder_id: res.reminderId,
       p_outcome: res.outcome,
       p_provider_message_id: res.providerMessageId,

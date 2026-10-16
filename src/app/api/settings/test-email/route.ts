@@ -57,11 +57,27 @@ export async function POST(request: NextRequest) {
       ? body.resend_api_key.trim()
       : null;
 
-  const activeApiKey =
-    providedKey ||
-    ctx.settings.resend_api_key ||
-    process.env.RESEND_API_KEY ||
-    "";
+  let effectiveKey = providedKey;
+  if (!effectiveKey) {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const { createAdminOrRpcSupabaseClient } = await import(
+          "@/lib/supabase/server"
+        );
+        const adminClient = createAdminOrRpcSupabaseClient();
+        const { data: sRow } = await adminClient
+          .from("salon_settings")
+          .select("resend_api_key")
+          .eq("salon_id", ctx.salonId)
+          .maybeSingle();
+        effectiveKey = sRow?.resend_api_key ?? null;
+      } catch {
+        // Fallback
+      }
+    }
+  }
+
+  const activeApiKey = effectiveKey || process.env.RESEND_API_KEY || "";
 
   const salonName = body.salon_name || ctx.settings.salon_name || "MOERGE Studio";
   const senderDisplay =

@@ -21,7 +21,7 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
       expect(metadata.keywords).toContain("ავტომატური შეხსენებები");
       expect(metadata.keywords).toContain("კლიენტების დაბრუნება");
       expect(metadata.openGraph?.siteName).toBe("MOERGE");
-      expect(metadata.twitter?.card).toBe("summary_large_image");
+      expect((metadata.twitter as { card?: string })?.card).toBe("summary_large_image");
     });
 
     it("has mobile-ready viewport configuration", () => {

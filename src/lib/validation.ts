@@ -307,4 +307,16 @@ export const publicBookingInputSchema = z.object({
     .nullable()
     .transform((v) => (v && v.length > 0 ? v : null)),
   email_consent: z.boolean().optional().default(true),
+  turnstile_token: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((v) => (v && v.length > 0 ? v : null)),
+  token: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((v) => (v && v.length > 0 ? v : null)),
 });

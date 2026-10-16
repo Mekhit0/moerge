@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { SalonSettings } from "../types";
 
+export const SAFE_SALON_SETTINGS_SELECT =
+  "id, salon_id, salon_name, sender_display_name, verified_sender_email, timezone, reminder_interval_days, email_subject, email_body_template, booking_url, brand_color, auto_reminders_enabled, dry_run_mode, test_recipient_email, booking_title, booking_subtitle, salon_address, salon_phone, working_hours_start, working_hours_end, slot_interval_minutes, send_booking_confirmation_email, custom_services, created_at, updated_at";
+
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -33,17 +36,38 @@ export async function createServerSupabaseClient() {
 }
 
 /**
+ * Creates an unauthenticated Supabase client using the anon key for public server endpoints
+ * (e.g. public booking RPCs).
+ */
+export function createPublicServerSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  return createClient(supabaseUrl, anonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+/**
  * Creates a server-only Supabase client for background cron jobs or webhook processing.
- * Uses SUPABASE_SERVICE_ROLE_KEY when configured, falling back to anon client that invokes
- * SECURITY DEFINER RPC functions protected by CRON_SECRET.
+ * Requires SUPABASE_SERVICE_ROLE_KEY. Throws a clear error if missing; silent fallback to anon key is disabled.
  */
 export function createAdminOrRpcSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY.trim().length > 10
-      ? process.env.SUPABASE_SERVICE_ROLE_KEY.trim()
-      : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+  if (!supabaseUrl) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable.");
+  }
+
+  if (!serviceKey || serviceKey.length < 10) {
+    throw new Error(
+      "Missing SUPABASE_SERVICE_ROLE_KEY: Service role key is required for secure server operations. Silent fallback to anon key is disabled."
+    );
+  }
 
   return createClient(supabaseUrl, serviceKey, {
     auth: {
@@ -86,7 +110,7 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
   // Ensure the user has an active salon membership
   const userSalonName =
     (user.user_metadata?.salon_name as string | undefined)?.trim() ||
-    "Lumière Epilation Studio";
+    "MOERGE Salon";
 
   const { data: ensuredSalonId, error: rpcError } = await supabase.rpc(
     "ensure_user_salon",
@@ -122,25 +146,47 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
       .maybeSingle(),
     supabase
       .from("salon_settings")
-      .select("*")
+      .select(SAFE_SALON_SETTINGS_SELECT)
       .eq("salon_id", salonId)
       .maybeSingle(),
   ]);
 
   const salonRow = salonRes.data;
-  const salonSlug = salonRow?.slug ?? "lumiere-studio";
-  const salonName = salonRow?.name ?? "Lumière Epilation Studio";
+  const salonSlug = salonRow?.slug ?? "moerge-salon";
+  const salonName = salonRow?.name ?? "MOERGE Salon";
 
   const appUrl = (
     process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app"
   ).replace(/\/$/, "");
   const autoBookingUrl = `${appUrl}/book?salon=${salonSlug}`;
 
-  const settings: SalonSettings = settingsRes.data
+  // Check if resend_api_key exists on the server side using service role client
+  let hasResendKey = false;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (serviceKey && serviceKey.length > 10) {
+    try {
+      const adminClient = createAdminOrRpcSupabaseClient();
+      const { data: keyRow } = await adminClient
+        .from("salon_settings")
+        .select("resend_api_key")
+        .eq("salon_id", salonId)
+        .maybeSingle();
+
+      hasResendKey = Boolean(
+        keyRow?.resend_api_key && String(keyRow.resend_api_key).trim().startsWith("re_")
+      );
+    } catch {
+      // Fallback if admin query fails
+    }
+  }
+
+  const rawSettings = settingsRes.data as (Record<string, unknown> | null);
+  const settings: SalonSettings = rawSettings
     ? {
-        ...settingsRes.data,
+        ...(rawSettings as unknown as SalonSettings),
         booking_url: autoBookingUrl,
-        salon_name: salonName || settingsRes.data.salon_name,
+        salon_name: salonName || (rawSettings.salon_name as string),
+        resend_api_key: hasResendKey ? "********" : null,
       }
     : {
         id: "",
@@ -157,6 +203,7 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
         auto_reminders_enabled: true,
         dry_run_mode: false,
         test_recipient_email: null,
+        resend_api_key: hasResendKey ? "********" : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -165,7 +212,7 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
     supabase,
     user: {
       id: user.id,
-      email: user.email ?? "staff@lumieresalon.com",
+      email: user.email ?? "owner@moerge.ge",
       fullName:
         (user.user_metadata?.full_name as string | undefined) ??
         user.email?.split("@")[0] ??

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import {
+  getAuthenticatedSalonContext,
+  createAdminOrRpcSupabaseClient,
+  SAFE_SALON_SETTINGS_SELECT,
+} from "@/lib/supabase/server";
 import { salonSettingsSchema } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
@@ -20,7 +24,8 @@ export async function GET(request: NextRequest) {
 
   const hasSavedKey = Boolean(
     ctx.settings.resend_api_key &&
-      ctx.settings.resend_api_key.startsWith("re_")
+      (ctx.settings.resend_api_key.startsWith("re_") ||
+        ctx.settings.resend_api_key === "********")
   );
   const hasEnvKey = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")
@@ -41,32 +46,30 @@ export async function GET(request: NextRequest) {
   });
 }
 
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: Record<string, unknown>;
+  let body: unknown;
   try {
-    body = (await request.json()) as Record<string, unknown>;
+    body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const parsed = salonSettingsSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       {
-        error:
-          parsed.error.issues[0]?.message ?? "Invalid settings configuration.",
-        issues: parsed.error.issues,
+        error: "Validation failed",
+        details: parsed.error.flatten().fieldErrors,
       },
-      { status: 400 }
+      { status: 422 }
     );
   }
 
-  // Compute immutable auto-generated booking URL derived from salon slug and host
   const host =
     request.headers.get("x-forwarded-host") || request.headers.get("host");
   const proto =
@@ -77,18 +80,37 @@ export async function PUT(request: NextRequest) {
     : process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app";
   const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${ctx.salonSlug}`;
 
-  // Preserve existing resend_api_key if user submitted the masked placeholder "********"
-  let resendApiKeyToSave = ctx.settings.resend_api_key ?? null;
-  if (parsed.data.resend_api_key !== undefined) {
-    if (parsed.data.resend_api_key === "********") {
-      resendApiKeyToSave = ctx.settings.resend_api_key ?? null;
-    } else if (!parsed.data.resend_api_key) {
-      resendApiKeyToSave = null;
-    } else {
-      resendApiKeyToSave = parsed.data.resend_api_key;
-    }
+  // If a new key or null was provided (not the masked placeholder "********"), update resend_api_key via service client
+  let adminClient;
+  try {
+    adminClient = createAdminOrRpcSupabaseClient();
+  } catch {
+    // Admin client optional if service role key not set in current environment
   }
 
+  let hasSavedKey = Boolean(
+    ctx.settings.resend_api_key &&
+      (ctx.settings.resend_api_key.startsWith("re_") ||
+        ctx.settings.resend_api_key === "********")
+  );
+
+  if (
+    adminClient &&
+    parsed.data.resend_api_key !== undefined &&
+    parsed.data.resend_api_key !== "********"
+  ) {
+    const keyVal = parsed.data.resend_api_key
+      ? parsed.data.resend_api_key.trim()
+      : null;
+    await adminClient
+      .from("salon_settings")
+      .update({ resend_api_key: keyVal })
+      .eq("salon_id", ctx.salonId);
+
+    hasSavedKey = Boolean(keyVal && keyVal.startsWith("re_"));
+  }
+
+  // Update non-sensitive columns with user-scoped authenticated client
   const { data: updatedSettings, error } = await ctx.supabase
     .from("salon_settings")
     .update({
@@ -112,12 +134,11 @@ export async function PUT(request: NextRequest) {
       working_hours_end: parsed.data.working_hours_end,
       slot_interval_minutes: parsed.data.slot_interval_minutes,
       custom_services: parsed.data.custom_services,
-      resend_api_key: resendApiKeyToSave,
       send_booking_confirmation_email:
         parsed.data.send_booking_confirmation_email ?? true,
     })
     .eq("salon_id", ctx.salonId)
-    .select("*")
+    .select(SAFE_SALON_SETTINGS_SELECT)
     .single();
 
   if (error) {
@@ -135,11 +156,10 @@ export async function PUT(request: NextRequest) {
       ...updatedSettings,
       booking_url: autoBookingUrl,
       salon_slug: ctx.salonSlug,
-      resend_api_key: updatedSettings.resend_api_key ? "********" : null,
+      resend_api_key: hasSavedKey ? "********" : null,
     },
     resendConfigured: Boolean(
-      (updatedSettings.resend_api_key &&
-        String(updatedSettings.resend_api_key).startsWith("re_")) ||
+      hasSavedKey ||
         (process.env.RESEND_API_KEY &&
           process.env.RESEND_API_KEY.startsWith("re_"))
     ),
