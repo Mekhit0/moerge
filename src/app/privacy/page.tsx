@@ -131,7 +131,7 @@ export default function PrivacyPolicyPage() {
                 <ul className="text-xs text-stone-600 space-y-1.5 list-disc pl-4">
                   <li>{t("კლიენტის სახელი და გვარი", "Client full name")}</li>
                   <li>{t("ტელეფონის ნომერი (SMS დადასტურებისთვის)", "Mobile phone number")}</li>
-                  <li>{t("ელ-ფოსტის მისამართი (21-დღიანი შეხსენებისთვის)", "Email address (for 21-day reminders)")}</li>
+                  <li>{t("ელ-ფოსტის მისამართი (ავტომატური შეხსენებებისთვის)", "Email address (for automated care reminders)")}</li>
                   <li>{t("ვიზიტის თარიღი, დრო და არჩეული პროცედურა", "Appointment date, slot time & service type")}</li>
                 </ul>
               </div>
@@ -163,10 +163,10 @@ export default function PrivacyPolicyPage() {
                 )}
               </li>
               <li>
-                <strong>{t("21-დღიანი ეპილაციის შეხსენება:", "21-Day Reminder Delivery:")}</strong>{" "}
+                <strong>{t("ავტომატური შეხსენების მიწოდება:", "Automated Reminder Delivery:")}</strong>{" "}
                 {t(
-                  "ეპილაციის პროცედურის დასრულებიდან 21 დღის შემდეგ კლიენტისთვის მოწვევის ავტომატური გაგზავნა.",
-                  "Automating optimal follow-up invitations 21 calendar days post-procedure via Resend email."
+                  "პროცედურის დასრულების შემდეგ კლიენტისთვის მოწვევის ავტომატური გაგზავნა მოვლის ციკლის შესაბამისად.",
+                  "Automating optimal follow-up invitations post-procedure via Resend email."
                 )}
               </li>
               <li>
@@ -283,7 +283,7 @@ export default function PrivacyPolicyPage() {
               </div>
               <div className="p-3 rounded-xl bg-stone-50 border border-stone-200">
                 ✓ <strong>{t("შეტყობინებებზე უარი:", "Opt-out from Reminders:")}</strong>{" "}
-                {t("ნებისმიერ დროს შეწყვიტოთ 21-დღიანი შეხსენებების მიღება.", "Unsubscribe or stop receiving follow-up notifications.")}
+                {t("ნებისმიერ დროს შეწყვიტოთ შეხსენებების მიღება.", "Unsubscribe or stop receiving follow-up notifications.")}
               </div>
             </div>
           </section>

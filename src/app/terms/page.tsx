@@ -66,7 +66,7 @@ export default function TermsOfServicePage() {
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
-                MOERGE SAAS PLATFORM
+                MOERGE • {t("სამართლებრივი პირობები", "Legal Terms")}
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900">
                 {t("მომსახურების წესები და პირობები", "Terms of Service")}
@@ -110,8 +110,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "MOERGE არის ღრუბლოვანი პროგრამული უზრუნველყოფა (SaaS), რომელიც განკუთვნილია სილამაზის, თავის მოვლისა და ეპილაციის სალონებისთვის. პლატფორმა მოიცავს ონლაინ ჯავშნების მართვას, სალონის განრიგის ორგანიზებას, ჭკვიან დროის კონტროლს (Smart Slot Guard) და ავტომატურ 21-დღიან საინფორმაციო შეხსენებებს ელ-ფოსტის (Resend) მეშვეობით.",
-                "MOERGE is a cloud-based software-as-a-service (SaaS) platform tailored for beauty, wellness, and epilation salons. The service provides an online booking page, appointment scheduling, smart slot conflict prevention, and automated 21-day care reminders dispatched via Resend email infrastructure."
+                "MOERGE არის ღრუბლოვანი პროგრამული უზრუნველყოფა (SaaS), რომელიც განკუთვნილია სილამაზის, თავის მოვლისა და ესთეტიკური სალონებისთვის. პლატფორმა მოიცავს ონლაინ ჯავშნების მართვას, სალონის განრიგის ორგანიზებას, ჭკვიან დროის კონტროლს (Smart Slot Guard) და პროცედურების შემდგომ ავტომატურ საინფორმაციო შეხსენებებს ელ-ფოსტის (Resend) მეშვეობით.",
+                "MOERGE is a cloud-based software platform tailored for beauty, wellness, and aesthetic salons. The service provides an online booking page, appointment scheduling, smart slot conflict prevention, and automated follow-up care reminders dispatched via Resend email infrastructure."
               )}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-stone-600 text-xs sm:text-sm">
@@ -190,13 +190,13 @@ export default function TermsOfServicePage() {
                 4
               </div>
               <h2 className="text-lg font-bold text-stone-900">
-                {t("4. 21-დღიანი შეხსენებების ავტომატიზაცია (Resend)", "4. 21-Day Reminder Cycle & Resend Email Engine")}
+                {t("4. ავტომატური შეხსენებების ძრავა (Resend)", "4. Automated Reminder Engine & Resend Integration")}
               </h2>
             </div>
             <p>
               {t(
-                "ეპილაციისა და შესაბამისი პროცედურების დასრულების შემდეგ, MOERGE ავტომატურად აგენერირებს 21-დღიან ციკლს და უგზავნის კლიენტს მოსაწვევს შემდეგი ვიზიტის დასაგეგმად. სალონს შეუძლია გამოიყენოს საკუთარი Resend API Key ან სისტემური არხი.",
-                "Following the completion of an epilation treatment, MOERGE schedules an automated 21-day follow-up reminder sent to the client's email address via Resend integration."
+                "პროცედურის დასრულების შემდეგ, MOERGE ავტომატურად ამზადებს პერსონალურ შეხსენებას შესაბამისი მოვლის ციკლის გათვალისწინებით (მაგ: ეპილაციის შემდგომი ან სხვა პერიოდული ვიზიტებისთვის) და უგზავნის კლიენტს მოსაწვევს შემდეგი ვიზიტის დასაგეგმად. სალონს შეუძლია გამოიყენოს საკუთარი Resend API Key ან სისტემური არხი.",
+                "Following the completion of a treatment, MOERGE schedules an automated care reminder tailored to the procedure cycle and sends the client an invitation for their next visit via Resend email integration."
               )}
             </p>
             <p className="text-xs text-stone-500">

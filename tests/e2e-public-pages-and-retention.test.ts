@@ -1,0 +1,130 @@
+import { describe, it, expect } from "vitest";
+import { siteMetadata as metadata, siteViewport as viewport } from "../src/lib/metadata";
+import robots from "../src/app/robots";
+import sitemap from "../src/app/sitemap";
+import {
+  evaluateSmartSlotAvailability,
+  generateDynamicTimeSlots,
+} from "../src/lib/scheduling";
+import { publicBookingInputSchema } from "../src/lib/validation";
+
+describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention", () => {
+  describe("1. SEO & Metadata Compliance", () => {
+    it("has professional, high-converting metadata and open graph tags", () => {
+      expect(metadata.title).toEqual({
+        default: "MOERGE | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+        template: "%s | MOERGE",
+      });
+      expect(metadata.description).toContain("სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების");
+      expect(metadata.description).not.toContain("21-დღიანი"); // Focus is on automated care reminders
+      expect(metadata.keywords).toContain("სალონის მართვა");
+      expect(metadata.keywords).toContain("ავტომატური შეხსენებები");
+      expect(metadata.keywords).toContain("კლიენტების დაბრუნება");
+      expect(metadata.openGraph?.siteName).toBe("MOERGE");
+      expect(metadata.twitter?.card).toBe("summary_large_image");
+    });
+
+    it("has mobile-ready viewport configuration", () => {
+      expect(viewport.width).toBe("device-width");
+      expect(viewport.initialScale).toBe(1);
+    });
+
+    it("generates correct robots.txt and sitemap.xml routes", () => {
+      const robotsRules = robots();
+      expect(robotsRules.rules).toBeDefined();
+      expect(robotsRules.sitemap).toBe("https://moerge.vercel.app/sitemap.xml");
+
+      const sitemapEntries = sitemap();
+      expect(sitemapEntries.length).toBeGreaterThanOrEqual(5);
+      const urls = sitemapEntries.map((e) => e.url);
+      expect(urls).toContain("https://moerge.vercel.app");
+      expect(urls).toContain("https://moerge.vercel.app/book");
+      expect(urls).toContain("https://moerge.vercel.app/login");
+      expect(urls).toContain("https://moerge.vercel.app/terms");
+      expect(urls).toContain("https://moerge.vercel.app/privacy");
+    });
+  });
+
+  describe("2. Smart Scheduling Engine & Availability", () => {
+    it("generates exact hourly slots across salon operating schedule", () => {
+      const slots = generateDynamicTimeSlots("10:00", "20:00", 60);
+      expect(slots).toEqual([
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00",
+        "19:00",
+        "20:00",
+      ]);
+    });
+
+    it("detects time conflicts with dynamic procedure duration", () => {
+      const bookedTimes = ["12:00:00"];
+      const candidateSlots = generateDynamicTimeSlots("10:00", "15:00", 60);
+
+      // Exact match at 12:00 should conflict with 45m duration
+      const checkConflict = evaluateSmartSlotAvailability(
+        "12:00",
+        bookedTimes,
+        45,
+        candidateSlots
+      );
+      expect(checkConflict.isAvailable).toBe(false);
+      expect(checkConflict.conflictingTime).toBe("12:00");
+      expect(checkConflict.availableSlots).toContain("10:00");
+      expect(checkConflict.availableSlots).toContain("11:00");
+      expect(checkConflict.availableSlots).toContain("13:00");
+      expect(checkConflict.availableSlots).not.toContain("12:00");
+
+      // Free slot at 14:00 should pass
+      const checkFree = evaluateSmartSlotAvailability(
+        "14:00",
+        bookedTimes,
+        45,
+        candidateSlots
+      );
+      expect(checkFree.isAvailable).toBe(true);
+      expect(checkFree.conflictingTime).toBeNull();
+    });
+  });
+
+  describe("3. Public Booking Input Validation", () => {
+    it("validates valid public appointment requests with custom service details", () => {
+      const payload = {
+        salon_slug: "malib-1b9bbc",
+        full_name: "მარიამ დავითაშვილი",
+        email: "mariam.d@example.com",
+        phone: "+995 599 12 34 56",
+        treatment_date: "2026-10-25",
+        treatment_time: "14:00",
+        treatment_type: "wax_epilation",
+        service_id: "srv_wax_legs",
+        service_name: "ცვილით დეპილაცია (მთლიანი ფეხები)",
+        price_gel: 45,
+        duration_minutes: 40,
+        notes: "პირველი ვიზიტი",
+        email_consent: true,
+      };
+
+      const result = publicBookingInputSchema.safeParse(payload);
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects invalid emails and missing required fields", () => {
+      const badPayload = {
+        full_name: "A",
+        email: "not-an-email",
+        treatment_date: "invalid-date",
+        treatment_time: "99:99",
+      };
+
+      const result = publicBookingInputSchema.safeParse(badPayload);
+      expect(result.success).toBe(false);
+    });
+  });
+});

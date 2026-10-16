@@ -178,7 +178,7 @@ export default function LoginPage() {
             href="/book"
             className="text-rose-200 hover:text-white underline font-semibold"
           >
-            {t("ონლაინ ჩაწერის ფორმა (/book) →", "Public Booking Form (/book) →")}
+            {t("ონლაინ ჩაწერის გვერდი →", "Public Booking Page →")}
           </Link>
         </div>
       </div>

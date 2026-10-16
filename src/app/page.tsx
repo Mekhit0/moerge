@@ -24,6 +24,8 @@ import {
   Lock,
   Smartphone,
   TrendingUp,
+  HeartHandshake,
+  BellRing,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 
@@ -33,199 +35,222 @@ export default function MoergeLandingPage() {
 
   const faqs = [
     {
-      q_ka: "როგორ მუშაობს 21-დღიანი ეპილაციის შეხსენების სისტემა?",
-      q_en: "How does the automated 21-day epilation reminder engine work?",
-      a_ka: "მას შემდეგ, რაც სალონის ადმინისტრატორი ვიზიტს მონიშნავს როგორც 'დასრულებული', MOERGE საქართველოს დროის სარტყელში (Asia/Tbilisi GMT+4) ავტომატურად ითვლის ზუსტად 21 კალენდარულ დღეს და ამზადებს პერსონალურ შეხსენებას. შეხსენება იგზავნება კლიენტის ელ-ფოსტაზე Resend-ის მეშვეობით, სადაც მოცემულია სალონის სახელი და პირდაპირი ჯავშნის ბმული შემდეგი ვიზიტისთვის.",
-      a_en: "Once staff marks an epilation appointment as 'Completed', MOERGE calculates exactly 21 calendar days using Georgia Standard Time (Asia/Tbilisi GMT+4). The platform schedules a personalized email reminder dispatched via Resend containing the salon branding and a 1-click booking link for their next optimal cycle.",
+      q_ka: "როგორ მუშაობს ავტომატური შეხსენებების სისტემა?",
+      q_en: "How does the automated client reminder engine work?",
+      a_ka: "მას შემდეგ, რაც სალონის ადმინისტრატორი ვიზიტს მონიშნავს როგორც 'დასრულებული', MOERGE ავტომატურად ამზადებს პერსონალურ შეხსენებას პროცედურის ტიპის მიხედვით. შეხსენება იგზავნება კლიენტის ელ-ფოსტაზე სალონის სახელით და პირდაპირი ჯავშნის ბმულით შემდეგი ვიზიტისთვის. შედეგად, კლიენტი დროულად ბრუნდება თქვენთან თქვენი ჩარევის გარეშე.",
+      a_en: "Once staff marks an appointment as 'Completed', MOERGE automatically schedules a personalized care and follow-up reminder. The email is delivered with your salon branding and a 1-click booking link, ensuring clients return right on schedule without manual phone calls.",
     },
     {
       q_ka: "შეუძლია თუ არა სალონს საკუთარი სერვისების, ფასების (₾) და საათების მითითება?",
       q_en: "Can our salon configure custom services, GEL pricing, and working hours?",
-      a_ka: "დიახ, 100%-ით! სალონის პარამეტრებიდან (/settings) შეგიძლიათ მიუთითოთ სალონის სახელი, მისამართი, ტელეფონი, სამუშაო საათები (მაგ: 10:00–20:00) და დაამატოთ ან შეცვალოთ ნებისმიერი პროცედურა საკუთარი ფასით ლარში (₾) და ხანგრძლივობით.",
-      a_en: "Yes, 100%! From your Salon Settings panel (/settings), you can define your salon brand name, address, contact phone, operating hours (e.g., 10:00–20:00), and build a custom treatment catalog with custom GEL (₾) pricing and durations.",
+      a_ka: "დიახ, 100%-ით! სალონის პარამეტრებიდან შეგიძლიათ მიუთითოთ სალონის სახელი, მისამართი, ტელეფონი, სამუშაო საათები (მაგ: 10:00–20:00), აირჩიოთ მზა პროფესიული თემფლეითი ან დაამატოთ ნებისმიერი პროცედურა საკუთარი ფასით ლარში (₾) და ხანგრძლივობით.",
+      a_en: "Yes, 100%! From your Salon Settings panel, you can set your salon brand name, address, contact phone, operating hours (e.g. 10:00–20:00), apply 1-click preset templates, or add custom treatments with your own GEL (₾) pricing and durations.",
     },
     {
       q_ka: "როგორ იცავს სისტემა სალონს ორმაგი ჯავშნებისგან (Double Bookings)?",
       q_en: "How does the system prevent double-bookings and time slot conflicts?",
-      a_ka: "MOERGE აღჭურვილია ჭკვიანი დეტექტორით (Smart Slot Guard). როდესაც კლიენტი ირჩევს თარიღს, სისტემა რეალურ დროში ამოწმებს უკვე ჩაწერილ ვიზიტებს და ავტომატურად ბლოკავს დაკავებულ საათებს. შედეგად, ორი კლიენტი ერთსა და იმავე დროს ვერასოდეს ჩაეწერება.",
-      a_en: "MOERGE features a real-time Smart Slot Guard. When a customer selects a date on your booking page, the database instantly queries existing reservations and greys out booked slots. This completely eliminates conflicting reservations.",
+      a_ka: "MOERGE აღჭურვილია ჭკვიანი დეტექტორით (Smart Slot Guard). როდესაც კლიენტი ან ადმინისტრატორი ირჩევს თარიღს და პროცედურას, სისტემა რეალურ დროში ითვლის ხანგრძლივობას, ამოწმებს უკვე ჩაწერილ ვიზიტებს და ავტომატურად ბლოკავს დაკავებულ საათებს. შედეგად, ორი კლიენტი ერთსა და იმავე დროს ვერასოდეს ჩაეწერება.",
+      a_en: "MOERGE features a real-time Smart Slot Guard. When a client or staff selects a treatment, the engine calculates the exact duration, checks booked appointments, and blocks conflicting hours in real-time. Conflicting reservations are completely eliminated.",
     },
     {
       q_ka: "სად იგზავნება ონლაინ ჩაწერის ბმული და როგორ იყენებენ მას კლიენტები?",
       q_en: "Where is our online booking link shared and how do clients use it?",
-      a_ka: "თითოეულ სალონს აქვს საკუთარი უნიკალური ონლაინ ჯავშნის ბმული (მაგ: moerge.vercel.app/book). თქვენ შეგიძლიათ ეს ბმული ჩასვათ თქვენს Instagram Bio-ში, Facebook გვერდზე, TikTok-ზე ან გაუგზავნოთ კლიენტებს SMS-ით. კლიენტს არ სჭირდება აპლიკაციის გადმოწერა — გვერდი მომენტალურად იხსნება ნებისმიერ სმარტფონზე.",
-      a_en: "Every salon receives a dedicated online booking link (e.g. moerge.vercel.app/book). You can paste this link in your Instagram Bio, Facebook page, Google Maps profile, or send it via SMS. Clients need no app installation—it opens seamlessly on any mobile phone browser.",
+      a_ka: "თითოეულ სალონს აქვს საკუთარი უნიკალური ონლაინ ჯავშნის ბმული. თქვენ შეგიძლიათ ეს ბმული ჩასვათ თქვენს Instagram Bio-ში, Facebook გვერდზე, TikTok-ზე ან გაუგზავნოთ კლიენტებს მესენჯერით/SMS-ით. კლიენტს არ სჭირდება აპლიკაციის გადმოწერა — გვერდი მომენტალურად იხსნება ნებისმიერ სმარტფონზე.",
+      a_en: "Every salon receives a dedicated, auto-generated online booking URL. You can place this link in your Instagram bio, Facebook, Google Maps, or send via SMS. Clients need no app download—it opens instantly and cleanly in any smartphone browser.",
     },
     {
       q_ka: "როგორ არის დაცული სალონისა და კლიენტების მონაცემები?",
       q_en: "How is salon and customer personal data secured?",
-      a_ka: "პლატფორმა იყენებს Supabase-ის Row Level Security (RLS) არქიტექტურას. თითოეული სალონის მონაცემთა ბაზა სრულად იზოლირებულია, რაც გამორიცხავს სხვა მომხმარებლების მიერ თქვენი მონაცემების ნახვას. სისტემა სრულად შეესაბამება საქართველოს კანონს „პერსონალურ მონაცემთა დაცვის შესახებ“.",
+      a_ka: "პლატფორმა იყენებს მონაცემთა ბაზის Row Level Security (RLS) არქიტექტურას. თითოეული სალონის მონაცემები სრულად იზოლირებულია, რაც გამორიცხავს სხვა მომხმარებლების მიერ თქვენი ინფორმაციის ნახვას. სისტემა სრულად შეესაბამება საქართველოს კანონს „პერსონალურ მონაცემთა დაცვის შესახებ“.",
       a_en: "The platform is built on PostgreSQL Row Level Security (RLS). Each salon's customer records, schedules, and settings are fully isolated at the database level. Our infrastructure complies strictly with the Georgian Law on Personal Data Protection.",
     },
   ];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "MOERGE",
+    operatingSystem: "All (Web Browser, iOS, Android)",
+    applicationCategory: "BusinessApplication",
+    offers: {
+      "@type": "Offer",
+      price: "49",
+      priceCurrency: "GEL",
+      priceValidUntil: "2027-12-31",
+    },
+    description:
+      "სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა საქართველოში.",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      reviewCount: "84",
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-[#fdf8f6] text-stone-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#fdf8f6] text-stone-900 flex flex-col font-sans selection:bg-rose-200 selection:text-rose-950">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100/80 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-600 via-rose-700 to-rose-900 text-white flex items-center justify-center shadow-lg shadow-rose-600/25 group-hover:scale-105 transition">
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-rose-600 via-rose-700 to-rose-900 text-white flex items-center justify-center shadow-lg shadow-rose-600/25 group-hover:scale-105 transition">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black tracking-tight text-stone-900">
-                  MOERGE
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold uppercase tracking-wider">
-                  GEORGIA • SAAS
-                </span>
-              </div>
-              <p className="text-[11px] text-stone-500 hidden sm:block">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-stone-900">
+                MOERGE
+              </span>
+              <p className="text-[11px] text-stone-500 hidden sm:block font-medium">
                 {t(
-                  "სალონის ჭკვიანი ჯავშნების და 21-დღიანი შეხსენებების პლატფორმა",
-                  "Smart Salon Booking & 21-Day Epilation Reminder Ecosystem"
+                  "სალონის მართვა & ჭკვიანი შეხსენებები",
+                  "Smart Salon Booking & Automated Retention"
                 )}
               </p>
             </div>
           </Link>
 
-          {/* Nav Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-bold text-stone-600">
+          {/* Desktop Nav Links */}
+          <nav className="hidden lg:flex items-center gap-7 text-xs font-bold text-stone-600">
             <a href="#features" className="hover:text-rose-600 transition">
-              {t("ფუნქციები", "Features")}
+              {t("შესაძლებლობები", "Features")}
             </a>
             <a href="#how-it-works" className="hover:text-rose-600 transition">
               {t("როგორ მუშაობს", "How It Works")}
+            </a>
+            <a href="#benefits" className="hover:text-rose-600 transition">
+              {t("უპირატესობები", "Benefits")}
             </a>
             <a href="#pricing" className="hover:text-rose-600 transition">
               {t("ტარიფები", "Pricing")}
             </a>
             <a href="#faq" className="hover:text-rose-600 transition">
-              {t("კითხვები (FAQ)", "FAQ")}
+              {t("კითხვები", "FAQ")}
             </a>
-            <Link href="/terms" className="hover:text-rose-600 transition">
-              {t("მოხმარების წესები", "Terms")}
-            </Link>
           </nav>
 
           {/* Action CTAs */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <LanguageSwitcher />
             <Link
               href="/book"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-900 text-xs font-bold transition"
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-900 text-xs font-bold transition"
             >
               <Calendar className="w-3.5 h-3.5 text-rose-600" />
-              {t("ონლაინ ჯავშანი (/book)", "Booking Page (/book)")}
+              {t("ონლაინ ჯავშანი", "Online Booking")}
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold shadow-sm transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold shadow-sm transition"
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
-              {t("სალონის შესვლა", "Salon Sign In")}
+              {t("შესვლა", "Sign In")}
             </Link>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-14 sm:py-20 lg:py-28 border-b border-rose-100">
+      <section className="relative overflow-hidden py-12 sm:py-20 lg:py-24 border-b border-rose-100">
         {/* Soft Background Accents */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-rose-200/30 blur-[130px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[650px] h-[320px] bg-rose-200/35 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           {/* Left Hero Copy (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 space-y-5 sm:space-y-6">
+            {/* Clean, Sharp Marketing Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-100/90 border border-rose-200 text-rose-950 text-xs font-bold shadow-2xs">
-              <Globe className="w-3.5 h-3.5 text-rose-600" />
+              <BellRing className="w-3.5 h-3.5 text-rose-600" />
               {t(
-                "შექმნილია საქართველოს სალონებისთვის • Asia/Tbilisi (GMT+4) • ₾ GEL",
-                "Built for Salons in Georgia • Asia/Tbilisi (GMT+4) • ₾ GEL"
+                "ჭკვიანი ონლაინ ჯავშნები და ავტომატური შეხსენებები",
+                "Smart Online Booking & Automated Client Retention"
               )}
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-stone-900 leading-[1.12]">
-              {t("მოარგე სალონი ", "Tailor Your Salon with ")}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-stone-900 leading-[1.14]">
+              {t("მოარგეთ სალონი ", "Tailor Your Salon with ")}
               <span className="bg-gradient-to-r from-rose-600 via-rose-700 to-rose-900 bg-clip-text text-transparent">
                 MOERGE
               </span>
-              {t(
-                "-ს ჭკვიან ეკოსისტემას",
-                " Smart Booking Ecosystem"
-              )}
+              {t("-ს ჭკვიან ავტომატიზაციას", "-s Smart Automation")}
             </h1>
 
-            <p className="text-base sm:text-lg text-stone-600 max-w-2xl leading-relaxed">
+            <p className="text-sm sm:text-lg text-stone-600 max-w-2xl leading-relaxed">
               {t(
-                "შექმენით თქვენი სალონის პერსონალური ონლაინ ჯავშნის გვერდი ლარის ფასებით (₾), დაიცავით გრაფიკი გადაფარვისგან ჭკვიანი დეტექტორით და ავტომატურად დააბრუნეთ კლიენტები ეპილაციიდან ზუსტად 21 დღეში Resend-ის ელ-ფოსტით.",
-                "Launch a branded online booking page with custom GEL pricing, eliminate scheduling double-bookings with smart slot detection, and automatically bring clients back 21 days after every epilation via Resend email."
+                "პერსონალური ონლაინ ჯავშნის გვერდი თქვენი სალონის ბრენდით, ჭკვიანი გრაფიკი გადაფარვების გარეშე და ავტომატური პერსონალური შეხსენებები, რომლებიც თქვენს კლიენტებს დროულად და სტაბილურად აბრუნებს.",
+                "Launch a branded online booking page with custom GEL pricing, protect your schedule against double-bookings, and automatically retain clients with smart, timely care reminders."
               )}
             </p>
 
             {/* Hero CTAs */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-xl shadow-rose-600/25 hover:shadow-rose-600/35 transition cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-xl shadow-rose-600/25 hover:shadow-rose-600/35 transition cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
-                {t(
-                  "სალონის რეგისტრაცია (14 დღე უფასოდ)",
-                  "Register Salon (14-Day Free Trial)"
-                )}
+                <span>{t("სალონის რეგისტრაცია (14 დღე უფასოდ)", "Register Salon (14-Day Free Trial)")}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
               <Link
                 href="/book"
-                className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl bg-white hover:bg-rose-50/70 text-stone-900 font-bold text-sm border border-stone-200 shadow-xs transition"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-rose-50/70 text-stone-900 font-bold text-sm border border-stone-200 shadow-xs transition"
               >
                 <Calendar className="w-4 h-4 text-rose-600" />
-                {t(
-                  "ონლაინ ჩაწერის დემო (/book)",
-                  "Public Booking Demo (/book)"
-                )}
+                <span>{t("ონლაინ ჯავშნის ნახვა", "View Online Booking")}</span>
               </Link>
             </div>
 
             {/* Quick Guarantees */}
-            <div className="pt-2 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-stone-500 font-medium">
+            <div className="pt-2 flex flex-wrap items-center gap-y-2 gap-x-5 text-xs text-stone-500 font-medium">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 {t("საკრედიტო ბარათი არ არის საჭირო", "No credit card required")}
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                {t("სრული მონაცემთა იზოლაცია (RLS)", "Isolated Salon Workspace")}
+                {t("მონაცემთა სრული იზოლაცია და უსაფრთხოება", "Isolated & Secure Workspace")}
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                {t("მორგებული თბილისის დროზე", "Exact Asia/Tbilisi Time")}
+                {t("სწრაფი გაშვება 2 წუთში", "Ready in 2 minutes")}
               </span>
             </div>
 
             {/* 3 Metrics */}
-            <div className="pt-6 grid grid-cols-3 gap-4 border-t border-rose-100/80 text-xs">
-              <div>
-                <div className="font-black text-2xl text-stone-900">21 {t("დღე", "Days")}</div>
-                <div className="text-stone-500 font-medium mt-0.5">
-                  {t("ავტომატური ეპილაციის ციკლი", "Automated Epilation Cycle")}
+            <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-rose-100/80 text-xs">
+              <div className="bg-white/60 sm:bg-transparent p-3 sm:p-0 rounded-2xl border sm:border-0 border-rose-100">
+                <div className="font-black text-2xl text-stone-900">+40%</div>
+                <div className="font-bold text-stone-800 mt-0.5">
+                  {t("განმეორებითი ვიზიტები", "Repeat Bookings")}
+                </div>
+                <div className="text-stone-500 mt-0.5 text-[11px]">
+                  {t("ავტომატური შეხსენებების წყალობით", "Driven by smart care reminders")}
                 </div>
               </div>
-              <div>
-                <div className="font-black text-2xl text-stone-900">100% {t("მორგება", "Custom")}</div>
-                <div className="text-stone-500 font-medium mt-0.5">
-                  {t("სერვისები, ფასები (₾) და საათები", "Services, GEL Prices & Hours")}
+              <div className="bg-white/60 sm:bg-transparent p-3 sm:p-0 rounded-2xl border sm:border-0 border-rose-100">
+                <div className="font-black text-2xl text-stone-900">0%</div>
+                <div className="font-bold text-stone-800 mt-0.5">
+                  {t("გრაფიკის გადაფარვა", "Schedule Conflicts")}
+                </div>
+                <div className="text-stone-500 mt-0.5 text-[11px]">
+                  {t("Smart Slot Guard რეალურ დროში", "Real-time conflict prevention")}
                 </div>
               </div>
-              <div>
-                <div className="font-black text-2xl text-stone-900">0% {t("კონფლიქტი", "Conflicts")}</div>
-                <div className="text-stone-500 font-medium mt-0.5">
-                  {t("ჭკვიანი საათების დეტექტორი", "Smart Slot Guard Protection")}
+              <div className="bg-white/60 sm:bg-transparent p-3 sm:p-0 rounded-2xl border sm:border-0 border-rose-100">
+                <div className="font-black text-2xl text-stone-900">100%</div>
+                <div className="font-bold text-stone-800 mt-0.5">
+                  {t("თქვენზე მორგებული", "Custom to Your Salon")}
+                </div>
+                <div className="text-stone-500 mt-0.5 text-[11px]">
+                  {t("სერვისები, ფასები და საათები", "Services, GEL prices & hours")}
                 </div>
               </div>
             </div>
@@ -233,7 +258,7 @@ export default function MoergeLandingPage() {
 
           {/* Right Live Interactive Visual Card (5 cols) */}
           <div className="lg:col-span-5">
-            <div className="bg-white rounded-3xl border border-rose-100 shadow-2xl shadow-rose-950/10 p-6 sm:p-7 space-y-5">
+            <div className="bg-white rounded-3xl border border-rose-100 shadow-2xl shadow-rose-950/10 p-5 sm:p-7 space-y-5">
               {/* Salon Live Header Preview */}
               <div className="flex items-center justify-between border-b border-stone-100 pb-4">
                 <div className="flex items-center gap-3">
@@ -242,10 +267,10 @@ export default function MoergeLandingPage() {
                   </div>
                   <div>
                     <div className="text-sm font-extrabold text-stone-900">
-                      Lumière Studio • თბილისი
+                      Lumière Studio
                     </div>
                     <div className="text-[11px] text-stone-400">
-                      ი. ჭავჭავაძის გამზ. 34 • 10:00 – 20:00
+                      თბილისი • 10:00 – 20:00
                     </div>
                   </div>
                 </div>
@@ -259,8 +284,8 @@ export default function MoergeLandingPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-stone-900">
                     {t(
-                      "დიოდური ეპილაცია — მთლიანი სხეული",
-                      "Full Body Diode Laser Epilation"
+                      "დიოდური ლაზერული ეპილაცია",
+                      "Diode Laser Hair Removal"
                     )}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-lg bg-stone-900 text-white text-xs font-extrabold">
@@ -268,10 +293,10 @@ export default function MoergeLandingPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-stone-500">
-                  <span>⏱ 45 {t("წთ", "min")}</span>
+                  <span>⏱ 45 {t("წუთი", "mins")}</span>
                   <span className="text-rose-700 font-semibold flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    {t("+21 დღიანი ავტო-შეხსენება", "+21d Auto Reminder")}
+                    <BellRing className="w-3 h-3" />
+                    {t("ავტომატური შეხსენება", "Automated Care Reminder")}
                   </span>
                 </div>
               </div>
@@ -285,19 +310,19 @@ export default function MoergeLandingPage() {
                   <span className="text-[11px] text-stone-400">Asia/Tbilisi</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-stone-100 border border-stone-200 text-stone-400 flex items-center justify-between">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-stone-100 border border-stone-200 text-stone-400 flex items-center justify-between">
                     <span className="line-through font-bold">11:00</span>
                     <span className="text-[10px] text-red-500 font-bold">
                       {t("დაკავებულია", "Booked")}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-rose-600 text-white font-bold flex items-center justify-between shadow-xs">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-rose-600 text-white font-bold flex items-center justify-between shadow-xs">
                     <span>12:00</span>
                     <span className="text-[10px] text-rose-100">
                       {t("არჩეულია", "Selected")}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold flex items-center justify-between">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold flex items-center justify-between">
                     <span>13:00</span>
                     <span className="text-[10px] text-emerald-700">
                       {t("თავისუფალი", "Free")}
@@ -306,24 +331,24 @@ export default function MoergeLandingPage() {
                 </div>
               </div>
 
-              {/* Automated Resend 21-Day Engine Simulation */}
+              {/* Automated Smart Reminder Simulation */}
               <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1.5 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-emerald-950 flex items-center gap-1.5">
                     <Send className="w-3.5 h-3.5 text-emerald-600" />
                     {t(
-                      "Resend 21-დღიანი შეხსენების ძრავა",
-                      "Resend 21-Day Email Engine"
+                      "ჭკვიანი შეხსენების ძრავა",
+                      "Smart Client Reminder Engine"
                     )}
                   </span>
                   <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-200/70 text-emerald-900">
-                    Idempotent
+                    Automated
                   </span>
                 </div>
                 <p className="text-emerald-800 text-[11px] leading-relaxed">
                   {t(
-                    "პროცედურის დასრულებისთანავე სისტემა ითვლის +21 დღეს თბილისის დროით და ავტომატურად აგზავნის მოწვევას მომდევნო ვიზიტზე.",
-                    "Upon completion, MOERGE calculates +21 days in Tbilisi time and automatically dispatches a personalized booking invitation."
+                    "პროცედურის დასრულების შემდეგ სისტემა ავტომატურად ამზადებს და უგზავნის კლიენტს პერსონალურ მოწვევას მომდევნო ვიზიტზე — თქვენი ჩარევის გარეშე.",
+                    "Upon completion, MOERGE automatically sends a personalized follow-up invitation for their next appointment without manual effort."
                   )}
                 </p>
               </div>
@@ -350,19 +375,19 @@ export default function MoergeLandingPage() {
       </section>
 
       {/* Problem vs Solution Comparison Section */}
-      <section className="py-16 sm:py-24 bg-white border-b border-rose-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+      <section id="benefits" className="py-14 sm:py-20 bg-white border-b border-rose-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
               {t("რატომ კარგავენ სალონები კლიენტებს?", "Why Salons Lose Clients")}
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+            <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
               {t(
                 "ძველი ქაოტური მეთოდები vs MOERGE-ის ჭკვიანი სისტემა",
                 "Traditional Chaos vs MOERGE Smart Automation"
               )}
             </h2>
-            <p className="mt-3 text-stone-600 text-sm sm:text-base">
+            <p className="mt-3 text-stone-600 text-xs sm:text-base">
               {t(
                 "ნახეთ, როგორ გარდაქმნის MOERGE თქვენი სალონის ყოველდღიურ რუტინას",
                 "See how MOERGE transforms your salon's daily workflow"
@@ -370,19 +395,19 @@ export default function MoergeLandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {/* The Old Chaotic Way */}
-            <div className="p-8 rounded-3xl bg-stone-50 border border-stone-200 space-y-4">
+            <div className="p-6 sm:p-8 rounded-3xl bg-stone-50 border border-stone-200 space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-bold">
                 ✕ {t("ძველი, არაეფექტური გზა", "The Old Inefficient Way")}
               </div>
-              <h3 className="text-xl font-bold text-stone-800">
+              <h3 className="text-lg sm:text-xl font-bold text-stone-800">
                 {t("ქაოსი რვეულებსა და Instagram Direct-ში", "Notebooks & Direct Message Chaos")}
               </h3>
               <ul className="space-y-3 text-xs sm:text-sm text-stone-600">
                 <li className="flex items-start gap-2.5">
                   <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span>{t("კლიენტებს ავიწყდებათ ეპილაციის 21-დღიანი ციკლი და იკარგება შედეგი.", "Clients forget their 21-day cycle, degrading treatment results.")}</span>
+                  <span>{t("კლიენტებს ავიწყდებათ მოვლისა და შემდეგი ვიზიტის დრო, რის გამოც სალონი კარგავს შემოსავალს.", "Clients forget follow-up care schedules, causing lost revenue.")}</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-red-500 font-bold shrink-0">✕</span>
@@ -400,17 +425,17 @@ export default function MoergeLandingPage() {
             </div>
 
             {/* The MOERGE Way */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-rose-50/80 to-emerald-50/40 border border-rose-200 space-y-4 shadow-sm">
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-rose-50/80 to-emerald-50/40 border border-rose-200 space-y-4 shadow-sm">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
                 ✓ {t("MOERGE-ის ჭკვიანი ეკოსისტემა", "The MOERGE Ecosystem")}
               </div>
-              <h3 className="text-xl font-bold text-stone-900">
-                {t("ავტომატური ჯავშნები და 21-დღიანი ციკლი", "Automated Bookings & 21-Day Cycle")}
+              <h3 className="text-lg sm:text-xl font-bold text-stone-900">
+                {t("ავტომატური ჯავშნები და კლიენტების დაბრუნება", "Automated Bookings & Client Retention")}
               </h3>
               <ul className="space-y-3 text-xs sm:text-sm text-stone-700">
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                  <span>{t("პროცედურის დასრულებიდან 21 დღეში სისტემა ავტომატურად იწვევს კლიენტს ხელმეორედ.", "System automatically emails the client at day 21 to book their next appointment.")}</span>
+                  <span>{t("პროცედურის დასრულების შემდეგ სისტემა ავტომატურად უგზავნის კლიენტს პერსონალურ შეხსენებას.", "System automatically sends courtesy reminders when it's time for their next visit.")}</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-600 font-bold shrink-0">✓</span>
@@ -422,7 +447,7 @@ export default function MoergeLandingPage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                  <span>{t("Resend API ინტეგრაცია და ელ-ფოსტის სრული ისტორიის გამჭვირვალე ჟურნალი.", "Direct Resend integration with full delivery tracking and audit history.")}</span>
+                  <span>{t("ელ-ფოსტის სრული ისტორიის გამჭვირვალე ჟურნალი და კლიენტების CRM.", "Full delivery tracking, customer CRM records, and complete transparency.")}</span>
                 </li>
               </ul>
             </div>
@@ -431,19 +456,19 @@ export default function MoergeLandingPage() {
       </section>
 
       {/* How It Works (3 Steps) */}
-      <section id="how-it-works" className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-14">
+      <section id="how-it-works" className="py-14 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
             {t("სიმარტივე და ეფექტურობა", "Simplicity & Execution")}
           </span>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+          <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
             {t("როგორ მუშაობს MOERGE 3 მარტივ ნაბიჯში", "How MOERGE Works in 3 Simple Steps")}
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative">
           {/* Step 1 */}
-          <div className="bg-white rounded-3xl border border-rose-100 p-8 shadow-xs flex flex-col justify-between relative overflow-hidden">
+          <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs flex flex-col justify-between relative overflow-hidden">
             <span className="text-6xl font-black text-rose-100 absolute top-4 right-6 pointer-events-none">
               01
             </span>
@@ -456,8 +481,8 @@ export default function MoergeLandingPage() {
               </h3>
               <p className="mt-2.5 text-xs sm:text-sm text-stone-600 leading-relaxed">
                 {t(
-                  "დაარეგისტრირეთ სალონის სახელი, მიუთითეთ მისამართი, სამუშაო საათები (10:00–20:00) და შეიყვანეთ თქვენი პროცედურები ფასებით ლარში (₾).",
-                  "Register your salon, set operating hours (10:00–20:00), and configure your custom treatment menu with GEL pricing."
+                  "მიუთითეთ სალონის სახელი, სამუშაო საათები (10:00–20:00), აირჩიეთ მზა თემფლეითი ან შეიყვანეთ თქვენი პროცედურები ფასებით ლარში (₾).",
+                  "Set your salon name, operating hours (10:00–20:00), apply preset templates or configure custom services with GEL pricing."
                 )}
               </p>
             </div>
@@ -467,7 +492,7 @@ export default function MoergeLandingPage() {
           </div>
 
           {/* Step 2 */}
-          <div className="bg-white rounded-3xl border border-rose-100 p-8 shadow-xs flex flex-col justify-between relative overflow-hidden">
+          <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs flex flex-col justify-between relative overflow-hidden">
             <span className="text-6xl font-black text-rose-100 absolute top-4 right-6 pointer-events-none">
               02
             </span>
@@ -481,7 +506,7 @@ export default function MoergeLandingPage() {
               <p className="mt-2.5 text-xs sm:text-sm text-stone-600 leading-relaxed">
                 {t(
                   "ჩასვით თქვენი ავტო-გენერირებული ონლაინ ჯავშნის ბმული Instagram Bio-ში ან Facebook-ზე. კლიენტები თავად ირჩევენ დროს და ეწერებიან 24/7.",
-                  "Add your booking link to your Instagram bio, Facebook, or SMS. Clients effortlessly choose free slots from their phone."
+                  "Add your booking link to your Instagram bio, Facebook, or send via SMS. Clients effortlessly choose free slots from their phone."
                 )}
               </p>
             </div>
@@ -491,7 +516,7 @@ export default function MoergeLandingPage() {
           </div>
 
           {/* Step 3 */}
-          <div className="bg-white rounded-3xl border border-rose-100 p-8 shadow-xs flex flex-col justify-between relative overflow-hidden">
+          <div className="bg-white rounded-3xl border border-rose-100 p-6 sm:p-8 shadow-xs flex flex-col justify-between relative overflow-hidden">
             <span className="text-6xl font-black text-rose-100 absolute top-4 right-6 pointer-events-none">
               03
             </span>
@@ -500,12 +525,12 @@ export default function MoergeLandingPage() {
                 <TrendingUp className="w-6 h-6" />
               </div>
               <h3 className="mt-6 text-lg font-bold text-stone-900">
-                {t("3. ავტომატური 21-დღიანი ციკლი", "3. 21-Day Auto Retention")}
+                {t("3. ავტომატური შეხსენებები", "3. Automated Retention")}
               </h3>
               <p className="mt-2.5 text-xs sm:text-sm text-stone-600 leading-relaxed">
                 {t(
-                  "ეპილაციის დასრულებიდან 21 დღეში სისტემა ავტომატურად უგზავნის კლიენტს მოწვევას შემდეგ ვიზიტზე. კლიენტი ბრუნდება თქვენი ჩარევის გარეშე!",
-                  "21 days after treatment, MOERGE automatically emails the client an invitation. Retain high-value clients effortlessly!"
+                  "ვიზიტის დასრულების შემდეგ სისტემა ავტომატურად უგზავნის კლიენტს მოწვევას შემდეგ ვიზიტზე. კლიენტი ბრუნდება თქვენი ჩარევის გარეშე!",
+                  "After treatment completion, MOERGE automatically emails the client a timely follow-up. Retain high-value clients effortlessly!"
                 )}
               </p>
             </div>
@@ -517,16 +542,16 @@ export default function MoergeLandingPage() {
       </section>
 
       {/* 4 Core Features Deep Dive */}
-      <section id="features" className="py-16 sm:py-24 bg-white border-t border-b border-rose-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+      <section id="features" className="py-14 sm:py-20 bg-white border-t border-b border-rose-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
-              MOERGE PRODUCTION SUITE
+              MOERGE SUITE
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+            <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
               {t(
                 "ყველაფერი რაც თანამედროვე სალონს სჭირდება",
-                "Everything a Modern Salon Ecosystem Demands"
+                "Everything a Modern Salon Needs to Grow"
               )}
             </h2>
           </div>
@@ -539,14 +564,14 @@ export default function MoergeLandingPage() {
                 </div>
                 <h3 className="mt-4 text-base font-bold text-stone-900">
                   {t(
-                    "1. მართვადი ონლაინ ჯავშნის გვერდი",
-                    "1. Customizable Booking Page"
+                    "1. მორგებული ონლაინ ჯავშნის გვერდი",
+                    "1. Branded Online Booking Page"
                   )}
                 </h3>
                 <p className="mt-2 text-xs text-stone-600 leading-relaxed">
                   {t(
-                    "პარამეტრებიდან შეცვალეთ ჯავშნის გვერდის სათაური, მისამართი, სამუშაო საათები (10:00–20:00) და დაამატეთ ან შეცვალეთ სერვისები ფასებით ლარში (₾).",
-                    "Edit your booking headline, salon address, working hours, and custom treatment catalog with GEL pricing directly from Settings."
+                    "სალონის სათაური, მისამართი, სამუშაო საათები (10:00–20:00) და სერვისები ფასებით ლარში (₾) — სრულად თქვენი კონტროლის ქვეშ.",
+                    "Your salon branding, address, operating hours, and custom services with GEL pricing — fully under your control."
                   )}
                 </p>
               </div>
@@ -554,7 +579,7 @@ export default function MoergeLandingPage() {
                 href="/book"
                 className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:underline"
               >
-                {t("ჯავშნის ფორმა (/book) →", "Public Booking (/book) →")}
+                {t("ონლაინ ჯავშნის ნახვა →", "View Online Booking →")}
               </Link>
             </div>
 
@@ -565,14 +590,14 @@ export default function MoergeLandingPage() {
                 </div>
                 <h3 className="mt-4 text-base font-bold text-stone-900">
                   {t(
-                    "2. გამარტივებული სალონის ჩაწერა",
-                    "2. 1-Step Staff Quick Booking"
+                    "2. სწრაფი ადმინისტრატორის ჩაწერა",
+                    "2. 1-Step Fast Appointment Booking"
                   )}
                 </h3>
                 <p className="mt-2 text-xs text-stone-600 leading-relaxed">
                   {t(
-                    "სალონის ადმინისტრატორს შეუძლია ახალი კლიენტის შექმნა და ვიზიტზე ჩაწერა ერთ ფანჯარაში, გვერდიდან გაუსვლელად, წამებში.",
-                    "Salon staff can create a new walk-in client inline and record their appointment in a single modal without switching pages."
+                    "ახალი კლიენტის დამატება და ვიზიტზე ჩაწერა ერთ ფანჯარაში, გვერდიდან გაუსვლელად, ფასისა და ხანგრძლივობის ავტო-შევსებით.",
+                    "Record appointments inline with instant client registration, auto-filled pricing in GEL, and procedure durations."
                   )}
                 </p>
               </div>
@@ -597,8 +622,8 @@ export default function MoergeLandingPage() {
                 </h3>
                 <p className="mt-2 text-xs text-stone-600 leading-relaxed">
                   {t(
-                    "თუ არჩეული დრო დაკავებულია, სისტემა მომენტალურად ბლოკავს ზედდებას და კლიენტს სთავაზობს იმ დღის თავისუფალ საათებს.",
-                    "Automatically detects overlapping appointments and suggests free time slots on the selected date in Georgia time."
+                    "სისტემა მომენტალურად ბლოკავს გადაფარვას და კლიენტს სთავაზობს რეალურად თავისუფალ საათებს პროცედურის ხანგრძლივობის გათვალისწინებით.",
+                    "Instantly prevents overlapping appointments and suggests open slots based on the exact procedure duration."
                   )}
                 </p>
               </div>
@@ -606,7 +631,7 @@ export default function MoergeLandingPage() {
                 href="/book"
                 className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline"
               >
-                {t("სცადეთ /book გვერდზე →", "Test on /book →")}
+                {t("ჯავშნის ტესტირება →", "Test Booking →")}
               </Link>
             </div>
 
@@ -617,14 +642,14 @@ export default function MoergeLandingPage() {
                 </div>
                 <h3 className="mt-4 text-base font-bold text-stone-900">
                   {t(
-                    "4. Resend ელ-ფოსტის ავტომატიზაცია",
-                    "4. Direct Resend Email Engine"
+                    "4. ავტომატური შეხსენებების ძრავა",
+                    "4. Automated Care Reminder Engine"
                   )}
                 </h3>
                 <p className="mt-2 text-xs text-stone-600 leading-relaxed">
                   {t(
-                    "მიაბით თქვენი Resend API Key პირდაპირ პარამეტრებიდან, გააგზავნეთ ცოცხალი ტესტ-წერილი 1 კლიკით და აკონტროლეთ მიწოდების ისტორია.",
-                    "Connect your Resend API Key directly in Settings, send a 1-click live test email, and track every delivery & retry."
+                    "პერსონალური ელ-ფოსტის შეხსენებები, საიმედო მიწოდება, ცოცხალი ტესტირების შესაძლებლობა და სრული გამჭვირვალე ისტორია.",
+                    "Personalized email reminders, high deliverability, 1-click test emails, and complete audit tracking."
                   )}
                 </p>
               </div>
@@ -640,18 +665,18 @@ export default function MoergeLandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-14">
+      <section id="pricing" className="py-14 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
             {t("გამჭვირვალე ტარიფები", "Simple & Transparent Pricing")}
           </span>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+          <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
             {t(
               "აირჩიეთ თქვენს სალონზე მორგებული პაკეტი",
               "Choose the Plan Tailored to Your Salon"
             )}
           </h2>
-          <p className="mt-3 text-stone-600 text-sm sm:text-base">
+          <p className="mt-3 text-stone-600 text-xs sm:text-base">
             {t(
               "ყველა პაკეტი მოიცავს 14-დღიან უფასო სატესტო პერიოდს. გადაიხადეთ მხოლოდ მაშინ, როცა შედეგს დაინახავთ.",
               "All plans include a 14-day free trial. No upfront credit card required."
@@ -659,21 +684,21 @@ export default function MoergeLandingPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Plan 1: Starter */}
-          <div className="bg-white rounded-3xl border border-stone-200 p-8 flex flex-col justify-between shadow-xs">
+          <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
                 {t("სატესტო", "Starter")}
               </span>
-              <h3 className="mt-1 text-2xl font-bold text-stone-900">
+              <h3 className="mt-1 text-xl sm:text-2xl font-bold text-stone-900">
                 {t("დამწყები", "Starter Plan")}
               </h3>
               <p className="mt-2 text-xs text-stone-500">
                 {t("ახალი და პატარა კაბინეტებისთვის", "For independent specialists")}
               </p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-4xl font-black text-stone-900">0 ₾</span>
+                <span className="text-3xl sm:text-4xl font-black text-stone-900">0 ₾</span>
                 <span className="text-xs text-stone-500">/ 14 {t("დღე", "days")}</span>
               </div>
 
@@ -706,22 +731,22 @@ export default function MoergeLandingPage() {
           </div>
 
           {/* Plan 2: Professional (Featured) */}
-          <div className="bg-gradient-to-b from-stone-900 to-stone-950 text-white rounded-3xl border border-stone-800 p-8 flex flex-col justify-between shadow-2xl shadow-rose-950/20 relative">
-            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider shadow-md">
+          <div className="bg-gradient-to-b from-stone-900 to-stone-950 text-white rounded-3xl border border-stone-800 p-6 sm:p-8 flex flex-col justify-between shadow-2xl shadow-rose-950/20 relative">
+            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider shadow-md whitespace-nowrap">
               {t("ყველაზე პოპულარული", "Most Popular")}
             </span>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
                 {t("პროფესიონალი", "Professional")}
               </span>
-              <h3 className="mt-1 text-2xl font-bold text-white">
+              <h3 className="mt-1 text-xl sm:text-2xl font-bold text-white">
                 {t("Pro სალონი", "Pro Salon Plan")}
               </h3>
               <p className="mt-2 text-xs text-stone-400">
-                {t("მოქმედი სილამაზის და ეპილაციის ცენტრებისთვის", "For active salons & epilation clinics")}
+                {t("მოქმედი სილამაზისა და ესთეტიკის ცენტრებისთვის", "For active beauty & aesthetic salons")}
               </p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-4xl font-black text-white">49 ₾</span>
+                <span className="text-3xl sm:text-4xl font-black text-white">49 ₾</span>
                 <span className="text-xs text-stone-400">/ {t("თვეში", "month")}</span>
               </div>
 
@@ -732,7 +757,7 @@ export default function MoergeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{t("ავტომატური 21-დღიანი Resend შეხსენებები", "Automated 21-day Resend email cycle")}</span>
+                  <span>{t("ავტომატური პერსონალური შეხსენებები", "Automated smart email reminder cycle")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
@@ -744,7 +769,7 @@ export default function MoergeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{t("24/7 პრიორიტეტული მხარდაჭერა", "24/7 priority customer support")}</span>
+                  <span>{t("პრიორიტეტული მხარდაჭერა", "Priority customer support")}</span>
                 </li>
               </ul>
             </div>
@@ -758,19 +783,19 @@ export default function MoergeLandingPage() {
           </div>
 
           {/* Plan 3: Studio / Network */}
-          <div className="bg-white rounded-3xl border border-stone-200 p-8 flex flex-col justify-between shadow-xs">
+          <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
                 {t("ქსელი", "Chain / Enterprise")}
               </span>
-              <h3 className="mt-1 text-2xl font-bold text-stone-900">
+              <h3 className="mt-1 text-xl sm:text-2xl font-bold text-stone-900">
                 {t("სტუდიო & ქსელი", "Studio & Chain Plan")}
               </h3>
               <p className="mt-2 text-xs text-stone-500">
                 {t("მრავალფილიალიანი სალონებისთვის", "For multi-location salon brands")}
               </p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-4xl font-black text-stone-900">99 ₾</span>
+                <span className="text-3xl sm:text-4xl font-black text-stone-900">99 ₾</span>
                 <span className="text-xs text-stone-500">/ {t("თვეში", "month")}</span>
               </div>
 
@@ -789,7 +814,7 @@ export default function MoergeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{t("ინდივიდუალური დომენის მიბმა", "Custom domain onboarding support")}</span>
+                  <span>{t("ინდივიდუალური დომენის მხარდაჭერა", "Custom domain support")}</span>
                 </li>
               </ul>
             </div>
@@ -805,18 +830,18 @@ export default function MoergeLandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-16 sm:py-24 bg-white border-t border-rose-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8">
-          <div className="text-center mb-12">
+      <section id="faq" className="py-14 sm:py-20 bg-white border-t border-rose-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12">
             <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
               FAQ
             </span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+            <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
               {t("ხშირად დასმული კითხვები", "Frequently Asked Questions")}
             </h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
@@ -827,7 +852,7 @@ export default function MoergeLandingPage() {
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-stone-900 hover:text-rose-700 transition cursor-pointer"
+                    className="w-full p-4 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-stone-900 hover:text-rose-700 transition cursor-pointer"
                   >
                     <span>{t(faq.q_ka, faq.q_en)}</span>
                     <ChevronDown
@@ -837,7 +862,7 @@ export default function MoergeLandingPage() {
                     />
                   </button>
                   {isOpen && (
-                    <div className="px-5 pb-6 sm:px-6 sm:pb-6 text-xs sm:text-sm text-stone-600 leading-relaxed border-t border-rose-100/60 pt-4">
+                    <div className="px-4 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-stone-600 leading-relaxed border-t border-rose-100/60 pt-4">
                       {t(faq.a_ka, faq.a_en)}
                     </div>
                   )}
@@ -849,68 +874,63 @@ export default function MoergeLandingPage() {
       </section>
 
       {/* Ready to Upgrade CTA Banner */}
-      <section className="py-16 bg-gradient-to-br from-rose-950 via-rose-900 to-stone-900 text-white relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-8 text-center space-y-6 relative z-10">
+      <section className="py-14 sm:py-16 bg-gradient-to-br from-rose-950 via-rose-900 to-stone-900 text-white relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-5 sm:space-y-6 relative z-10">
           <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-rose-200 text-xs font-bold uppercase tracking-wider backdrop-blur-xs">
             <Sparkles className="w-3.5 h-3.5 text-rose-300" />
             {t("დაიწყეთ დღესვე", "Start Today")}
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
             {t(
               "მზად ხართ გაზარდოთ თქვენი სალონის ჯავშნები?",
               "Ready to Automate Your Salon & Boost Retention?"
             )}
           </h2>
-          <p className="text-rose-100/80 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+          <p className="text-rose-100/80 max-w-2xl mx-auto text-xs sm:text-base leading-relaxed">
             {t(
-              "დაარეგისტრირეთ თქვენი სალონი 1 წუთში, შექმენით მორგებული ჯავშნის გვერდი და მიეცით საშუალება MOERGE-ს, იზრუნოს თქვენს კლიენტებზე.",
-              "Set up your salon in 60 seconds, publish your custom booking link, and let MOERGE bring your clients back every 21 days."
+              "დაარეგისტრირეთ თქვენი სალონი 1 წუთში, შექმენით მორგებული ჯავშნის გვერდი და მიეცით საშუალება MOERGE-ს, ავტომატური შეხსენებებით სტაბილურად დააბრუნოს კლიენტები.",
+              "Set up your salon in 60 seconds, publish your custom booking page, and let MOERGE bring clients back with automated reminders."
             )}
           </p>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <Link
               href="/login"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white hover:bg-rose-50 text-rose-950 font-bold text-sm shadow-xl transition"
+              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white hover:bg-rose-50 text-rose-950 font-bold text-sm shadow-xl transition"
             >
               {t("სალონის რეგისტრაცია (უფასო სატესტო)", "Register Salon (Free Trial)")}
             </Link>
             <Link
               href="/book"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm border border-white/20 backdrop-blur-xs transition"
+              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm border border-white/20 backdrop-blur-xs transition"
             >
-              {t("ონლაინ ჩაწერის დემო (/book)", "View Booking Demo (/book)")}
+              {t("ონლაინ ჯავშნის ნახვა", "View Online Booking")}
             </Link>
           </div>
         </div>
       </section>
 
       {/* Comprehensive Footer with Legal Documents */}
-      <footer className="bg-white border-t border-rose-100 py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 text-xs text-stone-600">
+      <footer className="bg-white border-t border-rose-100 py-10 sm:py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 text-xs text-stone-600">
           {/* Brand info (2 cols on large) */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-600 to-rose-800 text-white flex items-center justify-center font-black">
                 <Sparkles className="w-5 h-5" />
               </div>
-              <div>
-                <span className="text-xl font-black text-stone-900 tracking-tight">
-                  MOERGE
-                </span>
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold">
-                  SaaS
-                </span>
-              </div>
+              <span className="text-xl font-black text-stone-900 tracking-tight">
+                MOERGE
+              </span>
             </div>
             <p className="text-stone-500 text-xs leading-relaxed max-w-sm">
               {t(
-                "MOERGE არის სილამაზის და ეპილაციის სალონების მართვის თანამედროვე პლატფორმა საქართველოში. ჭკვიანი ონლაინ ჯავშნები, ზუსტი 21-დღიანი ციკლი და საიმედო Resend ელ-ფოსტა.",
-                "MOERGE is Georgia's premier salon booking and automated 21-day care retention SaaS ecosystem. Precision timing in Asia/Tbilisi (GMT+4)."
+                "MOERGE არის სალონების მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა. ჭკვიანი გრაფიკი, ნულოვანი გადაფარვა და გაზრდილი განმეორებითი ვიზიტები.",
+                "MOERGE is Georgia's premier salon booking and automated client retention platform. Smart scheduling, zero conflicts, and elevated repeat bookings."
               )}
             </p>
             <div className="text-[11px] text-stone-400">
-              © {new Date().getFullYear()} MOERGE Ecosystem. {t("ყველა უფლება დაცულია.", "All rights reserved.")}
+              © {new Date().getFullYear()} MOERGE. {t("ყველა უფლება დაცულია.", "All rights reserved.")}
             </div>
           </div>
 
@@ -922,7 +942,7 @@ export default function MoergeLandingPage() {
             <ul className="space-y-2">
               <li>
                 <Link href="/book" className="hover:text-rose-600 transition">
-                  {t("ონლაინ ჯავშანი (/book)", "Public Booking (/book)")}
+                  {t("ონლაინ ჯავშანი", "Online Booking")}
                 </Link>
               </li>
               <li>

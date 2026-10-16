@@ -91,7 +91,7 @@ function PublicBookingFormContent() {
     reminder_interval_days: 21,
     booking_title: "დაჯავშნეთ თქვენი ვიზიტი ონლაინ | Book Your Visit Online",
     booking_subtitle:
-      "აირჩიეთ სასურველი პროცედურა, შეამოწმეთ თავისუფალი საათები რეალურ დროში და მიიღეთ ავტომატური 21-დღიანი შეხსენება.",
+      "აირჩიეთ სასურველი პროცედურა, შეამოწმეთ თავისუფალი საათები რეალურ დროში და მიიღეთ ავტომატური შეხსენება შემდეგ ვიზიტზე.",
     salon_address: "თბილისი, ჭავჭავაძის გამზ. 34",
     salon_phone: "+995 555 00 11 22",
     working_hours_start: "10:00",
@@ -283,20 +283,20 @@ function PublicBookingFormContent() {
               <Sparkles className="w-5 h-5" />
             </Link>
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 flex items-center gap-1.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 flex flex-wrap items-center gap-1 sm:gap-1.5">
                 <span>{t("ონლაინ ჩაწერა", "Online Booking")}</span>
                 <span className="text-stone-300">•</span>
-                <span className="text-stone-400 font-semibold">Powered by MOERGE</span>
-                <span className="text-stone-300">•</span>
-                <span>🇬🇪 {salonInfo.timezone || "Asia/Tbilisi"}</span>
+                <span className="text-stone-400 font-semibold">MOERGE</span>
+                <span className="text-stone-300 hidden sm:inline">•</span>
+                <span className="hidden sm:inline">🇬🇪 {salonInfo.timezone || "Asia/Tbilisi"}</span>
               </div>
-              <h1 className="text-base sm:text-lg font-bold text-stone-900">
+              <h1 className="text-base sm:text-lg font-bold text-stone-900 truncate max-w-[200px] sm:max-w-xs">
                 {salonInfo.salon_name}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <LanguageSwitcher />
             <Link
               href="/settings"
@@ -307,9 +307,9 @@ function PublicBookingFormContent() {
             </Link>
             <Link
               href="/dashboard"
-              className="text-xs font-semibold text-stone-700 hover:text-rose-600 px-3 py-1.5 rounded-xl border border-stone-200 hover:border-rose-200 bg-white transition"
+              className="text-xs font-semibold text-stone-700 hover:text-rose-600 px-2.5 sm:px-3 py-1.5 rounded-xl border border-stone-200 hover:border-rose-200 bg-white transition whitespace-nowrap"
             >
-              {t("სალონის პანელი →", "Staff Portal →")}
+              {t("პანელი →", "Portal →")}
             </Link>
           </div>
         </div>
@@ -329,8 +329,8 @@ function PublicBookingFormContent() {
             <p className="mt-1.5 text-xs sm:text-sm text-stone-600 max-w-2xl leading-relaxed">
               {salonInfo.booking_subtitle ||
                 t(
-                  "აირჩიეთ სასურველი პროცედურა, შეამოწმეთ თავისუფალი საათები რეალურ დროში და მიიღეთ ავტომატური 21-დღიანი შეხსენება.",
-                  "Pick your preferred treatment, check real-time availability, and receive automated 21-day care reminders."
+                  "აირჩიეთ სასურველი პროცედურა, შეამოწმეთ თავისუფალი საათები რეალურ დროში და მიიღეთ ავტომატური შეხსენება შემდეგ ვიზიტზე.",
+                  "Pick your preferred treatment, check real-time availability, and receive courtesy follow-up reminders."
                 )}
             </p>
           </div>
@@ -443,13 +443,13 @@ function PublicBookingFormContent() {
                 <div className="mt-5 p-4 rounded-2xl bg-rose-50/70 border border-rose-100 text-xs text-rose-900 leading-relaxed">
                   <strong>
                     {t(
-                      "21-დღიანი მოვლის ციკლი ჩართულია:",
-                      "21-Day Care Cycle Included:"
+                      "მოვლისა და შეხსენების სერვისი ჩართულია:",
+                      "Care & Reminder Service Included:"
                     )}
                   </strong>{" "}
                   {t(
-                    `ეპილაციის პროცედურის დასრულებიდან ${salonInfo.reminder_interval_days ?? 21} დღის შემდეგ ავტომატურად მიიღებთ შეხსენებას ელ-ფოსტაზე მომდევნო ვიზიტის დასაგეგმად.`,
-                    `Once your epilation session is completed at the salon, we will automatically send you a courtesy email reminder ${salonInfo.reminder_interval_days ?? 21} days later when it's time for your next visit.`
+                    "პროცედურის დასრულების შემდეგ ავტომატურად მიიღებთ შეხსენებას ელ-ფოსტაზე მომდევნო ვიზიტის დასაგეგმად.",
+                    "Once your session is completed, we will automatically send you a courtesy email reminder when it's time for your next appointment."
                   )}
                 </div>
               )}
@@ -543,7 +543,7 @@ function PublicBookingFormContent() {
                           </span>
                           {srv.is_epilation && (
                             <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold">
-                              {t("21 დღიანი ციკლი", "21d Reminder")}
+                              {t("ავტო-შეხსენება", "Auto Reminder")}
                             </span>
                           )}
                         </div>
@@ -951,8 +951,8 @@ function PublicBookingFormContent() {
                   />
                   <span className="text-xs text-stone-700 leading-relaxed">
                     {t(
-                      `თანახმა ვარ მივიღო ელ-ფოსტის შეხსენება ეპილაციის დასრულებიდან ${salonInfo.reminder_interval_days ?? 21} დღის შემდეგ მომდევნო ვიზიტის დასაჯავშნად.`,
-                      `Send me an email reminder ${salonInfo.reminder_interval_days ?? 21} days after my completed epilation treatment so I know when to book my next session.`
+                      "თანახმა ვარ მივიღო ელ-ფოსტის შეხსენება პროცედურის დასრულების შემდეგ მომდევნო ვიზიტის დასაჯავშნად.",
+                      "Send me a courtesy email reminder after my treatment so I know when to book my next session."
                     )}
                   </span>
                 </label>
