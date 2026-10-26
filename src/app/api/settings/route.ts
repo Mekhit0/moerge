@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       salon_name: parsed.data.salon_name,
       sender_display_name: parsed.data.sender_display_name,
       verified_sender_email: parsed.data.verified_sender_email,
-      timezone: parsed.data.timezone || "Asia/Tbilisi",
+      timezone: "Asia/Tbilisi",
       reminder_interval_days: parsed.data.reminder_interval_days,
       email_subject: parsed.data.email_subject,
       email_body_template: parsed.data.email_body_template,

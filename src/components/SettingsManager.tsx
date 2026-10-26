@@ -61,19 +61,6 @@ interface SettingsManagerProps {
   webhookSecretConfigured: boolean;
 }
 
-const COMMON_TIMEZONES = [
-  "Asia/Tbilisi",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Madrid",
-  "America/New_York",
-  "America/Chicago",
-  "America/Los_Angeles",
-  "Asia/Dubai",
-  "UTC",
-];
-
 const WORK_HOUR_OPTIONS = [
   "07:00",
   "08:00",
@@ -139,9 +126,7 @@ export default function SettingsManager({
   const [brandColor, setBrandColor] = useState(
     initialSettings.brand_color || "#e11d48"
   );
-  const [timezone, setTimezone] = useState(
-    initialSettings.timezone || "Asia/Tbilisi"
-  );
+  const timezone = "Asia/Tbilisi";
 
   // Tab 2: Services & Catalog
   const [customServices, setCustomServices] = useState<CustomBookingService[]>(
@@ -748,19 +733,11 @@ export default function SettingsManager({
                 <Globe className="w-3.5 h-3.5 inline mr-1 text-rose-500" />
                 {t("დროის სარტყელი", "Time Zone")}
               </label>
-              <select
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border border-stone-200 text-sm bg-white font-medium focus:outline-none focus:ring-2 focus:ring-rose-500"
-              >
-                {COMMON_TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz === "Asia/Tbilisi"
-                      ? "🇬🇪 Asia/Tbilisi (საქართველო GMT+4)"
-                      : tz}
-                  </option>
-                ))}
-              </select>
+              <div className="flex min-h-12 items-center gap-2 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-medium text-stone-700">
+                <span aria-hidden="true">🇬🇪</span>
+                <span>{t("საქართველო", "Georgia")}</span>
+                <span className="text-stone-400">Asia/Tbilisi · UTC+4</span>
+              </div>
             </div>
           </div>
         </div>

@@ -10,5 +10,5 @@ export default async function OnboardingPage() {
   if (ctx.settings.onboarding_completed_at) redirect("/dashboard");
   if (!requireRole(ctx, ["owner", "admin"])) redirect("/dashboard");
   return <OnboardingWizard initialName={ctx.salonName} initialPhone={ctx.settings.salon_phone ?? ""}
-    initialAddress={ctx.settings.salon_address ?? ""} timezone={ctx.settings.timezone} slug={ctx.salonSlug} />;
+    initialAddress={ctx.settings.salon_address ?? ""} slug={ctx.salonSlug} />;
 }

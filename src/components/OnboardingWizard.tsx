@@ -1,33 +1,47 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Plus, Trash2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { BILLING_CONFIG } from "@/lib/billing-plans";
 
-type ServiceDraft = { name_ka: string; name_en: string; price_gel: number; duration_minutes: number; category: string };
+type ServiceDraft = {
+  id: string;
+  name: string;
+  priceGel: number;
+  durationMinutes: number;
+  category: string;
+};
+
+type StaffDraft = { id: string; name: string };
+
 const templates: Record<"salon" | "aesthetic", ServiceDraft[]> = {
   salon: [
-    { name_ka: "თმის შეჭრა", name_en: "Haircut", price_gel: 35, duration_minutes: 45, category: "hair" },
-    { name_ka: "მანიკური", name_en: "Manicure", price_gel: 40, duration_minutes: 60, category: "nails" },
-    { name_ka: "სახის მოვლა", name_en: "Facial care", price_gel: 70, duration_minutes: 60, category: "skin" },
-    { name_ka: "კონსულტაცია", name_en: "Consultation", price_gel: 0, duration_minutes: 30, category: "consultation" },
+    { id: "haircut", name: "თმის შეჭრა", priceGel: 35, durationMinutes: 45, category: "hair" },
+    { id: "manicure", name: "მანიკური", priceGel: 40, durationMinutes: 60, category: "nails" },
+    { id: "facial-care", name: "სახის მოვლა", priceGel: 70, durationMinutes: 60, category: "skin" },
+    { id: "consultation", name: "კონსულტაცია", priceGel: 0, durationMinutes: 30, category: "consultation" },
   ],
   aesthetic: [
-    { name_ka: "კანის კონსულტაცია", name_en: "Skin consultation", price_gel: 0, duration_minutes: 30, category: "consultation" },
-    { name_ka: "სახის წმენდა", name_en: "Facial treatment", price_gel: 90, duration_minutes: 75, category: "facial" },
-    { name_ka: "ლაზერული პროცედურა", name_en: "Laser treatment", price_gel: 80, duration_minutes: 45, category: "laser" },
-    { name_ka: "მასაჟი", name_en: "Massage", price_gel: 100, duration_minutes: 60, category: "massage" },
+    { id: "skin-consultation", name: "კანის კონსულტაცია", priceGel: 0, durationMinutes: 30, category: "consultation" },
+    { id: "facial-cleaning", name: "სახის წმენდა", priceGel: 90, durationMinutes: 75, category: "facial" },
+    { id: "laser", name: "ლაზერული პროცედურა", priceGel: 80, durationMinutes: 45, category: "laser" },
+    { id: "massage", name: "მასაჟი", priceGel: 100, durationMinutes: 60, category: "massage" },
   ],
 };
+
 const weekdays = [
   ["ორშაბათი", "Monday"], ["სამშაბათი", "Tuesday"], ["ოთხშაბათი", "Wednesday"],
   ["ხუთშაბათი", "Thursday"], ["პარასკევი", "Friday"], ["შაბათი", "Saturday"], ["კვირა", "Sunday"],
 ];
 
-export default function OnboardingWizard({ initialName, initialPhone = "", initialAddress = "", timezone = "Asia/Tbilisi", slug }: {
-  initialName: string; initialPhone?: string; initialAddress?: string; timezone?: string; slug: string;
+const MAX_TRIAL_STAFF = BILLING_CONFIG.plans.business.staffIncluded;
+
+export default function OnboardingWizard({ initialName, initialPhone = "", initialAddress = "", slug }: {
+  initialName: string; initialPhone?: string; initialAddress?: string; slug: string;
 }) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -36,97 +50,279 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
   const [salonName, setSalonName] = useState(initialName);
   const [salonPhone, setSalonPhone] = useState(initialPhone);
   const [salonAddress, setSalonAddress] = useState(initialAddress);
-  const [timezoneValue, setTimezoneValue] = useState(timezone);
-  const [services, setServices] = useState<ServiceDraft[]>(templates.salon);
-  const [staffText, setStaffText] = useState("");
+  const [services, setServices] = useState<ServiceDraft[]>(() => templates.salon.map((service) => ({ ...service })));
+  const [staffMembers, setStaffMembers] = useState<StaffDraft[]>([{ id: "specialist-1", name: "" }]);
   const [workingDays, setWorkingDays] = useState([1, 2, 3, 4, 5, 6]);
   const [openTime, setOpenTime] = useState("10:00");
   const [closeTime, setCloseTime] = useState("19:00");
+  const [slotIntervalMinutes, setSlotIntervalMinutes] = useState(30);
   const [bookingUrl, setBookingUrl] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const staffNames = useMemo(() => staffText.split("\n").map((name) => name.trim()).filter(Boolean), [staffText]);
 
   useEffect(() => {
     if (!bookingUrl) return;
-    void QRCode.toDataURL(bookingUrl, { width: 240, margin: 2, color: { dark: "#292524", light: "#ffffff" } }).then(setQrDataUrl);
+    void QRCode.toDataURL(bookingUrl, {
+      width: 240,
+      margin: 2,
+      color: { dark: "#292524", light: "#ffffff" },
+    }).then(setQrDataUrl);
   }, [bookingUrl]);
 
   function setTemplate(type: "salon" | "aesthetic") {
     setSalonType(type);
     setServices(templates[type].map((service) => ({ ...service })));
+    setError(null);
   }
 
-  function updateService(index: number, key: "name_ka" | "name_en" | "price_gel", value: string) {
-    setServices((current) => current.map((service, serviceIndex) => serviceIndex === index
-      ? { ...service, [key]: key === "price_gel" ? Number(value) : value } : service));
+  function updateService(index: number, key: "name" | "priceGel" | "durationMinutes", value: string) {
+    setServices((current) => current.map((service, serviceIndex) => {
+      if (serviceIndex !== index) return service;
+      return { ...service, [key]: key === "name" ? value : Number(value) };
+    }));
+  }
+
+  function updateStaffName(id: string, value: string) {
+    setStaffMembers((current) => current.map((staff) => staff.id === id ? { ...staff, name: value } : staff));
+  }
+
+  function continueToNextStep() {
+    setError(null);
+
+    if (step === 0) {
+      if (salonName.trim().length < 2) {
+        setError(t("სალონის სახელი მინიმუმ 2 სიმბოლო უნდა იყოს.", "Enter a salon name with at least 2 characters."));
+        return;
+      }
+      if (salonPhone.replace(/\D/g, "").length < 7) {
+        setError(t("მიუთითეთ სწორი საკონტაქტო ტელეფონი.", "Enter a valid contact phone number."));
+        return;
+      }
+    }
+
+    if (step === 1) {
+      if (services.length === 0) {
+        setError(t("დაამატეთ მინიმუმ ერთი სერვისი.", "Add at least one service."));
+        return;
+      }
+      if (services.some((service) => service.name.trim().length < 2)) {
+        setError(t("თითოეულ სერვისს მიუთითეთ სახელი.", "Enter a name for each service."));
+        return;
+      }
+      if (services.some((service) => !Number.isFinite(service.priceGel) || service.priceGel < 0 || service.priceGel > 10000)) {
+        setError(t("შეამოწმეთ სერვისების ფასები.", "Check the service prices."));
+        return;
+      }
+      if (services.some((service) => !Number.isInteger(service.durationMinutes) || service.durationMinutes < 5 || service.durationMinutes > 720)) {
+        setError(t("სერვისის ხანგრძლივობა უნდა იყოს 5-დან 720 წუთამდე.", "Service duration must be between 5 and 720 minutes."));
+        return;
+      }
+      const serviceNames = services.map((service) => service.name.trim().toLocaleLowerCase());
+      if (new Set(serviceNames).size !== serviceNames.length) {
+        setError(t("სერვისის სახელები არ უნდა მეორდებოდეს.", "Service names must be unique."));
+        return;
+      }
+    }
+
+    setStep((current) => current + 1);
   }
 
   async function finishSetup() {
-    setSaving(true); setError(null);
+    setError(null);
+    const cleanedStaffNames = staffMembers.map((staff) => staff.name.trim()).filter(Boolean);
+    if (cleanedStaffNames.length === 0) {
+      setError(t("დაამატეთ მინიმუმ ერთი სპეციალისტი.", "Add at least one specialist."));
+      return;
+    }
+    if (cleanedStaffNames.some((name) => name.length < 2)) {
+      setError(t("სპეციალისტის სახელი მინიმუმ 2 სიმბოლო უნდა იყოს.", "Specialist names must be at least 2 characters."));
+      return;
+    }
+    if (cleanedStaffNames.length > MAX_TRIAL_STAFF) {
+      setError(t(`საცდელ გეგმაში მაქსიმუმ ${MAX_TRIAL_STAFF} სპეციალისტის დამატებაა შესაძლებელი.`, `The trial plan includes up to ${MAX_TRIAL_STAFF} specialists.`));
+      return;
+    }
+    if (new Set(cleanedStaffNames.map((name) => name.toLocaleLowerCase())).size !== cleanedStaffNames.length) {
+      setError(t("სპეციალისტის სახელები არ უნდა მეორდებოდეს.", "Specialist names must be unique."));
+      return;
+    }
+    if (workingDays.length === 0) {
+      setError(t("აირჩიეთ მინიმუმ ერთი სამუშაო დღე.", "Select at least one working day."));
+      return;
+    }
+    if (closeTime <= openTime) {
+      setError(t("დახურვის დრო გახსნის დროზე გვიან უნდა იყოს.", "Closing time must be after opening time."));
+      return;
+    }
+
+    setSaving(true);
     try {
       const response = await fetch("/api/onboarding", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ salonName, salonPhone, salonAddress, timezone: timezoneValue, services, staffNames,
-          workingDays, openTime, closeTime }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          salonName,
+          salonPhone,
+          salonAddress,
+          services: services.map((service) => ({
+            name_ka: service.name.trim(),
+            price_gel: service.priceGel,
+            duration_minutes: service.durationMinutes,
+            category: service.category,
+          })),
+          staffNames: cleanedStaffNames,
+          workingDays,
+          openTime,
+          closeTime,
+          slotIntervalMinutes,
+        }),
       });
       const result = await response.json();
-      if (!response.ok) { setError(result.error ?? t("მონაცემების შენახვა ვერ მოხერხდა.", "Could not save setup.")); return; }
+      if (!response.ok) {
+        setError(result.error ?? t("მონაცემების შენახვა ვერ მოხერხდა. სცადეთ ხელახლა.", "Could not save setup. Please try again."));
+        return;
+      }
       setBookingUrl(new URL(result.bookingUrl, window.location.origin).toString());
       setStep(3);
-      router.refresh();
     } catch {
-      setError(t("ქსელური შეცდომა. სცადეთ ხელახლა.", "Network error. Please try again."));
-    } finally { setSaving(false); }
+      setError(t("ქსელური შეცდომა. შეამოწმეთ კავშირი და სცადეთ ხელახლა.", "Network error. Check your connection and try again."));
+    } finally {
+      setSaving(false);
+    }
   }
 
-  const field = "mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-500";
+  const field = "mt-1 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100";
+  const steps = [t("სალონი", "Salon"), t("სერვისები", "Services"), t("გუნდი და გრაფიკი", "Team & hours")];
+
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-4 py-8 sm:py-14">
       <header className="mb-7 text-center">
         <div className="text-xs font-extrabold uppercase tracking-widest text-rose-600">moarge</div>
         <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{t("მოვამზადოთ თქვენი სალონი", "Set up your salon")}</h1>
-        <p className="mt-2 text-sm text-stone-500">{t("რამდენიმე ნაბიჯი და მზად იქნებით პირველი ჯავშნისთვის.", "A few quick steps to get ready for your first booking.")}</p>
+        <p className="mt-2 text-sm text-stone-500">{t("შეავსეთ ძირითადი ინფორმაცია. დეტალების შეცვლა მოგვიანებითაც შეგიძლიათ.", "Add the essentials. You can update these details later.")}</p>
       </header>
-      <div className="mb-6 grid grid-cols-4 gap-2" aria-label={t("მიმდინარეობა", "Progress")}>
-        {[0, 1, 2, 3].map((item) => <div key={item} className={`h-1.5 rounded-full ${item <= step ? "bg-rose-600" : "bg-stone-200"}`} />)}
-      </div>
+
+      {step < 3 && <nav className="mb-6 grid grid-cols-3 gap-2" aria-label={t("მომზადების ეტაპები", "Setup steps")}>
+        {steps.map((label, index) => <div key={label} aria-current={step === index ? "step" : undefined} className="space-y-2">
+          <div className={`h-1.5 rounded-full ${index <= step ? "bg-rose-600" : "bg-stone-200"}`} />
+          <p className={`text-center text-[11px] font-medium ${index === step ? "text-rose-700" : "text-stone-400"}`}>{index + 1}. {label}</p>
+        </div>)}
+      </nav>}
+
       <section className="rounded-3xl border border-rose-100 bg-white p-5 shadow-sm sm:p-8">
-        {step === 0 && <div className="space-y-4">
-          <h2 className="text-lg font-bold">{t("1. სალონის ინფორმაცია", "1. Salon information")}</h2>
-          <label className="block text-sm">{t("სალონის სახელი", "Salon name")}<input className={field} value={salonName} onChange={(event) => setSalonName(event.target.value)} /></label>
+        {step === 0 && <div className="space-y-5">
+        <div>
+            <h2 className="text-lg font-bold">{t("სალონის ინფორმაცია", "Salon information")}</h2>
+            <p className="mt-1 text-sm text-stone-500">{t("ეს ინფორმაცია ჯავშნის გვერდზეც გამოჩნდება.", "This information will also appear on your booking page.")}</p>
+          </div>
+          <label className="block text-sm font-medium">{t("სალონის სახელი", "Salon name")} *
+            <input required maxLength={120} autoComplete="organization" className={field} value={salonName} onChange={(event) => setSalonName(event.target.value)} />
+          </label>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm">{t("ტელეფონი", "Phone")}<input className={field} value={salonPhone} onChange={(event) => setSalonPhone(event.target.value)} placeholder="+995 5XX XX XX XX" /></label>
-            <label className="block text-sm">{t("დროის სარტყელი", "Time zone")}<input className={field} value={timezoneValue} onChange={(event) => setTimezoneValue(event.target.value)} /></label>
+            <label className="block text-sm font-medium">{t("საკონტაქტო ტელეფონი", "Contact phone")} *
+              <input required type="tel" autoComplete="tel" className={field} value={salonPhone} onChange={(event) => setSalonPhone(event.target.value)} placeholder="+995 5XX XX XX XX" />
+            </label>
+            <div className="text-sm font-medium">
+              <span>{t("დროის სარტყელი", "Time zone")}</span>
+              <div className="mt-1 flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm text-stone-700" aria-label={t("საქართველო, დროის სარტყელი Asia/Tbilisi", "Georgia, time zone Asia/Tbilisi")}>
+                <span aria-hidden="true">🇬🇪</span><span>{t("საქართველო", "Georgia")}</span><span className="text-stone-400">(Asia/Tbilisi)</span>
+              </div>
+            </div>
           </div>
-          <label className="block text-sm">{t("მისამართი (არასავალდებულო)", "Address (optional)")}<input className={field} value={salonAddress} onChange={(event) => setSalonAddress(event.target.value)} /></label>
+          <label className="block text-sm font-medium">{t("მისამართი", "Address")} <span className="font-normal text-stone-400">({t("არასავალდებულო", "optional")})</span>
+            <input maxLength={240} autoComplete="street-address" className={field} value={salonAddress} onChange={(event) => setSalonAddress(event.target.value)} placeholder={t("ქალაქი, ქუჩა და ნომერი", "City, street and number")} />
+          </label>
         </div>}
-        {step === 1 && <div className="space-y-4">
-          <h2 className="text-lg font-bold">{t("2. აირჩიეთ სერვისები", "2. Choose your services")}</h2>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setTemplate("salon")} className={`rounded-xl border px-4 py-2 text-sm ${salonType === "salon" ? "border-rose-600 bg-rose-50" : "border-stone-200"}`}>{t("სალონი", "Salon")}</button>
-            <button type="button" onClick={() => setTemplate("aesthetic")} className={`rounded-xl border px-4 py-2 text-sm ${salonType === "aesthetic" ? "border-rose-600 bg-rose-50" : "border-stone-200"}`}>{t("ესთეტიკა", "Aesthetic")}</button>
+
+        {step === 1 && <div className="space-y-5">
+          <div>
+            <h2 className="text-lg font-bold">{t("სერვისები და ფასები", "Services and prices")}</h2>
+            <p className="mt-1 text-sm text-stone-500">{t("სერვისის სახელი ერთხელ შეიყვანეთ. moarge ამ სახელს ორივე ენაზე გამოიყენებს.", "Enter each service name once. moarge will use that name in both languages.")}</p>
           </div>
-          <div className="space-y-3">{services.map((service, index) => <div key={`${service.category}-${index}`} className="grid gap-2 rounded-2xl border border-stone-100 p-3 sm:grid-cols-[1fr_1fr_100px]">
-            <label className="text-xs">{t("სახელი ქართულად", "Name in Georgian")}<input className={field} value={service.name_ka} onChange={(event) => updateService(index, "name_ka", event.target.value)} /></label>
-            <label className="text-xs">{t("სახელი ინგლისურად", "Name in English")}<input className={field} value={service.name_en} onChange={(event) => updateService(index, "name_en", event.target.value)} /></label>
-            <label className="text-xs">{t("ფასი ₾", "Price GEL")}<input type="number" min="0" className={field} value={service.price_gel} onChange={(event) => updateService(index, "price_gel", event.target.value)} /></label>
-          </div>)}</div>
-          <button type="button" onClick={() => setServices((current) => [...current, { name_ka: "ახალი სერვისი", name_en: "New service", price_gel: 0, duration_minutes: 45, category: "general" }])} className="text-sm font-semibold text-rose-700">+ {t("სერვისის დამატება", "Add a service")}</button>
-        </div>}
-        {step === 2 && <div className="space-y-4">
-          <h2 className="text-lg font-bold">{t("3. გუნდი და სამუშაო საათები", "3. Staff and working hours")}</h2>
-          <label className="block text-sm">{t("სპეციალისტების სახელები, თითო ხაზზე ერთი", "Staff names, one per line")}<textarea className={`${field} min-h-24`} value={staffText} onChange={(event) => setStaffText(event.target.value)} placeholder={t("მაგალითად: ნინო", "For example: Alex")} /></label>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <label className="text-sm">{t("იღება", "Opens")}<input type="time" className={field} value={openTime} onChange={(event) => setOpenTime(event.target.value)} /></label>
-            <label className="text-sm">{t("იკეტება", "Closes")}<input type="time" className={field} value={closeTime} onChange={(event) => setCloseTime(event.target.value)} /></label>
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t("სერვისების შაბლონი", "Service template")}>
+            <button type="button" aria-pressed={salonType === "salon"} onClick={() => setTemplate("salon")} className={`rounded-xl border px-4 py-2 text-sm font-medium ${salonType === "salon" ? "border-rose-400 bg-rose-50 text-rose-800" : "border-stone-200 text-stone-600"}`}>{t("სილამაზის სალონი", "Beauty salon")}</button>
+            <button type="button" aria-pressed={salonType === "aesthetic"} onClick={() => setTemplate("aesthetic")} className={`rounded-xl border px-4 py-2 text-sm font-medium ${salonType === "aesthetic" ? "border-rose-400 bg-rose-50 text-rose-800" : "border-stone-200 text-stone-600"}`}>{t("ესთეტიკური ცენტრი", "Aesthetic center")}</button>
           </div>
-          <fieldset><legend className="mb-2 text-sm font-medium">{t("სამუშაო დღეები", "Working days")}</legend><div className="flex flex-wrap gap-2">{weekdays.map(([ka, en], index) => <label key={en} className={`rounded-xl border px-3 py-2 text-xs ${workingDays.includes((index + 1) % 7) ? "border-rose-300 bg-rose-50" : "border-stone-200"}`}><input className="mr-1.5 accent-rose-600" type="checkbox" checked={workingDays.includes((index + 1) % 7)} onChange={() => setWorkingDays((current) => current.includes((index + 1) % 7) ? current.filter((day) => day !== (index + 1) % 7) : [...current, (index + 1) % 7])} />{t(ka, en)}</label>)}</div></fieldset>
-          <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">{t("ეს საათები გუნდის ყველა წევრს მიენიჭება. მათი შეცვლა მოგვიანებითაც შეგიძლიათ.", "These hours will be applied to every staff member. You can change them later.")}</p>
+
+          <div className="space-y-3">
+            {services.map((service, index) => <fieldset key={service.id} className="rounded-2xl border border-stone-200 p-4">
+              <legend className="px-1 text-xs font-semibold text-stone-500">{t("სერვისი", "Service")} {index + 1}</legend>
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px_150px_auto] sm:items-end">
+                <label className="text-xs font-medium text-stone-600">{t("სახელი ქართულად", "Name in Georgian")} *
+                  <input required maxLength={100} className={field} value={service.name} onChange={(event) => updateService(index, "name", event.target.value)} placeholder={t("მაგალითად, მანიკური", "For example, manicure")} />
+                </label>
+                <label className="text-xs font-medium text-stone-600">{t("ფასი (₾)", "Price (GEL)")} *
+                  <input required type="number" min="0" max="10000" step="0.01" className={field} value={service.priceGel} onChange={(event) => updateService(index, "priceGel", event.target.value)} />
+                </label>
+                <label className="text-xs font-medium text-stone-600">{t("ხანგრძლივობა (წუთი)", "Duration (minutes)")} *
+                  <input required type="number" min="5" max="720" step="5" className={field} value={service.durationMinutes} onChange={(event) => updateService(index, "durationMinutes", event.target.value)} />
+                </label>
+                <button type="button" disabled={services.length === 1} onClick={() => setServices((current) => current.filter((_, serviceIndex) => serviceIndex !== index))} aria-label={t(`${service.name || "სერვისი"} წაშლა`, `Remove ${service.name || "service"}`)} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 px-3 text-stone-500 hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </fieldset>)}
+          </div>
+          <button type="button" disabled={services.length >= 30} onClick={() => setServices((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "", priceGel: 0, durationMinutes: 30, category: "general" }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
+            <Plus className="h-4 w-4" />{t("სერვისის დამატება", "Add service")}
+          </button>
         </div>}
+
+        {step === 2 && <div className="space-y-5">
+          <div>
+            <h2 className="text-lg font-bold">{t("სპეციალისტები და სამუშაო გრაფიკი", "Specialists and working hours")}</h2>
+            <p className="mt-1 text-sm text-stone-500">{t("თითოეულ სპეციალისტს ცალკე ველში მიუთითეთ. ერთი გრაფიკი ყველას მიენიჭება.", "Add each specialist in their own field. The same schedule will be applied to everyone.")}</p>
+          </div>
+          <div className="space-y-3">
+            {staffMembers.map((staff, index) => <div key={staff.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+              <label className="text-xs font-medium text-stone-600">{t("სპეციალისტი", "Specialist")} {index + 1}
+                <input maxLength={120} autoComplete="off" className={field} value={staff.name} onChange={(event) => updateStaffName(staff.id, event.target.value)} placeholder={t("სახელი და გვარი", "First and last name")} />
+              </label>
+              <button type="button" disabled={staffMembers.length === 1} onClick={() => setStaffMembers((current) => current.filter((member) => member.id !== staff.id))} aria-label={t(`სპეციალისტი ${index + 1}-ის წაშლა`, `Remove specialist ${index + 1}`)} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 px-3 text-stone-500 hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>)}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" disabled={staffMembers.length >= MAX_TRIAL_STAFF} onClick={() => setStaffMembers((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "" }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
+              <Plus className="h-4 w-4" />{t("სპეციალისტის დამატება", "Add specialist")}
+            </button>
+            <span className="text-xs text-stone-500">{t(`საცდელ გეგმაში მაქსიმუმ ${MAX_TRIAL_STAFF} სპეციალისტია.`, `Up to ${MAX_TRIAL_STAFF} specialists on the trial plan.`)}</span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="text-sm font-medium">{t("გახსნა", "Opens")}
+              <input type="time" className={field} value={openTime} onChange={(event) => setOpenTime(event.target.value)} />
+            </label>
+            <label className="text-sm font-medium">{t("დახურვა", "Closes")}
+              <input type="time" className={field} value={closeTime} onChange={(event) => setCloseTime(event.target.value)} />
+            </label>
+            <label className="text-sm font-medium">{t("ჯავშნის ინტერვალი", "Booking interval")}
+              <select className={field} value={slotIntervalMinutes} onChange={(event) => setSlotIntervalMinutes(Number(event.target.value))}>
+                <option value={15}>15 {t("წუთი", "minutes")}</option>
+                <option value={30}>30 {t("წუთი", "minutes")}</option>
+                <option value={60}>60 {t("წუთი", "minutes")}</option>
+              </select>
+            </label>
+          </div>
+
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium">{t("სამუშაო დღეები", "Working days")}</legend>
+            <div className="flex flex-wrap gap-2">
+              {weekdays.map(([ka, en], index) => {
+                const day = (index + 1) % 7;
+                const checked = workingDays.includes(day);
+                return <label key={en} className={`rounded-xl border px-3 py-2 text-xs ${checked ? "border-rose-300 bg-rose-50" : "border-stone-200"}`}>
+                  <input className="mr-1.5 accent-rose-600" type="checkbox" checked={checked} onChange={() => setWorkingDays((current) => checked ? current.filter((item) => item !== day) : [...current, day])} />{t(ka, en)}
+                </label>;
+              })}
+            </div>
+          </fieldset>
+        </div>}
+
         {step === 3 && <div className="space-y-5 text-center">
-          <div className="text-4xl">✓</div>
+          <div className="text-4xl text-emerald-600" aria-hidden="true">✓</div>
           <h2 className="text-xl font-bold">{t("სალონი მზად არის", "Your salon is ready")}</h2>
           <p className="text-sm text-stone-600">{t("გაუზიარეთ ეს ბმული კლიენტებს ონლაინ ჩასაწერად.", "Share this link with clients so they can book online.")}</p>
           <a className="block break-all rounded-xl bg-stone-50 p-3 text-sm text-rose-700 underline" href={bookingUrl}>{bookingUrl}</a>
@@ -134,14 +330,15 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
           <button type="button" onClick={() => { void navigator.clipboard?.writeText(bookingUrl); }} className="rounded-xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white">{t("ბმულის კოპირება", "Copy booking link")}</button>
           <div><button type="button" onClick={() => router.push("/dashboard")} className="rounded-xl border border-stone-200 px-5 py-3 text-sm font-semibold">{t("პანელზე გადასვლა", "Go to dashboard")}</button></div>
         </div>}
-        {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-        {step < 3 && <div className="mt-7 flex justify-between gap-3">
-          <button type="button" disabled={step === 0} onClick={() => setStep((current) => current - 1)} className="rounded-xl border border-stone-200 px-4 py-2.5 text-sm disabled:invisible">{t("უკან", "Back")}</button>
-          {step < 2 ? <button type="button" onClick={() => setStep((current) => current + 1)} className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white">{t("გაგრძელება", "Continue")}</button>
-            : <button type="button" disabled={saving || !staffNames.length || !workingDays.length} onClick={finishSetup} className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving ? t("ინახება...", "Saving...") : t("დასრულება", "Finish setup")}</button>}
+
+        {error && <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        {step < 3 && <div className="mt-7 flex justify-between gap-3 border-t border-stone-100 pt-5">
+          <button type="button" disabled={step === 0 || saving} onClick={() => { setError(null); setStep((current) => current - 1); }} className="rounded-xl border border-stone-200 px-4 py-2.5 text-sm disabled:invisible">{t("უკან", "Back")}</button>
+          {step < 2
+            ? <button type="button" onClick={continueToNextStep} className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white">{t("გაგრძელება", "Continue")}</button>
+            : <button type="button" disabled={saving} onClick={finishSetup} className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving ? t("ინახება...", "Saving...") : t("დასრულება", "Finish setup")}</button>}
         </div>}
       </section>
     </main>
   );
 }
-
