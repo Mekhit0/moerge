@@ -48,12 +48,18 @@ export default async function ClientProfilePage({
 
   const appointments = (appointmentsData ?? []) as Appointment[];
   const emailLogs = (logsData ?? []) as EmailLog[];
+  const completedAppointments = appointments.filter((appointment) => appointment.status === "completed");
+  const totalSpent = completedAppointments.reduce((sum, appointment) =>
+    sum + Number(appointment.price_snapshot ?? appointment.price_gel ?? 0), 0);
+  const lastVisit = completedAppointments[0]?.treatment_date ?? null;
 
   return (
     <ClientProfileView
       client={client}
       appointments={appointments}
       emailLogs={emailLogs}
+      totalSpent={totalSpent}
+      lastVisit={lastVisit}
     />
   );
 }

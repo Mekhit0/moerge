@@ -74,6 +74,16 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
+  if (Object.keys(body).length === 1 && Array.isArray(body.tags)) {
+    const tags = body.tags.map((tag) => typeof tag === "string" ? tag.trim().slice(0, 40) : "")
+      .filter((tag, index, all) => tag.length > 0 && all.indexOf(tag) === index).slice(0, 20);
+    if (tags.length !== body.tags.length) return NextResponse.json({ error: "Tags must be text, up to 20 items." }, { status: 400 });
+    const { data: updated, error } = await ctx.supabase.from("clients").update({ tags })
+      .eq("id", id).eq("salon_id", ctx.salonId).select("*").single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ client: updated });
+  }
+
   // Handle archive / restore toggle if requested
   if (typeof body.is_archived === "boolean" && Object.keys(body).length === 1) {
     if (!requireRole(ctx, ["owner", "admin"])) {

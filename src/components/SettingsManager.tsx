@@ -174,6 +174,10 @@ export default function SettingsManager({
   const [bookingCancelDeadlineHours, setBookingCancelDeadlineHours] = useState(
     initialSettings.booking_cancel_deadline_hours ?? 24
   );
+  const [depositRequired, setDepositRequired] = useState(initialSettings.deposit_required ?? false);
+  const [depositMode, setDepositMode] = useState<"fixed" | "percentage">(initialSettings.deposit_percentage ? "percentage" : "fixed");
+  const [depositAmount, setDepositAmount] = useState(initialSettings.deposit_amount_gel ?? 20);
+  const [depositPercentage, setDepositPercentage] = useState(initialSettings.deposit_percentage ?? 20);
   const [sendBookingConfirmationEmail, setSendBookingConfirmationEmail] =
     useState(initialSettings.send_booking_confirmation_email ?? true);
 
@@ -433,6 +437,9 @@ export default function SettingsManager({
           working_hours_end: workingHoursEnd,
           slot_interval_minutes: Number(slotIntervalMinutes),
           booking_cancel_deadline_hours: Number(bookingCancelDeadlineHours),
+          deposit_required: depositRequired,
+          deposit_amount_gel: depositRequired && depositMode === "fixed" ? Number(depositAmount) : null,
+          deposit_percentage: depositRequired && depositMode === "percentage" ? Number(depositPercentage) : null,
           send_booking_confirmation_email: sendBookingConfirmationEmail,
         }),
       });
@@ -1202,6 +1209,18 @@ export default function SettingsManager({
               </select>
             </div>
           </div>
+
+          <section className="rounded-2xl border border-rose-100 bg-white p-5">
+            <label className="flex items-start gap-3">
+              <input type="checkbox" checked={depositRequired} onChange={(event) => setDepositRequired(event.target.checked)} className="mt-1 accent-rose-600" />
+              <span><strong className="block text-sm">{t("მოითხოვეთ წინასწარი დეპოზიტი", "Require a booking deposit")}</strong><span className="mt-1 block text-xs text-stone-500">{t("დეპოზიტის პარამეტრი ინახება, გადახდისთვის საჭიროა ჩართული პროვაიდერი.", "Deposit preference is saved; payment processing requires an enabled payment provider.")}</span></span>
+            </label>
+            {depositRequired && <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="text-xs">{t("დეპოზიტის ტიპი", "Deposit type")}<select value={depositMode} onChange={(event) => setDepositMode(event.target.value as "fixed" | "percentage")} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm"><option value="fixed">{t("ფიქსირებული თანხა", "Fixed amount")}</option><option value="percentage">{t("სერვისის პროცენტი", "Percent of service price")}</option></select></label>
+              {depositMode === "fixed" ? <label className="text-xs">{t("თანხა ₾", "Amount GEL")}<input type="number" min="1" max="10000" step="0.01" value={depositAmount} onChange={(event) => setDepositAmount(Number(event.target.value))} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm" /></label>
+                : <label className="text-xs">{t("პროცენტი", "Percentage")}<input type="number" min="1" max="100" value={depositPercentage} onChange={(event) => setDepositPercentage(Number(event.target.value))} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm" /></label>}
+            </div>}
+          </section>
 
           {/* Booking Page Content */}
           <div className="space-y-4 pt-2">

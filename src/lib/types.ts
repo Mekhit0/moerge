@@ -105,6 +105,10 @@ export interface SalonSettings {
   booking_cancel_deadline_hours?: number;
   custom_services?: CustomBookingService[];
   send_booking_confirmation_email?: boolean;
+  onboarding_completed_at?: string | null;
+  deposit_required?: boolean;
+  deposit_amount_gel?: number | null;
+  deposit_percentage?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -118,6 +122,7 @@ export interface Client {
   normalized_phone?: string | null;
   phone: string | null;
   notes: string | null;
+  tags?: string[];
   email_consent: boolean;
   unsubscribed_at: string | null;
   sms_consent: boolean;

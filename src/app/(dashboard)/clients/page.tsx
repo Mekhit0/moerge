@@ -18,5 +18,5 @@ export default async function ClientsPage() {
     .eq("salon_id", ctx.salonId)
     .order("created_at", { ascending: false });
 
-  return <ClientsManager initialClients={(data ?? []) as Client[]} />;
+  return <ClientsManager initialClients={(data ?? []) as Client[]} canManageData={ctx.role === "owner" || ctx.role === "admin"} />;
 }

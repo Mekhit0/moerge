@@ -1,4 +1,5 @@
 import { calculateRetryPlan, classifyEmailError } from "./scheduling";
+import { BILLING_CONFIG } from "./billing-plans";
 import { createResendTransport, platformSender, type EmailTransport } from "./reminder-worker";
 
 export type NotificationChannel = "sms" | "email";
@@ -132,7 +133,7 @@ export function createUbilSmsProvider(options: {
         error.statusCode = statusCode;
         throw error;
       }
-      return { id: String(payload.smsID) };
+      return { id: String(payload.smsID), cost: BILLING_CONFIG.smsProviderCostGel };
     },
   };
 }

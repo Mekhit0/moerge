@@ -40,7 +40,10 @@ The optional `supabase/seed.sql` contains synthetic local salon and client recor
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Privileged server routes and database rate limiting | Server only |
 | `NEXT_PUBLIC_APP_URL` | Yes in deployed environments | Canonical links and email URLs | Browser and server |
 | `RESEND_API_KEY` | Yes for live email | Platform email delivery | Server only |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Optional | Server/client error reporting | Server / public DSN |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Optional for releases | Sentry source map upload | Build only |
 | `RESEND_FROM_DOMAIN` | Yes for live email | Verified sender domain | Server only |
+| `PAYMENT_PROVIDER` | No | Set to `fake` for local or staging billing-flow tests only | Server only |
 | `UBILL_API_KEY` | Yes for live SMS | uBill API authentication | Server only |
 | `UBILL_BRAND_ID` | Yes for live SMS | Authorized uBill sender brand | Server only |
 | `NOTIFICATION_PROVIDER` | No | Set to `fake` to simulate delivery | Server only |
@@ -65,6 +68,17 @@ Existing databases may already have the replaced versions recorded. Do not apply
 ## Deployment
 
 Deploy the Next.js app through Vercel and configure the required environment variables above in the appropriate Vercel environments. Verify the Resend sending domain and configure the Resend webhook to call `/api/webhooks/resend`. Configure the Turnstile site for the deployed booking domain. For SMS, add the uBill API key and authorized brand ID. Apply database changes to a confirmed staging project first, then follow the project's normal production release process.
+
+## Payments
+
+Billing currently uses a provider-agnostic ledger and fake checkout for local or staging flow tests. Do not enable fake payments in production. The owner selected Flitt, but a real adapter is not implemented until the owner supplies and confirms the recurring or invoice API documentation. Plans and rates are centralized in `src/lib/billing-plans.ts`; the billing UI reads the config through the server API. Trial salons receive 14 days without a card, with email only and no SMS. An expired trial or a plan invoice beyond its seven-day grace period is intended to pause booking and reminders and leave data read-only; records are never deleted automatically. Unpaid usage invoices pause SMS after seven days while bookings and email continue.
+
+## Daily backup procedure
+
+1. In Supabase Dashboard, open **Database → Backups** and confirm the latest scheduled backup completed within the last day. Paid Supabase projects create daily backups; projects without managed daily backups need an encrypted daily `supabase db dump` export stored outside the project.
+2. Check that the backup covers the database and Auth records needed for recovery. Supabase database backups do not include Storage objects, so back up Storage objects separately if the app begins storing client files.
+3. Once a month, restore the latest backup into a separate staging project and verify migrations, sign-in, salons, clients, and bookings. Record the restore date and any failures in the operations log.
+4. For an incident, select the latest backup from before the data loss in the Supabase dashboard, announce expected downtime, restore, then verify the app before reopening booking. Supabase documents the daily backup retention and restore flow in its [backup guide](https://supabase.com/docs/guides/platform/backups).
 
 ## Reminder scheduler
 

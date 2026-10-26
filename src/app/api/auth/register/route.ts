@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       email,
       password,
       options: {
-        emailRedirectTo: new URL("/auth/callback?next=%2Fdashboard", request.url).toString(),
+        emailRedirectTo: new URL("/auth/callback?next=%2Fonboarding", request.url).toString(),
         data: { full_name: fullName, salon_name: salonName },
       },
     });

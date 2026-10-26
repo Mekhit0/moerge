@@ -282,9 +282,17 @@ export const salonSettingsSchema = z
       .max(720)
       .optional()
       .default(24),
+    deposit_required: z.boolean().optional().default(false),
+    deposit_amount_gel: z.coerce.number().positive().max(10000).optional().nullable(),
+    deposit_percentage: z.coerce.number().int().min(1).max(100).optional().nullable(),
     send_booking_confirmation_email: z.boolean().optional().default(true),
   })
   .superRefine((data, ctx) => {
+    const hasFixed = data.deposit_amount_gel !== undefined && data.deposit_amount_gel !== null;
+    const hasPercent = data.deposit_percentage !== undefined && data.deposit_percentage !== null;
+    if ((data.deposit_required && hasFixed === hasPercent) || (!data.deposit_required && (hasFixed || hasPercent))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["deposit_required"], message: "Choose either a fixed deposit or a percentage deposit." });
+    }
     if (data.auto_reminders_enabled) {
       if (
         !data.verified_sender_email ||

@@ -32,6 +32,9 @@ async function processQueue(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Server configuration error." }, { status: 500 });
   }
 
+  const { error: billingError } = await supabase.rpc("process_billing_cycle");
+  if (billingError) return NextResponse.json({ error: billingError.message }, { status: 500 });
+
   const { data, error } = await supabase.rpc("claim_due_notifications", { p_limit: 25 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

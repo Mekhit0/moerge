@@ -17,16 +17,20 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
+  Download,
+  Upload,
 } from "lucide-react";
 import { Client } from "@/lib/types";
 import { useLanguage } from "@/lib/i18n";
 
 interface ClientsManagerProps {
   initialClients: Client[];
+  canManageData: boolean;
 }
 
 export default function ClientsManager({
   initialClients,
+  canManageData,
 }: ClientsManagerProps) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -49,6 +53,20 @@ export default function ClientsManager({
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState("");
+
+  async function importCsv(file?: File) {
+    if (!file) return;
+    setImporting(true); setImportMessage("");
+    try {
+      const response = await fetch("/api/clients/import", { method: "POST", headers: { "Content-Type": "text/csv" }, body: await file.text() });
+      const result = await response.json();
+      if (!response.ok) setImportMessage(result.error ?? t("იმპორტი ვერ მოხერხდა.", "Import failed."));
+      else { setImportMessage(t(`დაემატა ${result.imported} კლიენტი. გამოტოვებულია ${result.skipped_duplicates} დუბლიკატი.`, `Imported ${result.imported} clients. Skipped ${result.skipped_duplicates} duplicates.`)); router.refresh(); }
+    } catch { setImportMessage(t("ქსელური შეცდომა.", "Network error.")); }
+    finally { setImporting(false); }
+  }
 
   // Confirmation modal for archiving
   const [archiveTarget, setArchiveTarget] = useState<Client | null>(null);
@@ -210,15 +228,18 @@ export default function ClientsManager({
             )}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openNewClientModal}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-sm shadow-rose-600/20 transition cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          {t("ახალი კლიენტის დამატება", "Add New Client")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {canManageData && <>
+            <button type="button" onClick={() => window.location.assign("/api/clients/export")} className="inline-flex items-center gap-2 rounded-xl border border-stone-200 px-3 py-2.5 text-xs font-semibold"><Download className="h-4 w-4" />{t("CSV ექსპორტი", "Export CSV")}</button>
+            <label className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border border-stone-200 px-3 py-2.5 text-xs font-semibold ${importing ? "opacity-50" : ""}`}><Upload className="h-4 w-4" />{importing ? t("იმპორტი...", "Importing...") : t("CSV იმპორტი", "Import CSV")}<input type="file" accept=".csv,text/csv" className="sr-only" disabled={importing} onChange={(event) => { void importCsv(event.target.files?.[0]); event.currentTarget.value = ""; }} /></label>
+          </>}
+          <button type="button" onClick={openNewClientModal} className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-600/20 transition">
+            <Plus className="h-4 w-4" />{t("ახალი კლიენტის დამატება", "Add New Client")}
+          </button>
+        </div>
       </div>
+
+      {importMessage && <p role="status" className="rounded-xl border border-stone-200 bg-white p-3 text-sm">{importMessage}<span className="mt-1 block text-xs text-stone-500">{t("CSV სვეტები: full_name, phone, email, notes, tags (თეგები გამოყავით | სიმბოლოთი).", "CSV columns: full_name, phone, email, notes, tags (separate tags with |).")}</span></p>}
 
       {toast && (
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center justify-between">
