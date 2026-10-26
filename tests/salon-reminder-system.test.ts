@@ -329,14 +329,14 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       treatment_date: "2026-10-01",
       treatment_type: "laser_epilation",
       appointment_status: "completed",
-      salon_name: "Lumière Epilation Studio",
-      sender_display_name: "Lumière Studio",
-      verified_sender_email: "reminders@lumieresalon.com",
+      salon_name: "moarge Demo Salon",
+      sender_display_name: "moarge Demo Salon",
+      verified_sender_email: "reminders@example.com",
       timezone: "America/New_York",
       email_subject: "It's time to book your next epilation appointment!",
       email_body_template:
         "Hi {{client_name}}, book at {{booking_link}} with {{salon_name}}!",
-      booking_url: "https://lumieresalon.com/book",
+      booking_url: "https://example.com/book",
       brand_color: "#e11d48",
       dry_run_mode: false,
       test_recipient_email: null,
@@ -367,7 +367,7 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       const permanentFailTransport: EmailTransport = {
         sendEmail: vi.fn().mockRejectedValue(
           Object.assign(
-            new Error("The lumieresalon.com domain is not verified"),
+            new Error("The example.com domain is not verified"),
             { statusCode: 422 }
           )
         ),
@@ -421,14 +421,14 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
         {
           ...baseJob,
           dry_run_mode: true,
-          test_recipient_email: "qa-safe@lumieresalon.com",
+          test_recipient_email: "qa-safe@example.com",
         },
         { transport: null, envDryRun: true }
       );
 
       expect(result.outcome).toBe("dry_run_delivered");
       expect(result.isDryRun).toBe(true);
-      expect(result.recipientEmail).toBe("qa-safe@lumieresalon.com");
+      expect(result.recipientEmail).toBe("qa-safe@example.com");
     });
   });
 
@@ -454,13 +454,13 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
         treatment_date: "2026-10-01",
         treatment_type: "epilation",
         appointment_status: "completed",
-        salon_name: "Lumière Studio",
-        sender_display_name: "Lumière Studio",
-        verified_sender_email: "reminders@lumieresalon.com",
+        salon_name: "moarge Demo Salon",
+        sender_display_name: "moarge Demo Salon",
+        verified_sender_email: "reminders@example.com",
         timezone: "UTC",
         email_subject: "Reminder",
         email_body_template: "Hi {{client_name}}, {{booking_link}}",
-        booking_url: "https://lumieresalon.com/book",
+        booking_url: "https://example.com/book",
         brand_color: "#e11d48",
         dry_run_mode: false,
         test_recipient_email: null,
@@ -502,15 +502,15 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
 
     it("validates salon settings before enabling automatic sending", () => {
       const invalidPlaceholderSender = salonSettingsSchema.safeParse({
-        salon_name: "Lumière Studio",
-        sender_display_name: "Lumière",
+        salon_name: "moarge Demo Salon",
+        sender_display_name: "moarge Demo Salon",
         verified_sender_email: "test@example.com",
         timezone: "America/New_York",
         reminder_interval_days: 21,
         email_subject: "It's time to book your next epilation appointment!",
         email_body_template:
           "Hi {{client_name}}, book your next session here: {{booking_link}}",
-        booking_url: "https://lumieresalon.com/book",
+        booking_url: "https://example.com/book",
         brand_color: "#e11d48",
         auto_reminders_enabled: true,
         dry_run_mode: false,
@@ -522,17 +522,17 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
     it("renders customizable email template with salon branding and unsubscribe link", () => {
       const rendered = renderReminderEmail({
         clientName: "Elena Rostova",
-        salonName: "Lumière Epilation Studio",
-        bookingUrl: "https://lumieresalon.com/book",
-        unsubscribeUrl: "https://lumieresalon.com/unsubscribe?token=123",
+        salonName: "moarge Demo Salon",
+        bookingUrl: "https://example.com/book",
+        unsubscribeUrl: "https://example.com/unsubscribe?token=123",
       });
 
       expect(rendered.subject).toBe(
         "It's time to book your next epilation appointment!"
       );
       expect(rendered.text).toContain("Hi Elena Rostova,");
-      expect(rendered.text).toContain("https://lumieresalon.com/book");
-      expect(rendered.text).toContain("Lumière Epilation Studio Team");
+      expect(rendered.text).toContain("https://example.com/book");
+      expect(rendered.text).toContain("moarge Demo Salon Team");
       expect(rendered.html).toContain("Book Your Next Appointment");
       expect(rendered.html).toContain("Unsubscribe from future reminders");
     });
@@ -640,8 +640,8 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
 
       const renderedKa = renderReminderEmail({
         clientName: "ნინო ბერიძე",
-        salonName: "Lumière Epilation Studio",
-        bookingUrl: "https://lumieresalon.com/book",
+        salonName: "moarge Demo Salon",
+        bookingUrl: "https://example.com/book",
         subjectTemplate: GEORGIAN_DEFAULT_EMAIL_SUBJECT,
         bodyTemplate: GEORGIAN_DEFAULT_EMAIL_BODY,
       });
@@ -651,7 +651,7 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       );
       expect(renderedKa.text).toContain("გამარჯობა ნინო ბერიძე,");
       expect(renderedKa.text).toContain("21 დღე");
-      expect(renderedKa.text).toContain("https://lumieresalon.com/book");
+      expect(renderedKa.text).toContain("https://example.com/book");
     });
   });
 });

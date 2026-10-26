@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getAuthenticatedSalonContext,
-  createAdminOrRpcSupabaseClient,
   SAFE_SALON_SETTINGS_SELECT,
+  requireRole,
 } from "@/lib/supabase/server";
 import { salonSettingsSchema } from "@/lib/validation";
 
@@ -10,6 +10,9 @@ export async function GET(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!requireRole(ctx, ["owner", "admin"])) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const host =
@@ -19,14 +22,9 @@ export async function GET(request: NextRequest) {
     (host?.includes("localhost") ? "http" : "https");
   const baseUrl = host
     ? `${proto}://${host}`
-    : process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app";
+    : process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app";
   const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${ctx.salonSlug}`;
 
-  const hasSavedKey = Boolean(
-    ctx.settings.resend_api_key &&
-      (ctx.settings.resend_api_key.startsWith("re_") ||
-        ctx.settings.resend_api_key === "********")
-  );
   const hasEnvKey = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")
   );
@@ -36,9 +34,8 @@ export async function GET(request: NextRequest) {
       ...ctx.settings,
       booking_url: autoBookingUrl,
       salon_slug: ctx.salonSlug,
-      resend_api_key: hasSavedKey ? "********" : null,
     },
-    resendConfigured: hasSavedKey || hasEnvKey,
+    resendConfigured: hasEnvKey,
     webhookSecretConfigured: Boolean(
       process.env.RESEND_WEBHOOK_SECRET &&
         process.env.RESEND_WEBHOOK_SECRET.startsWith("whsec_")
@@ -50,6 +47,9 @@ export async function POST(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!requireRole(ctx, ["owner", "admin"])) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   let body: unknown;
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     (host?.includes("localhost") ? "http" : "https");
   const baseUrl = host
     ? `${proto}://${host}`
-    : process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app";
+    : process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app";
   let effectiveSlug = ctx.salonSlug;
   if (parsed.data.salon_slug) {
     const requestedSlug = parsed.data.salon_slug.toLowerCase().trim();
@@ -109,37 +109,6 @@ export async function POST(request: NextRequest) {
   }
 
   const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${effectiveSlug}`;
-
-  // If a new key or null was provided (not the masked placeholder "********"), update resend_api_key via service client
-  let adminClient;
-  try {
-    adminClient = createAdminOrRpcSupabaseClient();
-  } catch {
-    // Admin client optional if service role key not set in current environment
-  }
-
-  let hasSavedKey = Boolean(
-    ctx.settings.resend_api_key &&
-      (ctx.settings.resend_api_key.startsWith("re_") ||
-        ctx.settings.resend_api_key === "********")
-  );
-
-  if (
-    adminClient &&
-    parsed.data.resend_api_key !== undefined &&
-    parsed.data.resend_api_key !== "********"
-  ) {
-    const keyVal = parsed.data.resend_api_key
-      ? parsed.data.resend_api_key.trim()
-      : null;
-    await adminClient
-      .from("salon_settings")
-      .update({ resend_api_key: keyVal })
-      .eq("salon_id", ctx.salonId);
-
-    hasSavedKey = Boolean(keyVal && keyVal.startsWith("re_"));
-  }
-
   // Update non-sensitive columns with user-scoped authenticated client
   const { data: updatedSettings, error } = await ctx.supabase
     .from("salon_settings")
@@ -186,11 +155,9 @@ export async function POST(request: NextRequest) {
       ...updatedSettings,
       booking_url: autoBookingUrl,
       salon_slug: effectiveSlug,
-      resend_api_key: hasSavedKey ? "********" : null,
     },
     resendConfigured: Boolean(
-      hasSavedKey ||
-        (process.env.RESEND_API_KEY &&
+      (process.env.RESEND_API_KEY &&
           process.env.RESEND_API_KEY.startsWith("re_"))
     ),
   });

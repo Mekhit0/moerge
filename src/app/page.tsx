@@ -28,9 +28,9 @@ import {
   BellRing,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
-import MoergeLogo from "@/components/MoergeLogo";
+import MoargeLogo from "@/components/MoargeLogo";
 
-export default function MoergeLandingPage() {
+export default function MoargeLandingPage() {
   const { t } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [heroSlot, setHeroSlot] = useState<"11:00" | "12:00" | "13:00">("12:00");
@@ -40,8 +40,8 @@ export default function MoergeLandingPage() {
     {
       q_ka: "როგორ მუშაობს ავტომატური შეხსენებების სისტემა?",
       q_en: "How does the automated client reminder engine work?",
-      a_ka: "მას შემდეგ, რაც სალონის ადმინისტრატორი ვიზიტს მონიშნავს როგორც 'დასრულებული', MOERGE ავტომატურად ამზადებს პერსონალურ შეხსენებას პროცედურის ტიპის მიხედვით. შეხსენება იგზავნება კლიენტის ელ-ფოსტაზე სალონის სახელით და პირდაპირი ჯავშნის ბმულით შემდეგი ვიზიტისთვის. შედეგად, კლიენტი დროულად ბრუნდება თქვენთან თქვენი ჩარევის გარეშე.",
-      a_en: "Once staff marks an appointment as 'Completed', MOERGE automatically schedules a personalized care and follow-up reminder. The email is delivered with your salon branding and a 1-click booking link, ensuring clients return right on schedule without manual phone calls.",
+      a_ka: "მას შემდეგ, რაც სალონის ადმინისტრატორი ვიზიტს მონიშნავს როგორც 'დასრულებული', moarge ავტომატურად ამზადებს პერსონალურ შეხსენებას პროცედურის ტიპის მიხედვით. შეხსენება იგზავნება კლიენტის ელ-ფოსტაზე სალონის სახელით და პირდაპირი ჯავშნის ბმულით შემდეგი ვიზიტისთვის. შედეგად, კლიენტი დროულად ბრუნდება თქვენთან თქვენი ჩარევის გარეშე.",
+      a_en: "Once staff marks an appointment as 'Completed', moarge automatically schedules a personalized care and follow-up reminder. The email is delivered with your salon branding and a 1-click booking link, ensuring clients return right on schedule without manual phone calls.",
     },
     {
       q_ka: "შეუძლია თუ არა სალონს საკუთარი სერვისების, ფასების (₾) და საათების მითითება?",
@@ -52,8 +52,8 @@ export default function MoergeLandingPage() {
     {
       q_ka: "როგორ იცავს სისტემა სალონს ორმაგი ჯავშნებისგან (Double Bookings)?",
       q_en: "How does the system prevent double-bookings and time slot conflicts?",
-      a_ka: "MOERGE აღჭურვილია ჭკვიანი დეტექტორით (Smart Slot Guard). როდესაც კლიენტი ან ადმინისტრატორი ირჩევს თარიღს და პროცედურას, სისტემა რეალურ დროში ითვლის ხანგრძლივობას, ამოწმებს უკვე ჩაწერილ ვიზიტებს და ავტომატურად ბლოკავს დაკავებულ საათებს. შედეგად, ორი კლიენტი ერთსა და იმავე დროს ვერასოდეს ჩაეწერება.",
-      a_en: "MOERGE features a real-time Smart Slot Guard. When a client or staff selects a treatment, the engine calculates the exact duration, checks booked appointments, and blocks conflicting hours in real-time. Conflicting reservations are completely eliminated.",
+      a_ka: "moarge აღჭურვილია ჭკვიანი დეტექტორით (Smart Slot Guard). როდესაც კლიენტი ან ადმინისტრატორი ირჩევს თარიღს და პროცედურას, სისტემა რეალურ დროში ითვლის ხანგრძლივობას, ამოწმებს უკვე ჩაწერილ ვიზიტებს და ავტომატურად ბლოკავს დაკავებულ საათებს. შედეგად, ორი კლიენტი ერთსა და იმავე დროს ვერასოდეს ჩაეწერება.",
+      a_en: "moarge features a real-time Smart Slot Guard. When a client or staff selects a treatment, the engine calculates the exact duration, checks booked appointments, and blocks conflicting hours in real-time. Conflicting reservations are completely eliminated.",
     },
     {
       q_ka: "სად იგზავნება ონლაინ ჩაწერის ბმული და როგორ იყენებენ მას კლიენტები?",
@@ -72,7 +72,7 @@ export default function MoergeLandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "MOERGE",
+    name: "moarge",
     operatingSystem: "All (Web Browser, iOS, Android)",
     applicationCategory: "BusinessApplication",
     offers: {
@@ -103,10 +103,10 @@ export default function MoergeLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <MoergeLogo size="md" variant="icon" />
+            <MoargeLogo size="md" variant="icon" />
             <div>
               <span className="text-xl sm:text-2xl font-black tracking-tight text-stone-900 block leading-none">
-                MOERGE
+                moarge
               </span>
               <p className="text-[11px] text-stone-500 hidden sm:block font-medium mt-1">
                 {t(
@@ -177,7 +177,7 @@ export default function MoergeLandingPage() {
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-stone-900 leading-[1.14]">
               {t("მოარგეთ სალონი ", "Tailor Your Salon with ")}
               <span className="bg-gradient-to-r from-rose-600 via-rose-700 to-rose-900 bg-clip-text text-transparent">
-                MOERGE
+                moarge
               </span>
               {t("-ს ჭკვიან ავტომატიზაციას", "-s Smart Automation")}
             </h1>
@@ -268,7 +268,7 @@ export default function MoergeLandingPage() {
                   </div>
                   <div>
                     <div className="text-sm font-extrabold text-stone-900">
-                      Lumière Studio
+                      moarge Demo Salon
                     </div>
                     <div className="text-[11px] text-stone-400">
                       თბილისი • 10:00 – 20:00
@@ -316,8 +316,8 @@ export default function MoergeLandingPage() {
                     onClick={() =>
                       setHeroConflictMsg(
                         t(
-                          "⚠️ 11:00 უკვე დაკავებულია — MOERGE ავტომატურად ბლოკავს გადაფარვას!",
-                          "⚠️ 11:00 is already booked — MOERGE blocks overlapping slots!"
+                          "⚠️ 11:00 უკვე დაკავებულია — moarge ავტომატურად ბლოკავს გადაფარვას!",
+                          "⚠️ 11:00 is already booked — moarge blocks overlapping slots!"
                         )
                       )
                     }
@@ -396,7 +396,7 @@ export default function MoergeLandingPage() {
                 <p className="text-emerald-800 text-[11px] leading-relaxed">
                   {t(
                     "პროცედურის დასრულების შემდეგ სისტემა ავტომატურად ამზადებს და უგზავნის კლიენტს პერსონალურ მოწვევას მომდევნო ვიზიტზე — თქვენი ჩარევის გარეშე.",
-                    "Upon completion, MOERGE automatically sends a personalized follow-up invitation for their next appointment without manual effort."
+                    "Upon completion, moarge automatically sends a personalized follow-up invitation for their next appointment without manual effort."
                   )}
                 </p>
               </div>
@@ -431,14 +431,14 @@ export default function MoergeLandingPage() {
             </span>
             <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
               {t(
-                "ძველი ქაოტური მეთოდები vs MOERGE-ის ჭკვიანი სისტემა",
-                "Traditional Chaos vs MOERGE Smart Automation"
+                "ძველი ქაოტური მეთოდები vs moarge-ის ჭკვიანი სისტემა",
+                "Traditional Chaos vs moarge Smart Automation"
               )}
             </h2>
             <p className="mt-3 text-stone-600 text-xs sm:text-base">
               {t(
-                "ნახეთ, როგორ გარდაქმნის MOERGE თქვენი სალონის ყოველდღიურ რუტინას",
-                "See how MOERGE transforms your salon's daily workflow"
+                "ნახეთ, როგორ გარდაქმნის moarge თქვენი სალონის ყოველდღიურ რუტინას",
+                "See how moarge transforms your salon's daily workflow"
               )}
             </p>
           </div>
@@ -472,10 +472,10 @@ export default function MoergeLandingPage() {
               </ul>
             </div>
 
-            {/* The MOERGE Way */}
+            {/* The moarge Way */}
             <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-rose-50/80 to-emerald-50/40 border border-rose-200 space-y-4 shadow-sm">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
-                ✓ {t("MOERGE-ის ჭკვიანი ეკოსისტემა", "The MOERGE Ecosystem")}
+                ✓ {t("moarge-ის ჭკვიანი ეკოსისტემა", "The moarge Ecosystem")}
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-stone-900">
                 {t("ავტომატური ჯავშნები და კლიენტების დაბრუნება", "Automated Bookings & Client Retention")}
@@ -510,7 +510,7 @@ export default function MoergeLandingPage() {
             {t("სიმარტივე და ეფექტურობა", "Simplicity & Execution")}
           </span>
           <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
-            {t("როგორ მუშაობს MOERGE 3 მარტივ ნაბიჯში", "How MOERGE Works in 3 Simple Steps")}
+            {t("როგორ მუშაობს moarge 3 მარტივ ნაბიჯში", "How moarge Works in 3 Simple Steps")}
           </h2>
         </div>
 
@@ -578,7 +578,7 @@ export default function MoergeLandingPage() {
               <p className="mt-2.5 text-xs sm:text-sm text-stone-600 leading-relaxed">
                 {t(
                   "ვიზიტის დასრულების შემდეგ სისტემა ავტომატურად უგზავნის კლიენტს მოწვევას შემდეგ ვიზიტზე. კლიენტი ბრუნდება თქვენი ჩარევის გარეშე!",
-                  "After treatment completion, MOERGE automatically emails the client a timely follow-up. Retain high-value clients effortlessly!"
+                  "After treatment completion, moarge automatically emails the client a timely follow-up. Retain high-value clients effortlessly!"
                 )}
               </p>
             </div>
@@ -594,7 +594,7 @@ export default function MoergeLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
-              MOERGE SUITE
+              moarge SUITE
             </span>
             <h2 className="mt-2 text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
               {t(
@@ -936,8 +936,8 @@ export default function MoergeLandingPage() {
           </h2>
           <p className="text-rose-100/80 max-w-2xl mx-auto text-xs sm:text-base leading-relaxed">
             {t(
-              "დაარეგისტრირეთ თქვენი სალონი 1 წუთში, შექმენით მორგებული ჯავშნის გვერდი და მიეცით საშუალება MOERGE-ს, ავტომატური შეხსენებებით სტაბილურად დააბრუნოს კლიენტები.",
-              "Set up your salon in 60 seconds, publish your custom booking page, and let MOERGE bring clients back with automated reminders."
+              "დაარეგისტრირეთ თქვენი სალონი 1 წუთში, შექმენით მორგებული ჯავშნის გვერდი და მიეცით საშუალება moarge-ს, ავტომატური შეხსენებებით სტაბილურად დააბრუნოს კლიენტები.",
+              "Set up your salon in 60 seconds, publish your custom booking page, and let moarge bring clients back with automated reminders."
             )}
           </p>
 
@@ -964,16 +964,16 @@ export default function MoergeLandingPage() {
           {/* Brand info (2 cols on large) */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="inline-block">
-              <MoergeLogo size="md" variant="full" />
+              <MoargeLogo size="md" variant="full" />
             </Link>
             <p className="text-stone-500 text-xs leading-relaxed max-w-sm">
               {t(
-                "MOERGE არის სალონების მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა. ჭკვიანი გრაფიკი, ნულოვანი გადაფარვა და გაზრდილი განმეორებითი ვიზიტები.",
-                "MOERGE is Georgia's premier salon booking and automated client retention platform. Smart scheduling, zero conflicts, and elevated repeat bookings."
+                "moarge არის სალონების მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა. ჭკვიანი გრაფიკი, ნულოვანი გადაფარვა და გაზრდილი განმეორებითი ვიზიტები.",
+                "moarge is Georgia's premier salon booking and automated client retention platform. Smart scheduling, zero conflicts, and elevated repeat bookings."
               )}
             </p>
             <div className="text-[11px] text-stone-400">
-              © {new Date().getFullYear()} MOERGE. {t("ყველა უფლება დაცულია.", "All rights reserved.")}
+              © {new Date().getFullYear()} moarge. {t("ყველა უფლება დაცულია.", "All rights reserved.")}
             </div>
           </div>
 
@@ -1047,13 +1047,13 @@ export default function MoergeLandingPage() {
             <ul className="space-y-2 text-stone-600">
               <li>თბილისი, საქართველო</li>
               <li>
-                <a href="mailto:info@moerge.ge" className="hover:text-rose-600 transition">
-                  info@moerge.ge
+                <a href="mailto:info@moarge.ge" className="hover:text-rose-600 transition">
+                  info@moarge.ge
                 </a>
               </li>
               <li>
-                <a href="mailto:legal@moerge.ge" className="hover:text-rose-600 transition">
-                  legal@moerge.ge
+                <a href="mailto:legal@moarge.ge" className="hover:text-rose-600 transition">
+                  legal@moarge.ge
                 </a>
               </li>
               <li className="text-[11px] text-stone-400 pt-1">

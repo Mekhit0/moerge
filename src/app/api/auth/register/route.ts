@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminOrRpcSupabaseClient } from "@/lib/supabase/server";
+import { createPublicServerSupabaseClient, createServiceClient } from "@/lib/supabase/server";
 import { isValidEmailAddress } from "@/lib/validation";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { consumeServerRateLimit } from "@/lib/server-rate-limit";
 
 function getClientIp(request: NextRequest): string {
   const xRealIp = request.headers.get("x-real-ip");
@@ -35,15 +35,8 @@ function getClientIp(request: NextRequest): string {
 export async function POST(request: NextRequest) {
   try {
     const clientIp = getClientIp(request);
-
-    // Rate limit: max 10 registrations per hour per IP
-    const rateLimitResult = checkRateLimit(
-      `auth_register:${clientIp}`,
-      10,
-      60 * 60 * 1000
-    );
-
-    if (!rateLimitResult.allowed) {
+    const adminClient = createServiceClient();
+    if (!(await consumeServerRateLimit(adminClient, `auth-register:${clientIp}`, 10, 3600))) {
       return NextResponse.json(
         {
           error:
@@ -97,15 +90,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const adminClient = createAdminOrRpcSupabaseClient();
-
-    const { data, error } = await adminClient.auth.admin.createUser({
+    const authClient = createPublicServerSupabaseClient();
+    const { data, error } = await authClient.auth.signUp({
       email,
       password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        salon_name: salonName,
+      options: {
+        emailRedirectTo: new URL("/auth/callback?next=%2Fdashboard", request.url).toString(),
+        data: { full_name: fullName, salon_name: salonName },
       },
     });
 
@@ -127,6 +118,13 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { error: error.message },
+        { status: 400 }
+      );
+    }
+
+    if (!data.user) {
+      return NextResponse.json(
+        { error: "Registration could not be completed. Please check your email." },
         { status: 400 }
       );
     }

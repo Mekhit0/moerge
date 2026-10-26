@@ -6,10 +6,12 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    setupFiles: ["./tests/setup.ts"],
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "server-only": path.resolve(__dirname, "./tests/server-only.ts"),
     },
   },
 });

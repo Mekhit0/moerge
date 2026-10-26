@@ -41,6 +41,21 @@ export function isValidCalendarDate(dateStr: string): boolean {
   );
 }
 
+export function isPublicBookingDateAllowed(dateStr: string): boolean {
+  if (!isValidCalendarDate(dateStr)) return false;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tbilisi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  const today = `${part("year")}-${part("month")}-${part("day")}`;
+  const maxDate = new Date(`${today}T00:00:00Z`);
+  maxDate.setUTCDate(maxDate.getUTCDate() + 90);
+  return dateStr >= today && dateStr <= maxDate.toISOString().slice(0, 10);
+}
+
 export function isEpilationTreatment(type: TreatmentType): boolean {
   return (EPILATION_TREATMENT_TYPES as readonly string[]).includes(type);
 }
@@ -251,12 +266,6 @@ export const salonSettingsSchema = z
       .array(customBookingServiceSchema)
       .optional()
       .default([]),
-    resend_api_key: z
-      .string()
-      .trim()
-      .optional()
-      .nullable()
-      .transform((v) => (v && v.length > 0 ? v : null)),
     send_booking_confirmation_email: z.boolean().optional().default(true),
   })
   .superRefine((data, ctx) => {
@@ -303,14 +312,14 @@ export const publicBookingInputSchema = z.object({
   treatment_date: z
     .string()
     .trim()
-    .refine(isValidCalendarDate, "Please select a valid appointment date."),
+    .refine(isPublicBookingDateAllowed, "Choose a date from today through the next 90 days."),
   treatment_time: z
     .string()
     .trim()
     .default("10:00")
     .refine((v) => TIME_REGEX.test(v), "Please select a valid appointment time."),
   treatment_type: z.string().trim().min(1, "Please select a service."),
-  service_id: z.string().trim().optional().nullable(),
+  service_id: z.string().trim().min(1, "Please select an available service."),
   notes: z
     .string()
     .trim()
@@ -331,4 +340,8 @@ export const publicBookingInputSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => (v && v.length > 0 ? v : null)),
+}).superRefine((data, ctx) => {
+  if (data.treatment_type !== data.service_id) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["service_id"], message: "Service id mismatch." });
+  }
 });

@@ -19,7 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
-import MoergeLogo from "./MoergeLogo";
+import MoargeLogo from "./MoargeLogo";
 
 interface AppShellProps {
   salonName: string;
@@ -89,10 +89,10 @@ export default function AppShell({
         <div className="p-6 border-b border-rose-100/80">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
-              <MoergeLogo variant="icon" size="md" />
+              <MoargeLogo variant="icon" size="md" />
               <div className="min-w-0">
                 <div className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600 flex items-center gap-1.5">
-                  <span>MOERGE</span>
+                  <span>moarge</span>
                   <span className="text-stone-300">•</span>
                   <span>{t("სალონის სისტემა", "Salon Suite")}</span>
                 </div>
@@ -209,10 +209,10 @@ export default function AppShell({
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-rose-100 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <MoergeLogo variant="icon" size="sm" />
+            <MoargeLogo variant="icon" size="sm" />
             <div className="min-w-0">
               <div className="text-[9px] font-extrabold uppercase tracking-wider text-rose-600">
-                MOERGE
+                moarge
               </div>
               <span className="font-bold text-xs text-stone-900 truncate max-w-[170px] block">
                 {salonName}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  createAdminOrRpcSupabaseClient,
+  createServiceClient,
   getAuthenticatedSalonContext,
 } from "@/lib/supabase/server";
 import { isValidCalendarDate } from "@/lib/validation";
@@ -205,7 +205,7 @@ export async function POST(
 
   let adminClient;
   try {
-    adminClient = createAdminOrRpcSupabaseClient();
+    adminClient = createServiceClient();
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Service client unavailable";
     return NextResponse.json({ error: msg }, { status: 500 });
@@ -214,7 +214,6 @@ export async function POST(
   const { data: claimedData, error: claimError } = await adminClient.rpc(
     "claim_due_reminders",
     {
-      p_cron_secret: null,
       p_limit: 1,
       p_salon_id: ctx.salonId,
       p_specific_reminder_id: id,
@@ -233,15 +232,10 @@ export async function POST(
     );
   }
 
-  const transport = createResendTransport(
-    jobs[0].resend_api_key ??
-      ctx.settings.resend_api_key ??
-      process.env.RESEND_API_KEY
-  );
+  const transport = createResendTransport();
   const result = await processClaimedReminder(jobs[0], { transport });
 
   await adminClient.rpc("record_reminder_send_result", {
-    p_cron_secret: null,
     p_reminder_id: result.reminderId,
     p_outcome: result.outcome,
     p_provider_message_id: result.providerMessageId,

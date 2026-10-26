@@ -2,6 +2,7 @@
 
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Script from "next/script";
 import Link from "next/link";
 import {
   Sparkles,
@@ -34,7 +35,16 @@ import {
   getTreatmentLabel,
   useLanguage,
 } from "@/lib/i18n";
-import MoergeLogo from "@/components/MoergeLogo";
+import MoargeLogo from "@/components/MoargeLogo";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: string, options: Record<string, unknown>) => string;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
 
 interface PublicSalonInfo {
   found: boolean;
@@ -86,7 +96,7 @@ function PublicBookingFormContent() {
 
   const [salonInfo, setSalonInfo] = useState<PublicSalonInfo>({
     found: true,
-    salon_name: "MOERGE Epilation & Beauty Studio",
+    salon_name: "moarge Demo Salon",
     timezone: "Asia/Tbilisi",
     brand_color: "#e11d48",
     reminder_interval_days: 21,
@@ -115,6 +125,8 @@ function PublicBookingFormContent() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [emailConsent, setEmailConsent] = useState(true);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   const [bookedTimesOnDate, setBookedTimesOnDate] = useState<string[]>([]);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
@@ -163,7 +175,7 @@ function PublicBookingFormContent() {
       if (isDemo) {
         setSalonInfo({
           found: true,
-          salon_name: "Lumière Studio",
+          salon_name: "moarge Demo Salon",
           timezone: "Asia/Tbilisi",
           brand_color: "#e11d48",
           reminder_interval_days: 21,
@@ -208,6 +220,25 @@ function PublicBookingFormContent() {
     fetchAvailability(treatmentDate);
   }, [treatmentDate, fetchAvailability]);
 
+  useEffect(() => {
+    if (isDemo || !turnstileSiteKey) return;
+    let widgetId: string | null = null;
+    const timer = window.setInterval(() => {
+      if (!window.turnstile || widgetId) return;
+      widgetId = window.turnstile.render("turnstile-widget", {
+        sitekey: turnstileSiteKey,
+        callback: (token: string) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(""),
+        "error-callback": () => setTurnstileToken(""),
+      });
+      window.clearInterval(timer);
+    }, 100);
+    return () => {
+      window.clearInterval(timer);
+      if (widgetId) window.turnstile?.remove(widgetId);
+    };
+  }, [isDemo, turnstileSiteKey]);
+
   // Evaluate smart availability in real time for the selected time and all dynamic salon slots
   const smartAvailability = useMemo(
     () =>
@@ -244,7 +275,7 @@ function PublicBookingFormContent() {
       const mockResult: BookingResult = {
         appointment_id: `demo-${Date.now().toString(36)}`,
         client_id: `demo-client-${Date.now().toString(36)}`,
-        salon_name: salonInfo.salon_name || "Lumière Studio",
+        salon_name: salonInfo.salon_name || "moarge Demo Salon",
         is_returning_client: false,
         treatment_date: treatmentDate,
         treatment_time: treatmentTime,
@@ -277,6 +308,7 @@ function PublicBookingFormContent() {
           treatment_time: treatmentTime,
           treatment_type: activeService ? (activeService.id || activeService.type) : "custom",
           service_id: activeService?.id || null,
+          turnstile_token: turnstileToken,
           notes: composedNotes.slice(0, 1000) || null,
           email_consent: emailConsent,
         }),
@@ -322,13 +354,13 @@ function PublicBookingFormContent() {
         <div className="max-w-5xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link href="/" className="shrink-0 hover:opacity-95 transition">
-              <MoergeLogo variant="icon" size="sm" />
+              <MoargeLogo variant="icon" size="sm" />
             </Link>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 flex flex-wrap items-center gap-1 sm:gap-1.5">
                 <span>{t("ონლაინ ჩაწერა", "Online Booking")}</span>
                 <span className="text-stone-300">•</span>
-                <span className="text-stone-400 font-semibold">MOERGE</span>
+                <span className="text-stone-400 font-semibold">moarge</span>
                 <span className="text-stone-300 hidden sm:inline">•</span>
                 <span className="hidden sm:inline">🇬🇪 {salonInfo.timezone || "Asia/Tbilisi"}</span>
               </div>
@@ -1045,9 +1077,30 @@ function PublicBookingFormContent() {
                   </span>
                 </label>
 
+                {!isDemo && (
+                  <>
+                    {turnstileSiteKey ? (
+                      <>
+                        <Script
+                          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+                          strategy="afterInteractive"
+                        />
+                        <div id="turnstile-widget" />
+                      </>
+                    ) : (
+                      <p className="text-xs text-red-700" role="alert">
+                        {t(
+                          "უსაფრთხოების შემოწმება კონფიგურირებული არ არის.",
+                          "Security verification is not configured."
+                        )}
+                      </p>
+                    )}
+                  </>
+                )}
+
                 <button
                   type="submit"
-                  disabled={submitting || !smartAvailability.isAvailable}
+                  disabled={submitting || !smartAvailability.isAvailable || (!isDemo && !turnstileToken)}
                   className="w-full py-3.5 px-6 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold text-sm shadow-md shadow-rose-600/20 flex items-center justify-center gap-2 transition cursor-pointer"
                 >
                   {submitting
@@ -1065,8 +1118,8 @@ function PublicBookingFormContent() {
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   <span>
                     {t(
-                      "MOERGE Smart Booking • მხოლოდ ელ-ფოსტის შეხსენება",
-                      "MOERGE Smart Booking • Email-Only Reminders"
+                      "moarge Smart Booking • მხოლოდ ელ-ფოსტის შეხსენება",
+                      "moarge Smart Booking • Email-Only Reminders"
                     )}
                   </span>
                 </div>

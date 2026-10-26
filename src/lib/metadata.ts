@@ -8,13 +8,13 @@ export const siteViewport: Viewport = {
 };
 
 export const siteMetadata: Metadata = {
-  metadataBase: new URL("https://moerge.vercel.app"),
+  metadataBase: new URL("https://moarge.vercel.app"),
   title: {
-    default: "MOERGE | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
-    template: "%s | MOERGE",
+    default: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+    template: "%s | moarge",
   },
   description:
-    "MOERGE — სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა. გაზარდეთ განმეორებითი ვიზიტები +40%-ით, აღმოფხვერით ქაოსი და დაიცავით გრაფიკი გადაფარვებისგან.",
+    "moarge — სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა. გაზარდეთ განმეორებითი ვიზიტები +40%-ით, აღმოფხვერით ქაოსი და დაიცავით გრაფიკი გადაფარვებისგან.",
   keywords: [
     "სალონის მართვა",
     "ონლაინ ჯავშანი",
@@ -25,11 +25,11 @@ export const siteMetadata: Metadata = {
     "ეპილაციის სალონი",
     "სილამაზის სალონი",
     "salon booking software georgia",
-    "moerge",
+    "moarge",
   ],
-  authors: [{ name: "MOERGE" }],
-  creator: "MOERGE",
-  publisher: "MOERGE",
+  authors: [{ name: "moarge" }],
+  creator: "moarge",
+  publisher: "moarge",
   formatDetection: {
     email: false,
     address: false,
@@ -50,15 +50,15 @@ export const siteMetadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ka_GE",
-    url: "https://moerge.vercel.app",
-    siteName: "MOERGE",
-    title: "MOERGE | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+    url: "https://moarge.vercel.app",
+    siteName: "moarge",
+    title: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
     description:
       "სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა საქართველოში.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MOERGE | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+    title: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
     description:
       "გაზარდეთ თქვენი სალონის განმეორებითი ვიზიტები და დაიცავით გრაფიკი გადაფარვებისგან.",
   },

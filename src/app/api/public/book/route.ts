@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  createAdminOrRpcSupabaseClient,
-  createPublicServerSupabaseClient,
+  createServiceClient,
 } from "@/lib/supabase/server";
-import { isValidCalendarDate, publicBookingInputSchema } from "@/lib/validation";
-import { checkRateLimit } from "@/lib/rate-limit";
-import { createResendTransport } from "@/lib/reminder-worker";
+import { isPublicBookingDateAllowed, publicBookingInputSchema } from "@/lib/validation";
+import { createResendTransport, platformSender } from "@/lib/reminder-worker";
+import { consumeServerRateLimit } from "@/lib/server-rate-limit";
 
 function getTrustedClientIp(request: NextRequest): string {
   const xRealIp = request.headers.get("x-real-ip");
@@ -27,6 +26,7 @@ function getTrustedClientIp(request: NextRequest): string {
 }
 
 export async function GET(request: NextRequest) {
+  const clientIp = getTrustedClientIp(request);
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get("salon") ?? null;
   const dateParam = searchParams.get("date");
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       found: true,
       demo: true,
-      salon_name: "Lumière Studio",
+      salon_name: "moarge Demo Salon",
       timezone: "Asia/Tbilisi",
       brand_color: "#e11d48",
       reminder_interval_days: 21,
@@ -53,7 +53,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const supabase = createPublicServerSupabaseClient();
+  const supabase = createServiceClient();
+  try {
+    if (!(await consumeServerRateLimit(supabase, `availability:${clientIp}`, 120, 60))) {
+      return NextResponse.json({ error: "Too many requests. Please retry shortly." }, { status: 429 });
+    }
+  } catch {
+    return NextResponse.json({ error: "Rate limiter unavailable." }, { status: 500 });
+  }
 
   const { data: infoData, error: infoError } = await supabase.rpc(
     "get_public_salon_booking_info",
@@ -67,7 +74,7 @@ export async function GET(request: NextRequest) {
   }
 
   let availability = null;
-  if (dateParam && isValidCalendarDate(dateParam)) {
+  if (dateParam && isPublicBookingDateAllowed(dateParam)) {
     const { data: availData } = await supabase.rpc(
       "get_salon_date_availability",
       {
@@ -79,6 +86,9 @@ export async function GET(request: NextRequest) {
     );
     availability = availData;
   }
+  if (dateParam && !isPublicBookingDateAllowed(dateParam)) {
+    return NextResponse.json({ error: "Choose a date within the next 90 days." }, { status: 400 });
+  }
 
   return NextResponse.json({
     ...(infoData ?? { found: false }),
@@ -88,18 +98,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const clientIp = getTrustedClientIp(request);
-
-  // Layer 1: In-memory sliding rate limit per IP
-  const rl = checkRateLimit(`public:booking:${clientIp}`, 20, 60_000);
-  if (!rl.allowed) {
-    return NextResponse.json(
-      {
-        error:
-          "Too many booking requests. Please wait a moment / ძალიან ბევრი მოთხოვნაა, გთხოვთ სცადოთ მოგვიანებით.",
-      },
-      { status: 429 }
-    );
-  }
 
   let body: unknown;
   try {
@@ -121,11 +119,33 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Demo submissions never reach the database or send email.
+  if (!parsed.data.salon_slug || parsed.data.salon_slug === "demo") {
+    const normalizedTime = parsed.data.treatment_time.length === 5
+      ? `${parsed.data.treatment_time}:00`
+      : parsed.data.treatment_time;
+    return NextResponse.json({
+      booking: {
+        appointment_id: `demo-${Date.now().toString(36)}`,
+        client_id: `demo-client-${Date.now().toString(36)}`,
+        salon_name: "moarge Demo Salon (Demo Showcase)",
+        is_returning_client: false,
+        treatment_date: parsed.data.treatment_date,
+        treatment_time: normalizedTime.slice(0, 5),
+        treatment_type: parsed.data.treatment_type,
+        confirmation_email_sent: false,
+      },
+      demo: true,
+      message: "Demo booking simulated successfully. No data stored, no emails dispatched.",
+    });
+  }
+
   // Cloudflare Turnstile Verification
   const turnstileSecret = process.env.TURNSTILE_SECRET_KEY?.trim();
   const turnstileToken = parsed.data.turnstile_token || parsed.data.token;
 
-  if (turnstileSecret) {
+  if (!turnstileSecret) return NextResponse.json({ error: "Security verification is not configured." }, { status: 500 });
+  {
     if (!turnstileToken) {
       return NextResponse.json(
         {
@@ -173,56 +193,21 @@ export async function POST(request: NextRequest) {
       ? `${parsed.data.treatment_time}:00`
       : parsed.data.treatment_time;
 
-  // Mock / Demo showcase submissions stay strictly in the browser/mock layer
-  if (!parsed.data.salon_slug || parsed.data.salon_slug === "demo") {
-    return NextResponse.json({
-      booking: {
-        appointment_id: `demo-${Date.now().toString(36)}`,
-        client_id: `demo-client-${Date.now().toString(36)}`,
-        salon_name: "Lumière Studio (Demo Showcase)",
-        is_returning_client: false,
-        treatment_date: parsed.data.treatment_date,
-        treatment_time: normalizedTime.slice(0, 5),
-        treatment_type: parsed.data.treatment_type,
-        confirmation_email_sent: false,
-      },
-      demo: true,
-      message: "Demo booking simulated successfully. No data stored, no emails dispatched.",
-    });
-  }
-
-  // Obtain client for public RPC execution
+  // Public booking RPCs are available only to this server-side service client.
   let serviceClient;
   try {
-    serviceClient = createAdminOrRpcSupabaseClient();
-  } catch {
-    // If service role not configured, fallback to public client for RPC execution
+    serviceClient = createServiceClient();
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Server configuration error" }, { status: 500 });
   }
-  const rpcClient = serviceClient || createPublicServerSupabaseClient();
-
-  // Layer 2: Database IP Rate Limit (max 5 bookings per hour per IP)
-  if (serviceClient) {
-    try {
-      const oneHourAgo = new Date(Date.now() - 3600_000).toISOString();
-      const { count: ipBookingCount } = await serviceClient
-        .from("public_booking_rate_limits")
-        .select("*", { count: "exact", head: true })
-        .eq("ip_address", clientIp)
-        .gte("created_at", oneHourAgo);
-
-      if (ipBookingCount !== null && ipBookingCount >= 5) {
-        return NextResponse.json(
-          {
-            error:
-              "Too many bookings from your network. Please wait an hour before booking again / ამ ქსელიდან ჯავშნების ლიმიტი (საათში 5) ამოიწურა. გთხოვთ სცადოთ მოგვიანებით.",
-          },
-          { status: 429 }
-        );
-      }
-    } catch {
-      // Non-blocking rate-limit check failure
+  try {
+    if (!(await consumeServerRateLimit(serviceClient, `booking:${clientIp}`, 20, 60))) {
+      return NextResponse.json({ error: "Too many booking requests. Please retry shortly." }, { status: 429 });
     }
+  } catch {
+    return NextResponse.json({ error: "Rate limiter unavailable." }, { status: 500 });
   }
+  const rpcClient = serviceClient;
 
   const { data, error } = await rpcClient.rpc("submit_public_booking", {
     p_salon_slug: parsed.data.salon_slug,
@@ -234,6 +219,7 @@ export async function POST(request: NextRequest) {
     p_treatment_type: parsed.data.treatment_type,
     p_notes: parsed.data.notes,
     p_email_consent: parsed.data.email_consent,
+    p_client_ip: clientIp,
   });
 
   if (error) {
@@ -266,18 +252,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Record rate limit IP entry
-  if (serviceClient) {
-    try {
-      await serviceClient.from("public_booking_rate_limits").insert({
-        ip_address: clientIp,
-        email: parsed.data.email.toLowerCase().trim(),
-      });
-    } catch {
-      // Non-fatal
-    }
-  }
-
   // Dispatch instant booking confirmation email via Resend with 10-minute throttle
   let confirmationEmailSent = false;
   if (serviceClient) {
@@ -293,32 +267,38 @@ export async function POST(request: NextRequest) {
       let settingsQuery = serviceClient
         .from("salon_settings")
         .select(
-          "salon_id, salon_name, sender_display_name, verified_sender_email, resend_api_key, send_booking_confirmation_email, salon_address, salon_phone, dry_run_mode, test_recipient_email"
+          "salon_id, salon_name, sender_display_name, verified_sender_email, send_booking_confirmation_email, salon_address, salon_phone, dry_run_mode, test_recipient_email"
         )
         .limit(1);
       if (bookedSalonId) settingsQuery = settingsQuery.eq("salon_id", bookedSalonId);
       const { data: settingsRows } = await settingsQuery;
 
       const s = settingsRows?.[0];
-      const effectiveKey =
-        (s?.resend_api_key && String(s.resend_api_key).trim()) ||
-        process.env.RESEND_API_KEY ||
-        "";
+      const effectiveKey = process.env.RESEND_API_KEY;
 
       // Dry-run mode never emails real clients; it may redirect to the configured test inbox.
       const recipient = s?.dry_run_mode
         ? s?.test_recipient_email || null
         : parsed.data.email;
 
+      let recipientIsVerified = Boolean(s?.dry_run_mode);
+      if (recipient && !s?.dry_run_mode) {
+        const { data: emailVerified } = await serviceClient.rpc("is_verified_auth_email", {
+          p_email: recipient.toLowerCase().trim(),
+        });
+        recipientIsVerified = emailVerified === true;
+      }
+
       // Email throttling: Do not send confirmation email to the same address more than 3 times in 10 minutes
       let throttled = false;
       if (recipient) {
-        const tenMinutesAgo = new Date(Date.now() - 600_000).toISOString();
+        const dayStart = new Date();
+        dayStart.setHours(0, 0, 0, 0);
         const { count: emailCount } = await serviceClient
           .from("email_logs")
           .select("*", { count: "exact", head: true })
           .eq("recipient_email", recipient.toLowerCase().trim())
-          .gte("created_at", tenMinutesAgo);
+          .gte("created_at", dayStart.toISOString());
 
         if (emailCount !== null && emailCount >= 3) {
           throttled = true;
@@ -326,13 +306,13 @@ export async function POST(request: NextRequest) {
       }
 
       const transport =
-        s && s.send_booking_confirmation_email !== false && recipient && !throttled
-          ? createResendTransport(effectiveKey)
+        s && s.send_booking_confirmation_email !== false && recipient && recipientIsVerified && !throttled
+          ? createResendTransport()
           : null;
 
-      if (s && transport && recipient && !throttled) {
+      if (s && transport && recipient && recipientIsVerified && !throttled) {
         const timeStr = String(parsed.data.treatment_time).slice(0, 5);
-        const salonTitle = s.salon_name || resObj.salon_name || "MOERGE Salon";
+        const salonTitle = s.salon_name || resObj.salon_name || "moarge Salon";
         const subject = `ჯავშანი დადასტურებულია: ${parsed.data.treatment_date} (${timeStr}) — ${salonTitle}`;
         const html = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 28px; background: #fdf8f6; border-radius: 20px; border: 1px solid #ffe4e6;">
@@ -346,22 +326,21 @@ export async function POST(request: NextRequest) {
               ${s.salon_address ? `<div style="margin-top: 6px;"><strong>მისამართი / Address:</strong> ${esc(s.salon_address)}</div>` : ""}
               ${s.salon_phone ? `<div style="margin-top: 6px;"><strong>ტელეფონი / Phone:</strong> ${esc(s.salon_phone)}</div>` : ""}
             </div>
-            <p style="color: #78716c; font-size: 12px; margin-top: 18px;">გმადლობთ, რომ სარგებლობთ MOERGE-ს სისტემით!</p>
+            <p style="color: #78716c; font-size: 12px; margin-top: 18px;">გმადლობთ, რომ სარგებლობთ moarge-ს სისტემით!</p>
           </div>
         `;
 
-        const fromAddress = s.sender_display_name
-          ? `"${s.sender_display_name.replace(/"/g, "")}" <${s.verified_sender_email}>`
-          : s.verified_sender_email;
+        const fromAddress = platformSender(salonTitle);
 
         const emailRes = await transport.sendEmail({
           from: fromAddress,
+          replyTo: s.verified_sender_email,
           to: recipient,
           subject,
           html,
           text: `თქვენი ვიზიტი დაჯავშნილია!\nპროცედურა: ${parsed.data.treatment_type}\nთარიღი: ${parsed.data.treatment_date}\nდრო: ${timeStr}\nსალონი: ${salonTitle}`,
           idempotencyKey: `bookconf:${bookedSalonId || "pub"}:${(data as { appointment_id?: string })?.appointment_id}`,
-          unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app"}/unsubscribe`,
+          unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app"}/unsubscribe`,
         });
 
         confirmationEmailSent = Boolean(emailRes.id);

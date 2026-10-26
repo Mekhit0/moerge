@@ -4,7 +4,7 @@ import React, { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MailX, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
-import MoergeLogo from "@/components/MoergeLogo";
+import MoargeLogo from "@/components/MoargeLogo";
 
 function UnsubscribeContent() {
   const { t } = useLanguage();
@@ -15,7 +15,7 @@ function UnsubscribeContent() {
     "idle" | "submitting" | "done" | "error"
   >("idle");
   const [message, setMessage] = useState<string>("");
-  const [salonName, setSalonName] = useState<string>("Lumière Salon");
+  const [salonName, setSalonName] = useState<string>("moarge");
 
   async function handleConfirmUnsubscribe() {
     if (!token) {
@@ -50,7 +50,7 @@ function UnsubscribeContent() {
         return;
       }
 
-      setSalonName(data.salon_name || "Lumière Salon");
+      setSalonName(data.salon_name || "moarge");
       setStatus("done");
     } catch {
       setStatus("error");
@@ -78,7 +78,7 @@ function UnsubscribeContent() {
         </div>
 
         <div className="mt-4 flex justify-center">
-          <MoergeLogo size="sm" variant="full" />
+          <MoargeLogo size="sm" variant="full" />
         </div>
 
         <h1 className="mt-2 text-2xl font-semibold text-stone-900">

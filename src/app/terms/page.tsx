@@ -15,7 +15,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
-import MoergeLogo from "@/components/MoergeLogo";
+import MoargeLogo from "@/components/MoargeLogo";
 
 export default function TermsOfServicePage() {
   const { t } = useLanguage();
@@ -26,11 +26,11 @@ export default function TermsOfServicePage() {
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-rose-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3 group">
-            <MoergeLogo size="md" variant="icon" />
+            <MoargeLogo size="md" variant="icon" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black tracking-tight text-stone-900 leading-none">
-                  MOERGE
+                  moarge
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold uppercase tracking-wider">
                   LEGAL
@@ -65,7 +65,7 @@ export default function TermsOfServicePage() {
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
-                MOERGE • {t("სამართლებრივი პირობები", "Legal Terms")}
+                moarge • {t("სამართლებრივი პირობები", "Legal Terms")}
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-stone-900">
                 {t("მომსახურების წესები და პირობები", "Terms of Service")}
@@ -89,8 +89,8 @@ export default function TermsOfServicePage() {
 
           <p className="mt-6 text-sm sm:text-base text-stone-600 leading-relaxed">
             {t(
-              "წინამდებარე ხელშეკრულება წარმოადგენს იურიდიულად სავალდებულო შეთანხმებას MOERGE-ის პლატფორმის მომხმარებელსა (სალონის მფლობელი, ადმინისტრატორი, პერსონალი ან კლიენტი) და MOERGE-ის ადმინისტრაციას შორის. სისტემით სარგებლობით თქვენ ადასტურებთ, რომ სრულად ეთანხმებით ქვემოთ მოცემულ წესებს.",
-              "These Terms of Service constitute a legally binding agreement between the user of the MOERGE platform (salon owner, staff, or customer) and MOERGE. By accessing or using the platform, you acknowledge and agree to comply with all terms set forth herein."
+              "წინამდებარე ხელშეკრულება წარმოადგენს იურიდიულად სავალდებულო შეთანხმებას moarge-ის პლატფორმის მომხმარებელსა (სალონის მფლობელი, ადმინისტრატორი, პერსონალი ან კლიენტი) და moarge-ის ადმინისტრაციას შორის. სისტემით სარგებლობით თქვენ ადასტურებთ, რომ სრულად ეთანხმებით ქვემოთ მოცემულ წესებს.",
+              "These Terms of Service constitute a legally binding agreement between the user of the moarge platform (salon owner, staff, or customer) and moarge. By accessing or using the platform, you acknowledge and agree to comply with all terms set forth herein."
             )}
           </p>
         </div>
@@ -109,8 +109,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "MOERGE არის ღრუბლოვანი პროგრამული უზრუნველყოფა (SaaS), რომელიც განკუთვნილია სილამაზის, თავის მოვლისა და ესთეტიკური სალონებისთვის. პლატფორმა მოიცავს ონლაინ ჯავშნების მართვას, სალონის განრიგის ორგანიზებას, ჭკვიან დროის კონტროლს (Smart Slot Guard) და პროცედურების შემდგომ ავტომატურ საინფორმაციო შეხსენებებს ელ-ფოსტის (Resend) მეშვეობით.",
-                "MOERGE is a cloud-based software platform tailored for beauty, wellness, and aesthetic salons. The service provides an online booking page, appointment scheduling, smart slot conflict prevention, and automated follow-up care reminders dispatched via Resend email infrastructure."
+                "moarge არის ღრუბლოვანი პროგრამული უზრუნველყოფა (SaaS), რომელიც განკუთვნილია სილამაზის, თავის მოვლისა და ესთეტიკური სალონებისთვის. პლატფორმა მოიცავს ონლაინ ჯავშნების მართვას, სალონის განრიგის ორგანიზებას, ჭკვიან დროის კონტროლს (Smart Slot Guard) და პროცედურების შემდგომ ავტომატურ საინფორმაციო შეხსენებებს ელ-ფოსტის (Resend) მეშვეობით.",
+                "moarge is a cloud-based software platform tailored for beauty, wellness, and aesthetic salons. The service provides an online booking page, appointment scheduling, smart slot conflict prevention, and automated follow-up care reminders dispatched via Resend email infrastructure."
               )}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-stone-600 text-xs sm:text-sm">
@@ -151,7 +151,7 @@ export default function TermsOfServicePage() {
               <Lock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <span>
                 {t(
-                  "აკრძალულია ანგარიშის გადაცემა მესამე პირებისთვის MOERGE-ის წერილობითი თანხმობის გარეშე. საეჭვო აქტივობის შემჩნევის შემთხვევაში დაუყოვნებლივ დაუკავშირდით მხარდაჭერის გუნდს.",
+                  "აკრძალულია ანგარიშის გადაცემა მესამე პირებისთვის moarge-ის წერილობითი თანხმობის გარეშე. საეჭვო აქტივობის შემჩნევის შემთხვევაში დაუყოვნებლივ დაუკავშირდით მხარდაჭერის გუნდს.",
                   "Sharing login credentials with unauthorized third parties is prohibited. Please notify support immediately of any suspected unauthorized access."
                 )}
               </span>
@@ -170,14 +170,14 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "MOERGE უზრუნველყოფს საათების რეალურ დროში დაჯავშნის მექანიზმს საქართველოს დროის სარტყელში (Asia/Tbilisi, GMT+4). სისტემა ავტომატურად ბლოკავს უკვე დაკავებულ საათებს და იცავს სალონს ორმაგი ჯავშნებისგან (Double Bookings).",
-                "MOERGE operates strictly within the Georgia Standard Time zone (Asia/Tbilisi, GMT+4). The smart conflict detector prevents overlapping reservations in real-time."
+                "moarge უზრუნველყოფს საათების რეალურ დროში დაჯავშნის მექანიზმს საქართველოს დროის სარტყელში (Asia/Tbilisi, GMT+4). სისტემა ავტომატურად ბლოკავს უკვე დაკავებულ საათებს და იცავს სალონს ორმაგი ჯავშნებისგან (Double Bookings).",
+                "moarge operates strictly within the Georgia Standard Time zone (Asia/Tbilisi, GMT+4). The smart conflict detector prevents overlapping reservations in real-time."
               )}
             </p>
             <p>
               {t(
-                "სალონი თავად არის პასუხისმგებელი კლიენტის დროულ მიღებაზე, პროცედურის ხარისხსა და სალონის შიდა წესების დაცვაზე. MOERGE არ არის პასუხისმგებელი სალონსა და კლიენტს შორის მომსახურების უშუალო გაწევისას წარმოშობილ პრეტენზიებზე.",
-                "The individual salon remains solely liable for the provision, timeliness, and quality of in-person salon services. MOERGE operates as an enabling technology provider."
+                "სალონი თავად არის პასუხისმგებელი კლიენტის დროულ მიღებაზე, პროცედურის ხარისხსა და სალონის შიდა წესების დაცვაზე. moarge არ არის პასუხისმგებელი სალონსა და კლიენტს შორის მომსახურების უშუალო გაწევისას წარმოშობილ პრეტენზიებზე.",
+                "The individual salon remains solely liable for the provision, timeliness, and quality of in-person salon services. moarge operates as an enabling technology provider."
               )}
             </p>
           </section>
@@ -194,8 +194,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "პროცედურის დასრულების შემდეგ, MOERGE ავტომატურად ამზადებს პერსონალურ შეხსენებას შესაბამისი მოვლის ციკლის გათვალისწინებით (მაგ: ეპილაციის შემდგომი ან სხვა პერიოდული ვიზიტებისთვის) და უგზავნის კლიენტს მოსაწვევს შემდეგი ვიზიტის დასაგეგმად. სალონს შეუძლია გამოიყენოს საკუთარი Resend API Key ან სისტემური არხი.",
-                "Following the completion of a treatment, MOERGE schedules an automated care reminder tailored to the procedure cycle and sends the client an invitation for their next visit via Resend email integration."
+                "პროცედურის დასრულების შემდეგ, moarge ამზადებს პერსონალურ შეხსენებას შესაბამისი მოვლის ციკლის მიხედვით და უგზავნის კლიენტს შემდეგი ვიზიტის დასაგეგმად.",
+                "After a treatment, moarge schedules a personalized reminder based on the service cycle and invites the client to book their next visit."
               )}
             </p>
             <p className="text-xs text-stone-500">
@@ -218,8 +218,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "MOERGE-ის სააბონენტო ტარიფები მითითებულია ეროვნულ ვალუტაში (₾ ლარი). ახალ დარეგისტრირებულ სალონებს ეძლევათ 14-დღიანი უფასო სატესტო პერიოდი. სატესტო პერიოდის გასვლის შემდეგ სერვისით სარგებლობა გრძელდება არჩეული სატარიფო გეგმის შესაბამისად.",
-                "MOERGE subscription plans are denominated in Georgian Lari (GEL ₾). New salons enjoy a 14-day free trial. Following trial completion, continuous access requires an active plan subscription."
+                "moarge-ის სააბონენტო ტარიფები მითითებულია ეროვნულ ვალუტაში (₾ ლარი). ახალ დარეგისტრირებულ სალონებს ეძლევათ 14-დღიანი უფასო სატესტო პერიოდი. სატესტო პერიოდის გასვლის შემდეგ სერვისით სარგებლობა გრძელდება არჩეული სატარიფო გეგმის შესაბამისად.",
+                "moarge subscription plans are denominated in Georgian Lari (GEL ₾). New salons enjoy a 14-day free trial. Following trial completion, continuous access requires an active plan subscription."
               )}
             </p>
             <p>
@@ -261,8 +261,8 @@ export default function TermsOfServicePage() {
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
                 {t(
-                  "ჩვენი იურიდიული და მხარდაჭერის გუნდი მზადაა დაგეხმაროთ: legal@moerge.ge",
-                  "Our legal & support team is here to assist: legal@moerge.ge"
+                  "ჩვენი იურიდიული და მხარდაჭერის გუნდი მზადაა დაგეხმაროთ: legal@moarge.ge",
+                  "Our legal & support team is here to assist: legal@moarge.ge"
                 )}
               </p>
             </div>
@@ -280,9 +280,9 @@ export default function TermsOfServicePage() {
       <footer className="bg-white border-t border-rose-100 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
           <div className="flex items-center gap-2">
-            <span className="font-black text-stone-900">MOERGE</span>
+            <span className="font-black text-stone-900">moarge</span>
             <span>•</span>
-            <span>© {new Date().getFullYear()} MOERGE Ecosystem. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</span>
+            <span>© {new Date().getFullYear()} moarge Ecosystem. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</span>
           </div>
           <div className="flex items-center gap-4 font-semibold">
             <Link href="/" className="hover:text-rose-600">

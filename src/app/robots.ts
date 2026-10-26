@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: ["/", "/book", "/login", "/terms", "/privacy"],
       disallow: ["/api/", "/dashboard/", "/appointments/", "/clients/", "/settings/", "/email-history/"],
     },
-    sitemap: "https://moerge.vercel.app/sitemap.xml",
+    sitemap: "https://moarge.vercel.app/sitemap.xml",
   };
 }

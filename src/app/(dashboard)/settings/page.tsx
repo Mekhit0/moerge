@@ -11,16 +11,11 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  const hasSavedResendKey = Boolean(
-    ctx.settings.resend_api_key &&
-      (String(ctx.settings.resend_api_key).startsWith("re_") ||
-        ctx.settings.resend_api_key === "********")
-  );
   const hasEnvResendKey = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")
   );
 
-  const resendConfigured = hasSavedResendKey || hasEnvResendKey;
+  const resendConfigured = hasEnvResendKey;
   const webhookSecretConfigured = Boolean(
     process.env.RESEND_WEBHOOK_SECRET &&
       process.env.RESEND_WEBHOOK_SECRET.startsWith("whsec_")
@@ -31,7 +26,6 @@ export default async function SettingsPage() {
       initialSettings={{
         ...ctx.settings,
         salon_slug: ctx.salonSlug,
-        resend_api_key: hasSavedResendKey ? "********" : null,
       }}
       resendConfigured={resendConfigured}
       webhookSecretConfigured={webhookSecretConfigured}

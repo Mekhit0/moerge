@@ -22,7 +22,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
-import MoergeLogo from "@/components/MoergeLogo";
+import MoargeLogo from "@/components/MoargeLogo";
 
 export default function LoginPage() {
   const { t } = useLanguage();
@@ -166,13 +166,13 @@ export default function LoginPage() {
         {/* Brand Pitch & Highlights */}
         <div className="relative z-10 my-8 sm:my-12 max-w-xl space-y-6">
           <Link href="/" className="inline-block hover:opacity-95 transition">
-            <MoergeLogo size="lg" variant="full" theme="white" />
+            <MoargeLogo size="lg" variant="full" theme="white" />
           </Link>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.14] text-white">
             {t("მოარგეთ სალონი ", "Tailor Your Salon with ")}
             <span className="bg-gradient-to-r from-rose-400 via-rose-300 to-amber-200 bg-clip-text text-transparent">
-              MOERGE
+              moarge
             </span>
             {t("-ს ჭკვიან ავტომატიზაციას", "-s Smart Automation")}
           </h1>
@@ -197,7 +197,7 @@ export default function LoginPage() {
                 <div className="text-[12px] text-stone-300 mt-0.5 leading-relaxed">
                   {t(
                     "ვიზიტის დასრულების შემდეგ სისტემა ავტომატურად ამზადებს და უგზავნის კლიენტს პერსონალურ მოწვევას მომდევნო ვიზიტზე — თქვენი ჩარევის გარეშე.",
-                    "MOERGE automatically schedules and dispatches personalized invitations for their next session once marked completed."
+                    "moarge automatically schedules and dispatches personalized invitations for their next session once marked completed."
                   )}
                 </div>
               </div>
@@ -283,7 +283,7 @@ export default function LoginPage() {
           <div className="text-center sm:text-left">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-700 text-[11px] font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
-              {t("MOERGE სალონის პორტალი", "MOERGE Salon Portal")}
+              {t("moarge სალონის პორტალი", "moarge Salon Portal")}
             </div>
 
             <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
@@ -373,7 +373,7 @@ export default function LoginPage() {
                       required
                       value={salonName}
                       onChange={(e) => setSalonName(e.target.value)}
-                      placeholder={t("მაგ: Lumière Studio, Silk Laser Bar...", "e.g. Lumière Studio")}
+                      placeholder={t("მაგ: Silk Laser Bar", "e.g. Silk Laser Bar")}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition"
                     />
                   </div>

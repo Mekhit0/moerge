@@ -1,3 +1,4 @@
+import "server-only";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
@@ -55,7 +56,7 @@ export function createPublicServerSupabaseClient() {
  * Creates a server-only Supabase client for background cron jobs or webhook processing.
  * Requires SUPABASE_SERVICE_ROLE_KEY. Throws a clear error if missing; silent fallback to anon key is disabled.
  */
-export function createAdminOrRpcSupabaseClient() {
+export function createServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
@@ -87,7 +88,15 @@ export interface AuthenticatedSalonContext {
   salonId: string;
   salonSlug: string;
   salonName: string;
+  role: "owner" | "admin" | "staff";
   settings: SalonSettings;
+}
+
+export function requireRole(
+  ctx: AuthenticatedSalonContext,
+  allowed: ReadonlyArray<AuthenticatedSalonContext["role"]>
+): boolean {
+  return allowed.includes(ctx.role);
 }
 
 /**
@@ -110,7 +119,7 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
   // Ensure the user has an active salon membership
   const userSalonName =
     (user.user_metadata?.salon_name as string | undefined)?.trim() ||
-    "MOERGE Salon";
+    "My Salon";
 
   const { data: ensuredSalonId, error: rpcError } = await supabase.rpc(
     "ensure_user_salon",
@@ -124,7 +133,7 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
   if (rpcError || !salonId) {
     const { data: membership } = await supabase
       .from("salon_memberships")
-      .select("salon_id")
+      .select("salon_id, role")
       .eq("user_id", user.id)
       .eq("is_active", true)
       .order("created_at", { ascending: true })
@@ -137,6 +146,14 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
   if (!salonId) {
     return null;
   }
+
+  const { data: roleMembership } = await supabase
+    .from("salon_memberships")
+    .select("role")
+    .eq("salon_id", salonId)
+    .eq("user_id", user.id)
+    .eq("is_active", true)
+    .maybeSingle();
 
   const [salonRes, settingsRes] = await Promise.all([
     supabase
@@ -152,33 +169,13 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
   ]);
 
   const salonRow = salonRes.data;
-  const salonSlug = salonRow?.slug ?? "moerge-salon";
-  const salonName = salonRow?.name ?? "MOERGE Salon";
+  const salonSlug = salonRow?.slug ?? "my-salon";
+  const salonName = salonRow?.name ?? "My Salon";
 
   const appUrl = (
-    process.env.NEXT_PUBLIC_APP_URL || "https://moerge.vercel.app"
+    process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app"
   ).replace(/\/$/, "");
   const autoBookingUrl = `${appUrl}/book?salon=${salonSlug}`;
-
-  // Check if resend_api_key exists on the server side using service role client
-  let hasResendKey = false;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (serviceKey && serviceKey.length > 10) {
-    try {
-      const adminClient = createAdminOrRpcSupabaseClient();
-      const { data: keyRow } = await adminClient
-        .from("salon_settings")
-        .select("resend_api_key")
-        .eq("salon_id", salonId)
-        .maybeSingle();
-
-      hasResendKey = Boolean(
-        keyRow?.resend_api_key && String(keyRow.resend_api_key).trim().startsWith("re_")
-      );
-    } catch {
-      // Fallback if admin query fails
-    }
-  }
 
   const rawSettings = settingsRes.data as (Record<string, unknown> | null);
   const settings: SalonSettings = rawSettings
@@ -186,7 +183,6 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
         ...(rawSettings as unknown as SalonSettings),
         booking_url: autoBookingUrl,
         salon_name: salonName || (rawSettings.salon_name as string),
-        resend_api_key: hasResendKey ? "********" : null,
       }
     : {
         id: "",
@@ -203,7 +199,6 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
         auto_reminders_enabled: true,
         dry_run_mode: false,
         test_recipient_email: null,
-        resend_api_key: hasResendKey ? "********" : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -212,7 +207,7 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
     supabase,
     user: {
       id: user.id,
-      email: user.email ?? "owner@moerge.ge",
+      email: user.email ?? "owner@moarge.ge",
       fullName:
         (user.user_metadata?.full_name as string | undefined) ??
         user.email?.split("@")[0] ??
@@ -221,6 +216,7 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
     salonId,
     salonSlug,
     salonName,
+    role: (roleMembership?.role ?? "staff") as "owner" | "admin" | "staff",
     settings,
   };
 }

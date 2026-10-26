@@ -103,7 +103,6 @@ export interface SalonSettings {
   working_hours_end?: string;
   slot_interval_minutes?: number;
   custom_services?: CustomBookingService[];
-  resend_api_key?: string | null;
   send_booking_confirmation_email?: boolean;
   created_at: string;
   updated_at: string;

@@ -12,15 +12,15 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
   describe("1. SEO & Metadata Compliance", () => {
     it("has professional, high-converting metadata and open graph tags", () => {
       expect(metadata.title).toEqual({
-        default: "MOERGE | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
-        template: "%s | MOERGE",
+        default: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+        template: "%s | moarge",
       });
       expect(metadata.description).toContain("სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების");
       expect(metadata.description).not.toContain("21-დღიანი"); // Focus is on automated care reminders
       expect(metadata.keywords).toContain("სალონის მართვა");
       expect(metadata.keywords).toContain("ავტომატური შეხსენებები");
       expect(metadata.keywords).toContain("კლიენტების დაბრუნება");
-      expect(metadata.openGraph?.siteName).toBe("MOERGE");
+      expect(metadata.openGraph?.siteName).toBe("moarge");
       expect((metadata.twitter as { card?: string })?.card).toBe("summary_large_image");
     });
 
@@ -32,16 +32,16 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
     it("generates correct robots.txt and sitemap.xml routes", () => {
       const robotsRules = robots();
       expect(robotsRules.rules).toBeDefined();
-      expect(robotsRules.sitemap).toBe("https://moerge.vercel.app/sitemap.xml");
+      expect(robotsRules.sitemap).toBe("https://moarge.vercel.app/sitemap.xml");
 
       const sitemapEntries = sitemap();
       expect(sitemapEntries.length).toBeGreaterThanOrEqual(5);
       const urls = sitemapEntries.map((e) => e.url);
-      expect(urls).toContain("https://moerge.vercel.app");
-      expect(urls).toContain("https://moerge.vercel.app/book");
-      expect(urls).toContain("https://moerge.vercel.app/login");
-      expect(urls).toContain("https://moerge.vercel.app/terms");
-      expect(urls).toContain("https://moerge.vercel.app/privacy");
+      expect(urls).toContain("https://moarge.vercel.app");
+      expect(urls).toContain("https://moarge.vercel.app/book");
+      expect(urls).toContain("https://moarge.vercel.app/login");
+      expect(urls).toContain("https://moarge.vercel.app/terms");
+      expect(urls).toContain("https://moarge.vercel.app/privacy");
     });
   });
 
@@ -100,9 +100,11 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
         full_name: "მარიამ დავითაშვილი",
         email: "mariam.d@example.com",
         phone: "+995 599 12 34 56",
-        treatment_date: "2026-10-25",
+        treatment_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10),
         treatment_time: "14:00",
-        treatment_type: "wax_epilation",
+        treatment_type: "srv_wax_legs",
         service_id: "srv_wax_legs",
         service_name: "ცვილით დეპილაცია (მთლიანი ფეხები)",
         price_gel: 45,
@@ -137,7 +139,7 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
       const data = await res.json();
       expect(data.found).toBe(true);
       expect(data.demo).toBe(true);
-      expect(data.salon_name).toBe("Lumière Studio");
+      expect(data.salon_name).toBe("moarge Demo Salon");
       expect(data.availability.booked_times).toEqual(["11:00:00", "15:00:00"]);
     });
 
@@ -151,9 +153,12 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
           full_name: "ტესტერ დემო",
           email: "demo.tester@example.com",
           phone: "+995 555 12 34 56",
-          treatment_date: "2026-10-30",
+          treatment_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .slice(0, 10),
           treatment_time: "12:00",
-          treatment_type: "laser_epilation",
+          treatment_type: "srv_laser_full",
+          service_id: "srv_laser_full",
           email_consent: true,
         }),
       });

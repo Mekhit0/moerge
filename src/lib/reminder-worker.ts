@@ -31,7 +31,6 @@ export interface ClaimedReminderJob {
   brand_color: string;
   dry_run_mode: boolean;
   test_recipient_email: string | null;
-  resend_api_key?: string | null;
 }
 
 export interface SingleReminderProcessResult {
@@ -53,6 +52,7 @@ export interface SingleReminderProcessResult {
 export interface EmailTransport {
   sendEmail(params: {
     from: string;
+    replyTo?: string;
     to: string;
     subject: string;
     html: string;
@@ -62,11 +62,20 @@ export interface EmailTransport {
   }): Promise<{ id: string }>;
 }
 
+export function platformSender(salonName: string): string {
+  const domain = process.env.RESEND_FROM_DOMAIN?.trim().toLowerCase();
+  if (!domain || !/^(?:[a-z0-9-]+\.)+[a-z]{2,}$/.test(domain)) {
+    throw new Error("Missing or invalid RESEND_FROM_DOMAIN environment variable.");
+  }
+  const safeName = salonName.replace(/[<>\"]/g, "").trim();
+  return `"${safeName} via moarge" <no-reply@${domain}>`;
+}
+
 /**
  * Default Resend email transport using server-side RESEND_API_KEY.
  */
-export function createResendTransport(apiKey?: string): EmailTransport | null {
-  const key = (apiKey ?? process.env.RESEND_API_KEY ?? "").trim();
+export function createResendTransport(): EmailTransport | null {
+  const key = process.env.RESEND_API_KEY?.trim() ?? "";
   if (!key || !key.startsWith("re_")) {
     return null;
   }
@@ -74,10 +83,11 @@ export function createResendTransport(apiKey?: string): EmailTransport | null {
   const resend = new Resend(key);
 
   return {
-    async sendEmail({ from, to, subject, html, text, idempotencyKey, unsubscribeUrl }) {
+    async sendEmail({ from, replyTo, to, subject, html, text, idempotencyKey, unsubscribeUrl }) {
       const response = await resend.emails.send(
         {
           from,
+          replyTo,
           to: [to],
           subject,
           html,
@@ -199,7 +209,7 @@ export async function processClaimedReminder(
   const resolvedTransport =
     options.transport !== undefined
       ? options.transport
-      : createResendTransport(job.resend_api_key ?? undefined);
+      : createResendTransport();
 
   const envDryRun =
     options.envDryRun ??
@@ -245,12 +255,13 @@ export async function processClaimedReminder(
   }
 
   // 4. Send via Resend transport with deterministic attempt idempotency key
-  const fromHeader = `${job.sender_display_name.replace(/[<>"]/g, "")} <${job.verified_sender_email}>`;
+  const fromHeader = platformSender(job.salon_name);
   const attemptIdempotencyKey = `${job.idempotency_key}:attempt:${job.attempt_count}`;
 
   try {
     const res = await resolvedTransport.sendEmail({
       from: fromHeader,
+      replyTo: job.verified_sender_email,
       to: targetRecipientEmail,
       subject: testRecipient
         ? `[TEST -> ${job.client_email}] ${rendered.subject}`

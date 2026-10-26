@@ -14,7 +14,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
-import MoergeLogo from "@/components/MoergeLogo";
+import MoargeLogo from "@/components/MoargeLogo";
 
 export default function PrivacyPolicyPage() {
   const { t } = useLanguage();
@@ -25,11 +25,11 @@ export default function PrivacyPolicyPage() {
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-rose-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3 group">
-            <MoergeLogo size="md" variant="icon" />
+            <MoargeLogo size="md" variant="icon" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black tracking-tight text-stone-900 leading-none">
-                  MOERGE
+                  moarge
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
                   SECURITY & PRIVACY
@@ -84,8 +84,8 @@ export default function PrivacyPolicyPage() {
 
           <p className="mt-6 text-sm sm:text-base text-stone-600 leading-relaxed">
             {t(
-              "MOERGE-ში ჩვენ განსაკუთრებულ პატივს ვცემთ თქვენი და თქვენი კლიენტების პერსონალური ინფორმაციის უსაფრთხოებას. წინამდებარე პოლიტიკა განმარტავს, თუ რა მონაცემებს ვაგროვებთ, როგორ ვამუშავებთ და როგორ ვიცავთ მათ საქართველოს მოქმედი კანონმდებლობისა და საერთაშორისო სტანდარტების შესაბამისად.",
-              "At MOERGE, we prioritize the confidentiality and integrity of your data and that of your salon customers. This Privacy Policy details the types of personal data we collect, our processing grounds, and the technical safeguards employed under the Law of Georgia on Personal Data Protection."
+              "moarge-ში ჩვენ განსაკუთრებულ პატივს ვცემთ თქვენი და თქვენი კლიენტების პერსონალური ინფორმაციის უსაფრთხოებას. წინამდებარე პოლიტიკა განმარტავს, თუ რა მონაცემებს ვაგროვებთ, როგორ ვამუშავებთ და როგორ ვიცავთ მათ საქართველოს მოქმედი კანონმდებლობისა და საერთაშორისო სტანდარტების შესაბამისად.",
+              "At moarge, we prioritize the confidentiality and integrity of your data and that of your salon customers. This Privacy Policy details the types of personal data we collect, our processing grounds, and the technical safeguards employed under the Law of Georgia on Personal Data Protection."
             )}
           </p>
         </div>
@@ -104,8 +104,8 @@ export default function PrivacyPolicyPage() {
             </div>
             <p>
               {t(
-                "MOERGE ამუშავებს მხოლოდ იმ მონაცემებს, რომლებიც აუცილებელია სალონის ფუნქციონირებისა და ჯავშნის სერვისის განსახორციელებლად:",
-                "MOERGE only collects and processes information strictly necessary for appointment booking and salon management:"
+                "moarge ამუშავებს მხოლოდ იმ მონაცემებს, რომლებიც აუცილებელია სალონის ფუნქციონირებისა და ჯავშნის სერვისის განსახორციელებლად:",
+                "moarge only collects and processes information strictly necessary for appointment booking and salon management:"
               )}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -190,8 +190,8 @@ export default function PrivacyPolicyPage() {
             </div>
             <p>
               {t(
-                "MOERGE იყენებს თანამედროვე უსაფრთხოების მრავალდონიან სისტემას:",
-                "MOERGE implements multi-tiered enterprise-grade security protocols:"
+                "moarge იყენებს თანამედროვე უსაფრთხოების მრავალდონიან სისტემას:",
+                "moarge implements multi-tiered enterprise-grade security protocols:"
               )}
             </p>
             <div className="space-y-3 pt-1">
@@ -231,8 +231,8 @@ export default function PrivacyPolicyPage() {
             </div>
             <p>
               {t(
-                "MOERGE არასოდეს ყიდის ან გადასცემს პერსონალურ მონაცემებს სარეკლამო ან მარკეტინგულ სააგენტოებს. მონაცემთა დამუშავებაში მონაწილეობენ მხოლოდ სანდო ინფრასტრუქტურული პროვაიდერები:",
-                "MOERGE never sells personal data to advertisers or data brokers. Data is processed exclusively by audited infrastructure partners:"
+                "moarge არასოდეს ყიდის ან გადასცემს პერსონალურ მონაცემებს სარეკლამო ან მარკეტინგულ სააგენტოებს. მონაცემთა დამუშავებაში მონაწილეობენ მხოლოდ სანდო ინფრასტრუქტურული პროვაიდერები:",
+                "moarge never sells personal data to advertisers or data brokers. Data is processed exclusively by audited infrastructure partners:"
               )}
             </p>
             <ul className="list-disc pl-6 space-y-1.5 text-stone-600 text-xs sm:text-sm">
@@ -300,8 +300,8 @@ export default function PrivacyPolicyPage() {
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
                 {t(
-                  "კითხვების ან მოთხოვნების შემთხვევაში დაგვიკავშირდით: privacy@moerge.ge",
-                  "For privacy inquiries, contact our data protection team: privacy@moerge.ge"
+                  "კითხვების ან მოთხოვნების შემთხვევაში დაგვიკავშირდით: privacy@moarge.ge",
+                  "For privacy inquiries, contact our data protection team: privacy@moarge.ge"
                 )}
               </p>
             </div>
@@ -319,9 +319,9 @@ export default function PrivacyPolicyPage() {
       <footer className="bg-white border-t border-rose-100 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
           <div className="flex items-center gap-2">
-            <span className="font-black text-stone-900">MOERGE</span>
+            <span className="font-black text-stone-900">moarge</span>
             <span>•</span>
-            <span>© {new Date().getFullYear()} MOERGE Ecosystem. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</span>
+            <span>© {new Date().getFullYear()} moarge Ecosystem. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</span>
           </div>
           <div className="flex items-center gap-4 font-semibold">
             <Link href="/" className="hover:text-rose-600">

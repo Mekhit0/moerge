@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 import { clientInputSchema, normalizeEmail } from "@/lib/validation";
 
 export async function GET(
@@ -76,6 +76,9 @@ export async function PATCH(
 
   // Handle archive / restore toggle if requested
   if (typeof body.is_archived === "boolean" && Object.keys(body).length === 1) {
+    if (!requireRole(ctx, ["owner", "admin"])) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const archiveFlag = body.is_archived;
     const { data: updated, error } = await ctx.supabase
       .from("clients")

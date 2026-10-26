@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPublicServerSupabaseClient } from "@/lib/supabase/server";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { createServiceClient } from "@/lib/supabase/server";
+import { consumeServerRateLimit } from "@/lib/server-rate-limit";
 import { z } from "zod";
 
 const tokenSchema = z.object({
@@ -10,14 +10,6 @@ const tokenSchema = z.object({
 export async function POST(request: NextRequest) {
   const clientIp =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
-  const rl = checkRateLimit(`unsubscribe:${clientIp}`, 20, 60_000);
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again shortly." },
-      { status: 429 }
-    );
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -33,7 +25,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = createPublicServerSupabaseClient();
+  const supabase = createServiceClient();
+  try {
+    if (!(await consumeServerRateLimit(supabase, `unsubscribe:${clientIp}`, 20, 60))) {
+      return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 });
+    }
+  } catch {
+    return NextResponse.json({ error: "Rate limiter unavailable." }, { status: 500 });
+  }
   const { data, error } = await supabase.rpc("unsubscribe_client_by_token", {
     p_token: parsed.data.token,
   });

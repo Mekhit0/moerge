@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import {
-  createAdminOrRpcSupabaseClient,
-  getAuthenticatedSalonContext,
+  createServiceClient,
 } from "@/lib/supabase/server";
 import {
   ClaimedReminderJob,
@@ -34,20 +33,7 @@ async function handleProcessDueReminders(request: NextRequest) {
     ? authHeader.slice(7).trim()
     : "";
 
-  let isCronAuthenticated =
-    bearerToken.length > 0 && timingSafeMatch(bearerToken, configuredSecret.trim());
-  let targetSalonId: string | null = null;
-
-  // Also allow authenticated salon staff to trigger due reminders for their own salon
-  if (!isCronAuthenticated) {
-    const staffCtx = await getAuthenticatedSalonContext();
-    if (staffCtx) {
-      isCronAuthenticated = true;
-      targetSalonId = staffCtx.salonId;
-    }
-  }
-
-  if (!isCronAuthenticated) {
+  if (!(bearerToken.length > 0 && timingSafeMatch(bearerToken, configuredSecret.trim()))) {
     return NextResponse.json(
       { error: "Unauthorized cron invocation." },
       { status: 401 }
@@ -67,7 +53,7 @@ async function handleProcessDueReminders(request: NextRequest) {
 
   let supabase;
   try {
-    supabase = createAdminOrRpcSupabaseClient();
+    supabase = createServiceClient();
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Database configuration error";
     return NextResponse.json({ error: msg }, { status: 500 });
@@ -76,9 +62,8 @@ async function handleProcessDueReminders(request: NextRequest) {
   const { data: claimedData, error: claimError } = await supabase.rpc(
     "claim_due_reminders",
     {
-      p_cron_secret: null,
       p_limit: 25,
-      p_salon_id: targetSalonId,
+      p_salon_id: null,
       p_specific_reminder_id: null,
     }
   );
@@ -94,13 +79,10 @@ async function handleProcessDueReminders(request: NextRequest) {
   const processedResults = [];
 
   for (const job of jobs) {
-    const transport = createResendTransport(
-      job.resend_api_key ?? process.env.RESEND_API_KEY
-    );
+    const transport = createResendTransport();
     const res = await processClaimedReminder(job, { transport });
 
     await supabase.rpc("record_reminder_send_result", {
-      p_cron_secret: null,
       p_reminder_id: res.reminderId,
       p_outcome: res.outcome,
       p_provider_message_id: res.providerMessageId,

@@ -32,7 +32,7 @@ import {
   getTreatmentLabel,
   useLanguage,
 } from "@/lib/i18n";
-import MoergeLogo from "./MoergeLogo";
+import MoargeLogo from "./MoargeLogo";
 
 interface DashboardClientProps {
   salonName: string;
@@ -132,9 +132,9 @@ export default function DashboardClient({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 bg-white p-6 sm:p-8 rounded-3xl border border-rose-100 shadow-sm">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <MoergeLogo variant="icon" size="xs" />
+            <MoargeLogo variant="icon" size="xs" />
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600">
-              MOERGE SALON SUITE
+              moarge SALON SUITE
             </span>
             <span className="text-stone-300">•</span>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">

@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface MoergeLogoProps {
+export interface MoargeLogoProps {
   className?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   variant?: "full" | "icon";
@@ -16,13 +16,13 @@ const SIZE_MAP = {
   xl: { icon: 60, text: "text-3xl", sub: "text-[12px]" },
 };
 
-export default function MoergeLogo({
+export default function MoargeLogo({
   className = "",
   size = "md",
   variant = "full",
   theme = "dark",
   showSubtitle = true,
-}: MoergeLogoProps) {
+}: MoargeLogoProps) {
   const { icon: iconDim, text: textClass, sub: subClass } = SIZE_MAP[size];
 
   const textColor =
@@ -49,7 +49,7 @@ export default function MoergeLogo({
       >
         <defs>
           <linearGradient
-            id="moerge_bg_grad"
+            id="moarge_bg_grad"
             x1="2"
             y1="2"
             x2="46"
@@ -62,7 +62,7 @@ export default function MoergeLogo({
           </linearGradient>
 
           <linearGradient
-            id="moerge_star_grad"
+            id="moarge_star_grad"
             x1="21"
             y1="7"
             x2="27"
@@ -75,7 +75,7 @@ export default function MoergeLogo({
           </linearGradient>
 
           <linearGradient
-            id="moerge_m_grad"
+            id="moarge_m_grad"
             x1="12"
             y1="12"
             x2="36"
@@ -86,7 +86,7 @@ export default function MoergeLogo({
             <stop offset="100%" stopColor="#ffe4e6" />
           </linearGradient>
 
-          <filter id="moerge_drop" x="-10%" y="-10%" width="125%" height="125%">
+          <filter id="moarge_drop" x="-10%" y="-10%" width="125%" height="125%">
             <feDropShadow
               dx="0"
               dy="1.5"
@@ -104,7 +104,7 @@ export default function MoergeLogo({
           width="44"
           height="44"
           rx="13"
-          fill="url(#moerge_bg_grad)"
+          fill="url(#moarge_bg_grad)"
         />
 
         {/* Subtle Luxury Inset Border */}
@@ -119,17 +119,17 @@ export default function MoergeLogo({
         />
 
         {/* Intertwined Architectural M */}
-        <g filter="url(#moerge_drop)">
+        <g filter="url(#moarge_drop)">
           <path
             d="M12 34V18.5C12 14.9 14.9 12 18.5 12C20.8 12 22.8 13.2 24 15.1C25.2 13.2 27.2 12 29.5 12C33.1 12 36 14.9 36 18.5V34C36 34.6 35.6 35 35 35H32C31.4 35 31 34.6 31 34V20C31 18.3 29.7 17 28 17C26.3 17 25 18.3 25 20V32C25 32.6 24.6 33 24 33C23.4 33 23 32.6 23 32V20C23 18.3 21.7 17 20 17C18.3 17 17 18.3 17 20V34C17 34.6 16.6 35 16 35H13C12.4 35 12 34.6 12 34Z"
-            fill="url(#moerge_m_grad)"
+            fill="url(#moarge_m_grad)"
           />
         </g>
 
         {/* Salon Sparkle Apex */}
         <path
           d="M24 7.2L24.9 9.8C25.1 10.3 25.5 10.7 26 10.9L28.6 11.8L26 12.7C25.5 12.9 25.1 13.3 24.9 13.8L24 16.4L23.1 13.8C22.9 13.3 22.5 12.9 22 12.7L19.4 11.8L22 10.9C22.5 10.7 22.9 10.3 23.1 9.8L24 7.2Z"
-          fill="url(#moerge_star_grad)"
+          fill="url(#moarge_star_grad)"
         />
       </svg>
 
@@ -139,7 +139,7 @@ export default function MoergeLogo({
           <span
             className={`font-black tracking-tight ${textClass} ${textColor} font-sans`}
           >
-            MOERGE
+            moarge
           </span>
           {showSubtitle && (
             <span

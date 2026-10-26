@@ -196,9 +196,6 @@ export default function SettingsManager({
   const [testRecipientEmail, setTestRecipientEmail] = useState(
     initialSettings.test_recipient_email ?? ""
   );
-  const [resendApiKey, setResendApiKey] = useState(
-    initialSettings.resend_api_key ?? ""
-  );
 
   // Live Test Email State
   const [liveTestEmailTo, setLiveTestEmailTo] = useState(
@@ -228,7 +225,7 @@ export default function SettingsManager({
     if (typeof window !== "undefined") {
       return `${window.location.origin}/book?salon=${slug}`;
     }
-    return `https://moerge.vercel.app/book?salon=${slug}`;
+    return `https://moarge.vercel.app/book?salon=${slug}`;
   }, [salonSlug, initialSettings.salon_slug]);
 
   function handleCopyBookingUrl() {
@@ -254,12 +251,12 @@ export default function SettingsManager({
   const livePreview = useMemo(() => {
     return renderReminderEmail({
       clientName: lang === "ka" ? "ნინო ბერიძე" : "Sophia Beaumont",
-      salonName: salonName || "MOERGE Studio",
+      salonName: salonName || "My Salon",
       bookingUrl: effectiveBookingUrl,
       subjectTemplate: emailSubject,
       bodyTemplate: emailBodyTemplate,
       brandColor,
-      unsubscribeUrl: "https://moerge.vercel.app/unsubscribe?token=demo-token",
+      unsubscribeUrl: "https://moarge.vercel.app/unsubscribe?token=demo-token",
     });
   }, [lang, salonName, effectiveBookingUrl, emailSubject, emailBodyTemplate, brandColor]);
 
@@ -348,7 +345,6 @@ export default function SettingsManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recipient_email: liveTestEmailTo.trim(),
-          resend_api_key: resendApiKey.trim() || undefined,
           sender_display_name: senderDisplayName,
           salon_name: salonName,
         }),
@@ -432,7 +428,6 @@ export default function SettingsManager({
           working_hours_start: workingHoursStart,
           working_hours_end: workingHoursEnd,
           slot_interval_minutes: Number(slotIntervalMinutes),
-          resend_api_key: resendApiKey.trim() || null,
           send_booking_confirmation_email: sendBookingConfirmationEmail,
           custom_services: normalizedServices,
         }),
@@ -484,7 +479,7 @@ export default function SettingsManager({
       <div className="bg-white p-6 sm:p-7 rounded-3xl border border-rose-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-widest text-rose-600 mb-1">
-            <span>MOERGE</span>
+            <span>moarge</span>
             <span className="text-stone-300">•</span>
             <span>{t("პარამეტრების ცენტრი", "Settings Center")}</span>
           </div>
@@ -649,7 +644,7 @@ export default function SettingsManager({
                 required
                 value={salonName}
                 onChange={(e) => setSalonName(e.target.value)}
-                placeholder="მაგ. MOERGE Studio, Lumière, Beauty Lounge"
+                placeholder="მაგ. Beauty Lounge"
                 className="w-full px-4 py-3 rounded-2xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-semibold"
               />
             </div>
@@ -1359,7 +1354,7 @@ export default function SettingsManager({
                 required
                 value={senderDisplayName}
                 onChange={(e) => setSenderDisplayName(e.target.value)}
-                placeholder="მაგ. MOERGE Studio"
+                placeholder="მაგ. Beauty Lounge"
                 className="w-full px-4 py-3 rounded-2xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
@@ -1450,59 +1445,8 @@ export default function SettingsManager({
               />
             </div>
           </div>
-
-          {/* Resend Integration & Test Box */}
+          {/* Live 1-Click Test Box */}
           <div className="pt-4 border-t border-stone-100 space-y-4">
-            <div>
-              <h4 className="text-sm font-bold text-stone-900 flex items-center gap-2">
-                <KeyRound className="w-4 h-4 text-rose-600" />
-                <span>{t("გაგზავნის არხი და Resend API", "Email Delivery & Resend API")}</span>
-              </h4>
-              <p className="text-xs text-stone-500 mt-0.5">
-                {t(
-                  "MOERGE Cloud სისტემური მიწოდება აქტიურია ავტომატურად. თუ გსურთ საკუთარი ბრენდირებული დომენიდან გაგზავნა, შეიყვანეთ თქვენი Resend API Key.",
-                  "MOERGE Cloud system delivery is active by default. Enter your own Resend API key if using a custom verified domain."
-                )}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
-                  {t("საკუთარი Resend API Key (არასავალდებულო)", "Custom Resend API Key (Optional)")}
-                </label>
-                <input
-                  type="password"
-                  value={resendApiKey}
-                  onChange={(e) => setResendApiKey(e.target.value)}
-                  placeholder="re_..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm font-mono"
-                />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50 cursor-pointer w-full text-xs">
-                  <input
-                    type="checkbox"
-                    checked={dryRunMode}
-                    onChange={(e) => setDryRunMode(e.target.checked)}
-                    className="rounded border-stone-300 text-rose-600 focus:ring-rose-500"
-                  />
-                  <div>
-                    <div className="font-bold text-stone-800">
-                      {t("Dry-Run რეჟიმი (სიმულაცია)", "Dry-Run Simulation")}
-                    </div>
-                    <div className="text-[11px] text-stone-500">
-                      {dryRunMode
-                        ? t("წერილები სიმულირდება რეალური გაგზავნის გარეშე", "Simulates sends without emailing real clients")
-                        : t("რეალური მიწოდება აქტიურია (Live)", "Live emailing active")}
-                    </div>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            {/* Live 1-Click Test Box */}
             <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-2.5">
               <div className="text-xs font-bold text-stone-900 flex items-center justify-between">
                 <span>{t("შეამოწმეთ შეხსენების გაგზავნა რეალურ დროში:", "Test live email delivery:")}</span>
@@ -1640,7 +1584,7 @@ export default function SettingsManager({
           <div className="flex items-center gap-2 text-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-semibold text-stone-700 hidden sm:inline">
-              {t("MOERGE Settings Cloud", "MOERGE Settings Cloud")}
+              {t("moarge Settings Cloud", "moarge Settings Cloud")}
             </span>
             <span className="text-stone-400 hidden sm:inline">•</span>
             <span className="text-stone-500 font-mono text-[11px]">
