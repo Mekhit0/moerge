@@ -10,6 +10,7 @@ function UnsubscribeContent() {
   const { t } = useLanguage();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  const channel = searchParams.get("channel") === "sms" ? "sms" : "email";
 
   const [status, setStatus] = useState<
     "idle" | "submitting" | "done" | "error"
@@ -34,7 +35,7 @@ function UnsubscribeContent() {
       const res = await fetch("/api/unsubscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, channel }),
       });
 
       const data = await res.json();
@@ -88,8 +89,8 @@ function UnsubscribeContent() {
                 "You Have Been Unsubscribed"
               )
             : t(
-                "ვიზიტის შეხსენებების გაუქმება",
-                "Unsubscribe from Appointment Reminders"
+                channel === "sms" ? "SMS შეტყობინებების გაუქმება" : "ელ-ფოსტის შეტყობინებების გაუქმება",
+                channel === "sms" ? "Unsubscribe from SMS messages" : "Unsubscribe from email messages"
               )}
         </h1>
 
@@ -97,8 +98,8 @@ function UnsubscribeContent() {
           <>
             <p className="mt-3 text-sm text-stone-600 leading-relaxed">
               {t(
-                "დააჭირეთ ქვემოთ მოცემულ ღილაკს, რათა აღარ მიიღოთ 21-დღიანი ეპილაციის ავტომატური შეხსენებები. ყველა მიმდინარე დაგეგმილი შეხსენება მყისიერად გაუქმდება.",
-                "Click below to opt out of future automated 21-day epilation reminder emails. Any pending scheduled reminders for your email address will be immediately canceled."
+                channel === "sms" ? "დააჭირეთ, რათა აღარ მიიღოთ SMS შეტყობინებები. მოლოდინში მყოფი შეტყობინებები გაუქმდება." : "დააჭირეთ, რათა აღარ მიიღოთ ელ-ფოსტის შეტყობინებები. მოლოდინში მყოფი წერილები გაუქმდება.",
+                channel === "sms" ? "Click to stop SMS messages. Pending SMS notifications will be canceled." : "Click to stop email messages. Pending email notifications will be canceled."
               )}
             </p>
             {!token ? (
@@ -135,8 +136,8 @@ function UnsubscribeContent() {
         {status === "done" && (
           <div className="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm leading-relaxed">
             {t(
-              `თქვენი ელ-ფოსტის მისამართზე გაითიშა ავტომატური შეხსენებები სალონიდან „${salonName}“ და ყველა მოლოდინში მყოფი შეხსენება გაუქმებულია.`,
-              `Your email address has been opted out of automated reminders from ${salonName}, and any pending scheduled reminders have been canceled.`
+              channel === "sms" ? `თქვენი ნომერი აღარ მიიღებს SMS შეტყობინებებს სალონიდან „${salonName}“.` : `თქვენი ელ-ფოსტა აღარ მიიღებს შეტყობინებებს სალონიდან „${salonName}“.`,
+              channel === "sms" ? `Your number will no longer receive SMS messages from ${salonName}.` : `Your email will no longer receive messages from ${salonName}.`
             )}
           </div>
         )}

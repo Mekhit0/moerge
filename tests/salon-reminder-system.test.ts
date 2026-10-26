@@ -491,12 +491,12 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       const validClient = clientInputSchema.safeParse({
         full_name: "Sophia Beaumont",
         email: "Sophia@Example.com",
-        phone: "",
+        phone: "+995 555 12 34 56",
       });
       expect(validClient.success).toBe(true);
       if (validClient.success) {
         expect(validClient.data.email).toBe("sophia@example.com");
-        expect(validClient.data.phone).toBeNull();
+        expect(validClient.data.phone).toBe("+995555123456");
       }
     });
 

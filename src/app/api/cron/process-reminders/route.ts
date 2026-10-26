@@ -1,118 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { createServiceClient } from "@/lib/supabase/server";
 import {
-  createServiceClient,
-} from "@/lib/supabase/server";
-import {
-  ClaimedReminderJob,
-  createResendTransport,
-  processClaimedReminder,
-} from "@/lib/reminder-worker";
+  createNotificationProvider,
+  FakeNotificationProvider,
+  processNotification,
+  type NotificationJob,
+} from "@/lib/notifications";
 
 function timingSafeMatch(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) {
-    crypto.timingSafeEqual(bufA, bufA);
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) {
+    crypto.timingSafeEqual(left, left);
     return false;
   }
-  return crypto.timingSafeEqual(bufA, bufB);
+  return crypto.timingSafeEqual(left, right);
 }
 
-async function handleProcessDueReminders(request: NextRequest) {
-  const configuredSecret = process.env.CRON_SECRET;
-  if (!configuredSecret || configuredSecret.trim().length === 0) {
-    return NextResponse.json(
-      { error: "Server configuration error: CRON_SECRET is not configured." },
-      { status: 500 }
-    );
-  }
-
-  const authHeader = request.headers.get("authorization") ?? "";
-  const bearerToken = authHeader.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : "";
-
-  if (!(bearerToken.length > 0 && timingSafeMatch(bearerToken, configuredSecret.trim()))) {
-    return NextResponse.json(
-      { error: "Unauthorized cron invocation." },
-      { status: 401 }
-    );
-  }
-
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!serviceRoleKey || serviceRoleKey.length < 10) {
-    return NextResponse.json(
-      {
-        error:
-          "Server configuration error: SUPABASE_SERVICE_ROLE_KEY is required for background reminder processing.",
-      },
-      { status: 500 }
-    );
-  }
+async function processQueue(request: NextRequest) {
+  const secret = process.env.CRON_SECRET?.trim();
+  if (!secret) return NextResponse.json({ error: "CRON_SECRET is not configured." }, { status: 500 });
+  const authorization = request.headers.get("authorization") ?? "";
+  const bearer = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+  if (!bearer || !timingSafeMatch(bearer, secret)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
   let supabase;
   try {
     supabase = createServiceClient();
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Database configuration error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Server configuration error." }, { status: 500 });
   }
 
-  const { data: claimedData, error: claimError } = await supabase.rpc(
-    "claim_due_reminders",
-    {
-      p_limit: 25,
-      p_salon_id: null,
-      p_specific_reminder_id: null,
-    }
-  );
+  const { data, error } = await supabase.rpc("claim_due_notifications", { p_limit: 25 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  if (claimError) {
-    return NextResponse.json(
-      { error: `Failed to claim due reminders: ${claimError.message}` },
-      { status: 500 }
-    );
-  }
-
-  const jobs = (claimedData ?? []) as ClaimedReminderJob[];
-  const processedResults = [];
-
-  for (const job of jobs) {
-    const transport = createResendTransport();
-    const res = await processClaimedReminder(job, { transport });
-
-    await supabase.rpc("record_reminder_send_result", {
-      p_reminder_id: res.reminderId,
-      p_outcome: res.outcome,
-      p_provider_message_id: res.providerMessageId,
-      p_recipient_email: res.recipientEmail,
-      p_subject: res.subject,
-      p_error_message: res.errorMessage,
-      p_next_retry_at: res.nextRetryAtIso,
-      p_status_code: res.statusCode,
-      p_is_dry_run: res.isDryRun,
-      p_raw_payload: {
-        processed_at: new Date().toISOString(),
-        attempt_count: job.attempt_count,
-      },
+  const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://moarge.ge").replace(/\/$/, "");
+  const jobs = (data ?? []) as Array<NotificationJob & { unsubscribe_token: string }>;
+  const results = [];
+  for (const row of jobs) {
+    const job: NotificationJob = {
+      ...row,
+      unsubscribe_url: `${appBaseUrl}/unsubscribe?token=${encodeURIComponent(row.unsubscribe_token)}&channel=${row.channel}`,
+    };
+    const useFake = row.dry_run_mode || process.env.NOTIFICATION_PROVIDER === "fake";
+    const provider = useFake ? new FakeNotificationProvider() : createNotificationProvider(row.channel);
+    const result = await processNotification(job, provider);
+    const { error: recordError } = await supabase.rpc("record_notification_result", {
+      p_id: result.id,
+      p_status: result.status,
+      p_provider_message_id: result.providerMessageId,
+      p_cost: result.cost,
+      p_error: result.error,
+      p_next_attempt_at: result.nextAttemptAt,
     });
-
-    processedResults.push(res);
+    results.push({ ...result, recorded: !recordError });
   }
-
-  return NextResponse.json({
-    ok: true,
-    claimedCount: jobs.length,
-    processed: processedResults,
-    timestamp: new Date().toISOString(),
-  });
+  return NextResponse.json({ ok: true, claimedCount: jobs.length, processed: results, timestamp: new Date().toISOString() });
 }
 
 export async function GET(request: NextRequest) {
-  return handleProcessDueReminders(request);
+  return processQueue(request);
 }
 
 export async function POST(request: NextRequest) {
-  return handleProcessDueReminders(request);
+  return processQueue(request);
 }

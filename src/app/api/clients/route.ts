@@ -72,22 +72,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const normalized = normalizeEmail(parsed.data.email);
+  const normalized = parsed.data.email ? normalizeEmail(parsed.data.email) : null;
 
-  // Check for existing duplicate email within the same salon
   const { data: existingClient } = await ctx.supabase
     .from("clients")
     .select("id, full_name, is_archived")
     .eq("salon_id", ctx.salonId)
-    .eq("normalized_email", normalized)
+    .eq("normalized_phone", parsed.data.phone)
     .maybeSingle();
 
   if (existingClient) {
     return NextResponse.json(
       {
         error: existingClient.is_archived
-          ? `A client with email "${normalized}" (${existingClient.full_name}) already exists in your archived clients. Restore their profile instead of creating a duplicate.`
-          : `A client with email "${normalized}" (${existingClient.full_name}) is already registered in this salon.`,
+          ? `A client with phone "${parsed.data.phone}" (${existingClient.full_name}) already exists in archived clients. Restore their profile instead.`
+          : `A client with phone "${parsed.data.phone}" (${existingClient.full_name}) is already registered in this salon.`,
       },
       { status: 409 }
     );
@@ -102,7 +101,10 @@ export async function POST(request: NextRequest) {
       phone: parsed.data.phone,
       notes: parsed.data.notes,
       email_consent: parsed.data.email_consent,
+      sms_consent: parsed.data.sms_consent,
+      preferred_language: parsed.data.preferred_language,
       unsubscribed_at: parsed.data.email_consent ? null : new Date().toISOString(),
+      sms_unsubscribed_at: parsed.data.sms_consent ? null : new Date().toISOString(),
     })
     .select("*")
     .single();
@@ -110,7 +112,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     if (error.code === "23505") {
       return NextResponse.json(
-        { error: "A client with this email address already exists in your salon." },
+        { error: "A client with this phone number already exists in your salon." },
         { status: 409 }
       );
     }

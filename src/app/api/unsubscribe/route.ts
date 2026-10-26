@@ -5,6 +5,7 @@ import { z } from "zod";
 
 const tokenSchema = z.object({
   token: z.string().uuid("Invalid unsubscribe token format."),
+  channel: z.enum(["sms", "email"]).default("email"),
 });
 
 export async function POST(request: NextRequest) {
@@ -33,8 +34,9 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Rate limiter unavailable." }, { status: 500 });
   }
-  const { data, error } = await supabase.rpc("unsubscribe_client_by_token", {
+  const { data, error } = await supabase.rpc("unsubscribe_client_notification_by_token", {
     p_token: parsed.data.token,
+    p_channel: parsed.data.channel,
   });
 
   if (error) {

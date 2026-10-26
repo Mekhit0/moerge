@@ -70,6 +70,11 @@ describe.skipIf(!canRun)("staff booking concurrency (staging integration)", { ti
       p_staff_id: staffId, p_client_id: null, p_full_name: `Parallel ${index}`, p_phone: "+995555000001", p_email: null, p_notes: null,
     })));
     expect(parallel.every((result) => !result.error && (result.data as { success?: boolean })?.success), JSON.stringify(parallel.map((result) => ({ data: result.data, error: result.error?.message })))).toBe(true);
+    const { count: phoneIdentityCount, error: identityError } = await admin.from("clients")
+      .select("id", { count: "exact", head: true })
+      .eq("salon_id", salonId).eq("normalized_phone", "+995555000001");
+    expect(identityError).toBeNull();
+    expect(phoneIdentityCount).toBe(1);
 
     const race = await Promise.all([1, 2].map((index) => admin.rpc("create_appointment", {
       p_salon_id: salonId, p_service_id: serviceId, p_date: bookingDate, p_start_time: "03:00:00",
@@ -78,9 +83,43 @@ describe.skipIf(!canRun)("staff booking concurrency (staging integration)", { ti
     expect(race.filter((result) => !result.error && (result.data as { success?: boolean })?.success)).toHaveLength(1);
     expect(race.filter((result) => !result.error && (result.data as { conflict?: boolean })?.conflict)).toHaveLength(1);
     expect(race.filter((result) => !result.error && (result.data as { conflict?: boolean })?.conflict)).toHaveLength(1);
+    const { count: racePhoneIdentityCount } = await admin.from("clients")
+      .select("id", { count: "exact", head: true })
+      .eq("salon_id", salonId).eq("normalized_phone", "+995555000002");
+    expect(racePhoneIdentityCount).toBe(1);
+
+    const notificationBooking = await admin.rpc("create_appointment", {
+      p_salon_id: salonId, p_service_id: serviceId, p_date: bookingDate, p_start_time: "03:00:00",
+      p_staff_id: staffIds[2], p_client_id: null, p_full_name: "Notification test",
+      p_phone: "+995555000003", p_email: `notify-${crypto.randomUUID()}@example.test`, p_notes: null,
+      p_email_consent: true, p_sms_consent: true, p_language: "en",
+    });
+    expect(notificationBooking.error).toBeNull();
+    expect((notificationBooking.data as { success?: boolean })?.success).toBe(true);
+    const notificationAppointmentId = (notificationBooking.data as { appointment_id: string }).appointment_id;
+    const { data: queuedNotifications, error: notificationError } = await admin.from("notification_log")
+      .select("id,message_type,channel,status,client_id")
+      .eq("salon_id", salonId).eq("appointment_id", notificationAppointmentId);
+    expect(notificationError).toBeNull();
+    expect(queuedNotifications?.map((item) => `${item.message_type}:${item.channel}`).sort()).toEqual([
+      "booking_confirmation:email", "booking_confirmation:sms",
+      "reminder_24h:email", "reminder_24h:sms",
+      "reminder_2h:email", "reminder_2h:sms",
+    ]);
+    const { data: notifyClient } = await admin.from("clients").select("unsubscribe_token")
+      .eq("salon_id", salonId).eq("normalized_phone", "+995555000003").single();
+    const { data: unsubResult, error: unsubError } = await admin.rpc("unsubscribe_client_notification_by_token", {
+      p_token: notifyClient!.unsubscribe_token, p_channel: "sms",
+    });
+    expect(unsubError).toBeNull();
+    expect((unsubResult as { success?: boolean })?.success).toBe(true);
+    const { data: afterUnsubscribe } = await admin.from("notification_log")
+      .select("channel,status").eq("appointment_id", notificationAppointmentId);
+    expect(afterUnsubscribe?.filter((item) => item.channel === "sms").every((item) => item.status === "suppressed")).toBe(true);
+    expect(afterUnsubscribe?.filter((item) => item.channel === "email").every((item) => item.status === "pending")).toBe(true);
 
     const { data: dstSlots, error: dstError } = await admin.rpc("get_available_slots", {
-      p_salon_id: salonId, p_service_id: serviceId, p_date: bookingDate, p_staff_id: staffIds[2],
+      p_salon_id: salonId, p_service_id: serviceId, p_date: bookingDate, p_staff_id: staffIds[1],
     });
     expect(dstError).toBeNull();
     const dstSlot = (dstSlots ?? []).find((slot: { slot_time: string }) => slot.slot_time.startsWith("02:30"));

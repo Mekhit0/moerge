@@ -102,6 +102,7 @@ export interface SalonSettings {
   working_hours_start?: string;
   working_hours_end?: string;
   slot_interval_minutes?: number;
+  booking_cancel_deadline_hours?: number;
   custom_services?: CustomBookingService[];
   send_booking_confirmation_email?: boolean;
   created_at: string;
@@ -114,10 +115,14 @@ export interface Client {
   full_name: string;
   email: string | null;
   normalized_email?: string;
+  normalized_phone?: string | null;
   phone: string | null;
   notes: string | null;
   email_consent: boolean;
   unsubscribed_at: string | null;
+  sms_consent: boolean;
+  sms_unsubscribed_at: string | null;
+  preferred_language: "ka" | "en";
   unsubscribe_token: string;
   is_archived: boolean;
   archived_at: string | null;

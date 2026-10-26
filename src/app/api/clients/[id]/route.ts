@@ -114,13 +114,21 @@ export async function PATCH(
 
   const parsed = clientInputSchema.safeParse({
     full_name: body.full_name ?? existing.full_name,
-    email: body.email ?? existing.email,
+    email: body.email !== undefined ? body.email : existing.email,
     phone: body.phone !== undefined ? body.phone : existing.phone,
     notes: body.notes !== undefined ? body.notes : existing.notes,
     email_consent:
       typeof body.email_consent === "boolean"
         ? body.email_consent
         : existing.email_consent,
+    sms_consent:
+      typeof body.sms_consent === "boolean"
+        ? body.sms_consent
+        : existing.sms_consent,
+    preferred_language:
+      body.preferred_language === "ka" || body.preferred_language === "en"
+        ? body.preferred_language
+        : existing.preferred_language,
   });
 
   if (!parsed.success) {
@@ -130,21 +138,21 @@ export async function PATCH(
     );
   }
 
-  const normalized = normalizeEmail(parsed.data.email);
+  const normalized = parsed.data.email ? normalizeEmail(parsed.data.email) : null;
 
-  if (normalized !== existing.normalized_email) {
+  if (parsed.data.phone !== existing.normalized_phone) {
     const { data: dup } = await ctx.supabase
       .from("clients")
       .select("id, full_name")
       .eq("salon_id", ctx.salonId)
-      .eq("normalized_email", normalized)
+      .eq("normalized_phone", parsed.data.phone)
       .neq("id", id)
       .maybeSingle();
 
     if (dup) {
       return NextResponse.json(
         {
-          error: `Another client (${dup.full_name}) already uses "${normalized}".`,
+          error: `Another client (${dup.full_name}) already uses this phone number.`,
         },
         { status: 409 }
       );
@@ -159,9 +167,14 @@ export async function PATCH(
       phone: parsed.data.phone,
       notes: parsed.data.notes,
       email_consent: parsed.data.email_consent,
+      sms_consent: parsed.data.sms_consent,
+      preferred_language: parsed.data.preferred_language,
       unsubscribed_at: parsed.data.email_consent
         ? null
         : existing.unsubscribed_at ?? new Date().toISOString(),
+      sms_unsubscribed_at: parsed.data.sms_consent
+        ? null
+        : existing.sms_unsubscribed_at ?? new Date().toISOString(),
     })
     .eq("id", id)
     .eq("salon_id", ctx.salonId)
@@ -184,6 +197,15 @@ export async function PATCH(
       .eq("client_id", id)
       .eq("salon_id", ctx.salonId)
       .eq("status", "scheduled");
+  }
+  if (!parsed.data.sms_consent) {
+    await ctx.supabase
+      .from("notification_log")
+      .update({ status: "suppressed", error: "SMS consent withdrawn" })
+      .eq("client_id", id)
+      .eq("salon_id", ctx.salonId)
+      .eq("channel", "sms")
+      .in("status", ["pending", "retry"]);
   }
 
   return NextResponse.json({ client: updated });

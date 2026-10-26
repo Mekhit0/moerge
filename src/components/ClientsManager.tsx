@@ -44,7 +44,8 @@ export default function ClientsManager({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [emailConsent, setEmailConsent] = useState(true);
+  const [emailConsent, setEmailConsent] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -74,7 +75,8 @@ export default function ClientsManager({
     setEmail("");
     setPhone("");
     setNotes("");
-    setEmailConsent(true);
+    setEmailConsent(false);
+    setSmsConsent(false);
     setFormError(null);
     setModalOpen(true);
   }
@@ -86,6 +88,7 @@ export default function ClientsManager({
     setPhone(client.phone ?? "");
     setNotes(client.notes ?? "");
     setEmailConsent(client.email_consent);
+    setSmsConsent(client.sms_consent);
     setFormError(null);
     setModalOpen(true);
   }
@@ -98,10 +101,11 @@ export default function ClientsManager({
     try {
       const payload = {
         full_name: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim() || null,
+        email: email.trim().toLowerCase() || null,
+        phone: phone.trim(),
         notes: notes.trim() || null,
         email_consent: emailConsent,
+        sms_consent: smsConsent,
       };
 
       const url = editingClient
@@ -498,13 +502,12 @@ export default function ClientsManager({
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
                   {t(
-                    "ელ-ფოსტის მისამართი * (ავტომატური შეხსენებებისთვის)",
-                    "Email Address * (Used for Automated Reminders)"
+                    "ელ-ფოსტის მისამართი (არასავალდებულო)",
+                    "Email Address (Optional)"
                   )}
                 </label>
                 <input
                   type="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nino@example.com"
@@ -515,12 +518,13 @@ export default function ClientsManager({
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
                   {t(
-                    "ტელეფონის ნომერი (არასავალდებულო — არ გამოიყენება შეტყობინებისთვის)",
-                    "Phone Number (Optional — Never Used for Notifications)"
+                    "ტელეფონის ნომერი *",
+                    "Phone Number *"
                   )}
                 </label>
                 <input
                   type="tel"
+                  required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+995 555 12 34 56"
@@ -568,10 +572,14 @@ export default function ClientsManager({
                     )}
                   </strong>{" "}
                   {t(
-                    "დასრულებული ეპილაციის ვიზიტიდან 21 დღის შემდეგ.",
-                    "21 days after completed epilation appointments."
+                      "შეტყობინების მისამართად.",
+                      "For email notifications."
                   )}
                 </span>
+              </label>
+              <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-50/50 border border-rose-100 cursor-pointer">
+                <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} className="mt-0.5 rounded border-stone-300 text-rose-600 focus:ring-rose-500" />
+                <span className="text-xs text-stone-700 leading-relaxed">{t("კლიენტი თანახმაა მიიღოს SMS შეტყობინებები.", "Client consents to SMS notifications.")}</span>
               </label>
 
               <div className="pt-2 flex items-center justify-end gap-2.5">

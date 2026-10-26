@@ -3,7 +3,6 @@ import {
   createServiceClient,
 } from "@/lib/supabase/server";
 import { isPublicBookingDateAllowed, publicBookingInputSchema } from "@/lib/validation";
-import { createResendTransport, platformSender } from "@/lib/reminder-worker";
 import { consumeServerRateLimit } from "@/lib/server-rate-limit";
 
 function getTrustedClientIp(request: NextRequest): string {
@@ -253,9 +252,11 @@ export async function POST(request: NextRequest) {
     p_email: normalizedEmail,
     p_notes: parsed.data.notes,
     p_email_consent: parsed.data.email_consent,
+    p_sms_consent: parsed.data.sms_consent,
+    p_language: parsed.data.preferred_language,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  const resObj = data as { success?: boolean; conflict?: boolean; error?: string; available_slots?: string[]; salon_id?: string; salon_name?: string; appointment_id?: string; client_id?: string; client_email?: string; service_name?: string };
+  const resObj = data as { success?: boolean; conflict?: boolean; error?: string; available_slots?: string[]; salon_id?: string; salon_name?: string; appointment_id?: string; client_id?: string; client_email?: string; service_name?: string; manage_token?: string };
   if (!resObj?.success && resObj?.conflict) {
     return NextResponse.json(
       {
@@ -268,99 +269,14 @@ export async function POST(request: NextRequest) {
   }
   if (!resObj?.success) return NextResponse.json({ error: resObj?.error ?? "Unable to create booking." }, { status: 400 });
 
-  // Dispatch instant booking confirmation email via Resend with 10-minute throttle
-  let confirmationEmailSent = false;
-  if (serviceClient) {
-    try {
-      const esc = (v: unknown) =>
-        String(v ?? "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-
-      const bookedSalonId = resObj.salon_id;
-      let settingsQuery = serviceClient
-        .from("salon_settings")
-        .select(
-          "salon_id, salon_name, sender_display_name, verified_sender_email, send_booking_confirmation_email, salon_address, salon_phone, dry_run_mode, test_recipient_email"
-        )
-        .limit(1);
-      if (bookedSalonId) settingsQuery = settingsQuery.eq("salon_id", bookedSalonId);
-      const { data: settingsRows } = await settingsQuery;
-
-      const s = settingsRows?.[0];
-
-      // Dry-run mode never emails real clients; it may redirect to the configured test inbox.
-      const recipient = s?.dry_run_mode
-        ? s?.test_recipient_email || null
-        : normalizedEmail;
-
-      const recipientIsVerified = Boolean(s?.dry_run_mode) || Boolean(normalizedEmail);
-
-      const transport =
-        s && s.send_booking_confirmation_email !== false && recipient && recipientIsVerified
-          ? createResendTransport()
-          : null;
-
-      if (s && transport && recipient && recipientIsVerified) {
-        const timeStr = String(parsed.data.treatment_time).slice(0, 5);
-        const salonTitle = s.salon_name || resObj.salon_name || "moarge Salon";
-        const subject = `ჯავშანი დადასტურებულია: ${parsed.data.treatment_date} (${timeStr}) — ${salonTitle}`;
-        const html = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 28px; background: #fdf8f6; border-radius: 20px; border: 1px solid #ffe4e6;">
-            <h2 style="color: #be123c; margin: 0 0 12px;">თქვენი ვიზიტი დაჯავშნილია! / Booking Confirmed</h2>
-            <p style="color: #44403c; font-size: 15px; line-height: 1.6;">გამარჯობა <strong>${esc(parsed.data.full_name)}</strong>,</p>
-            <p style="color: #44403c; font-size: 14px; line-height: 1.6;">თქვენი ონლაინ ჯავშანი სალონში <strong>${esc(salonTitle)}</strong> წარმატებით დადასტურდა.</p>
-            <div style="background: #ffffff; padding: 16px 20px; border-radius: 14px; border: 1px solid #fecdd3; margin: 16px 0; font-size: 14px; color: #1c1917;">
-              <div><strong>პროცედურა / Service:</strong> ${esc(resObj.service_name || parsed.data.treatment_type)}</div>
-              <div style="margin-top: 6px;"><strong>თარიღი / Date:</strong> ${esc(parsed.data.treatment_date)}</div>
-              <div style="margin-top: 6px;"><strong>დრო / Time (Asia/Tbilisi):</strong> ${esc(timeStr)}</div>
-              ${s.salon_address ? `<div style="margin-top: 6px;"><strong>მისამართი / Address:</strong> ${esc(s.salon_address)}</div>` : ""}
-              ${s.salon_phone ? `<div style="margin-top: 6px;"><strong>ტელეფონი / Phone:</strong> ${esc(s.salon_phone)}</div>` : ""}
-            </div>
-            <p style="color: #78716c; font-size: 12px; margin-top: 18px;">გმადლობთ, რომ სარგებლობთ moarge-ს სისტემით!</p>
-          </div>
-        `;
-
-        const fromAddress = platformSender(salonTitle);
-
-        const emailRes = await transport.sendEmail({
-          from: fromAddress,
-          replyTo: s.verified_sender_email,
-          to: recipient,
-          subject,
-          html,
-          text: `თქვენი ვიზიტი დაჯავშნილია!\nპროცედურა: ${resObj.service_name || parsed.data.treatment_type}\nთარიღი: ${parsed.data.treatment_date}\nდრო: ${timeStr}\nსალონი: ${salonTitle}`,
-        idempotencyKey: `bookconf:${bookedSalonId || "pub"}:${resObj.appointment_id}`,
-          unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app"}/unsubscribe`,
-        });
-
-        confirmationEmailSent = Boolean(emailRes.id);
-
-        // Record in email_logs
-        await serviceClient.from("email_logs").insert({
-          salon_id: bookedSalonId || s.salon_id,
-          appointment_id: resObj.appointment_id,
-          recipient_email: recipient.toLowerCase().trim(),
-          subject,
-          event_type: confirmationEmailSent ? "api_accepted" : "failed",
-          provider_message_id: emailRes.id || null,
-          status_code: 200,
-          error_message: null,
-          is_dry_run: false,
-        });
-      }
-    } catch {
-      // Non-fatal booking confirmation dispatch failure
-    }
-  }
-
   return NextResponse.json({
     booking: {
       ...(typeof data === "object" && data !== null ? data : {}),
-      confirmation_email_sent: confirmationEmailSent,
+      manage_url: resObj.manage_token
+        ? `${(process.env.NEXT_PUBLIC_APP_URL || "https://moarge.ge").replace(/\/$/, "")}/manage-booking?token=${encodeURIComponent(resObj.manage_token)}`
+        : null,
     },
+    confirmation_queued: true,
     message: "Booking confirmed successfully / ჯავშანი წარმატებით დადასტურდა.",
   });
 }

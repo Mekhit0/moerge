@@ -9,10 +9,11 @@ moarge is a booking and client-management app for beauty salons in Georgia. The 
 - Day and week staff calendars with quick booking, drag rescheduling, time blocks, and arrived, no-show, and canceled statuses.
 - Salon appointment and client records, including client consent and archive controls.
 - Owner, admin, and staff memberships. Settings and membership management are restricted to owners and admins.
-- Email booking confirmations for eligible verified addresses, email reminders for completed epilation appointments, webhook status updates, and unsubscribe links.
+- Consent-based notifications with salon templates in Georgian and English: booking confirmation, 24-hour and 2-hour reminders, cancel/reschedule confirmation, service-specific recall, and no-show follow-up.
+- A retryable, idempotent notification outbox with per-channel consent, delivery log, email unsubscribe, SMS unsubscribe, and client self-service cancellation/rescheduling.
 - New salons receive a 14-day trial. Public bookings and reminder delivery are disabled after the trial expires unless the salon is active.
 
-SMS reminders, resource administration, subscription payments, and reminders for non-epilation services are not implemented.
+Resource administration and subscription payments are not implemented. uBill is the SMS provider; configure its credentials and an authorized brand to enable live SMS. See the [uBill API guide](https://ubill.ge/en/api-docs) for account and brand setup.
 
 ## Local development
 
@@ -40,6 +41,9 @@ The optional `supabase/seed.sql` contains synthetic local salon and client recor
 | `NEXT_PUBLIC_APP_URL` | Yes in deployed environments | Canonical links and email URLs | Browser and server |
 | `RESEND_API_KEY` | Yes for live email | Platform email delivery | Server only |
 | `RESEND_FROM_DOMAIN` | Yes for live email | Verified sender domain | Server only |
+| `UBILL_API_KEY` | Yes for live SMS | uBill API authentication | Server only |
+| `UBILL_BRAND_ID` | Yes for live SMS | Authorized uBill sender brand | Server only |
+| `NOTIFICATION_PROVIDER` | No | Set to `fake` to simulate delivery | Server only |
 | `RESEND_WEBHOOK_SECRET` | Yes for webhook processing | Resend webhook signature validation | Server only |
 | `CRON_SECRET` | Yes for reminder processing | Bearer authentication for the cron endpoint | Server only |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Yes for live public booking | Turnstile browser widget | Browser and server |
@@ -54,13 +58,13 @@ Missing required server keys fail closed. Never put service, Resend, webhook, cr
 
 ## Database migrations
 
-The migrations directory has a clean baseline followed by the Phase 0 security migration and Phase 2 booking migrations. The baseline consolidates former versions `20261016000001` through `20261016000011`; the former Phase 0 source at `20261026104942` was replaced when the history was reordered. Phase 2 adds staff scheduling, relational services, appointment conflict protection, and removes the legacy JSONB service catalog. The replaced SQL files are listed in `supabase/migrations/README.md`.
+The migrations directory has a clean baseline followed by the Phase 0 security migration and Phase 2 and Phase 3 migrations. The baseline consolidates former versions `20261016000001` through `20261016000011`; the former Phase 0 source at `20261026104942` was replaced when the history was reordered. Phase 2 adds staff scheduling and relational services. Phase 3 adds normalized phone identity, channel consent, templates, notification queue, and self-service booking management.
 
-Existing databases may already have the replaced versions recorded. Do not apply the new baseline to those databases as a fresh migration. The configured staging project (`oolsgizchxstiuvzveos`) has the current Phase 0 and Phase 2 migrations applied and was used for the booking integration test. Production was not changed. For other existing databases, reconcile migration history before applying only pending migrations.
+Existing databases may already have the replaced versions recorded. Do not apply the new baseline to those databases as a fresh migration. The configured staging project (`oolsgizchxstiuvzveos`) has the Phase 0, Phase 2, and Phase 3 migrations applied. Production was not changed. For other existing databases, reconcile migration history before applying only pending migrations.
 
 ## Deployment
 
-Deploy the Next.js app through Vercel and configure the required environment variables above in the appropriate Vercel environments. Verify the Resend sending domain and configure the Resend webhook to call `/api/webhooks/resend`. Configure the Turnstile site for the deployed booking domain. Apply database changes to a confirmed staging project first, then follow the project's normal production release process.
+Deploy the Next.js app through Vercel and configure the required environment variables above in the appropriate Vercel environments. Verify the Resend sending domain and configure the Resend webhook to call `/api/webhooks/resend`. Configure the Turnstile site for the deployed booking domain. For SMS, add the uBill API key and authorized brand ID. Apply database changes to a confirmed staging project first, then follow the project's normal production release process.
 
 ## Reminder scheduler
 

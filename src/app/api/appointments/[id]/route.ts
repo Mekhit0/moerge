@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient, getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import { appointmentInputSchema } from "@/lib/validation";
-import { addCalendarDays, planReminderReconciliation } from "@/lib/scheduling";
-import { Reminder } from "@/lib/types";
+import { addCalendarDays } from "@/lib/scheduling";
 
 export async function PATCH(
   request: NextRequest,
@@ -17,7 +16,7 @@ export async function PATCH(
 
   const { data: existingAppt, error: fetchErr } = await ctx.supabase
     .from("appointments")
-    .select("*, client:clients(*), reminders(*)")
+    .select("*, client:clients(*)")
     .eq("id", id)
     .eq("salon_id", ctx.salonId)
     .maybeSingle();
@@ -75,8 +74,6 @@ export async function PATCH(
 
   const intervalDays =
     matchedService?.recall_days ?? ctx.settings.reminder_interval_days ?? 21;
-  const timeZone = ctx.settings.timezone || "Asia/Tbilisi";
-
   const nextExpectedDate =
     parsed.data.status === "completed" && isEpilation
       ? addCalendarDays(parsed.data.treatment_date, intervalDays)
@@ -146,84 +143,7 @@ export async function PATCH(
     );
   }
 
-  const client = existingAppt.client;
-  const existingReminders = (existingAppt.reminders ?? []) as Reminder[];
-
-  // Reconcile reminder so editing/rescheduling/canceling never creates duplicates
-  const reconciliation = planReminderReconciliation({
-    salonId: ctx.salonId,
-    appointmentId: updatedAppt.id,
-    treatmentDate: updatedAppt.treatment_date,
-    treatmentType: updatedAppt.treatment_type,
-    status: updatedAppt.status,
-    client: {
-      is_archived: client?.is_archived ?? false,
-      email_consent: client?.email_consent ?? true,
-      unsubscribed_at: client?.unsubscribed_at ?? null,
-    },
-    existingReminders,
-    intervalDays,
-    timeZone,
-  });
-
-  if (reconciliation.action === "create") {
-    const { data: newRem } = await ctx.supabase
-      .from("reminders")
-      .insert({
-        salon_id: ctx.salonId,
-        client_id: updatedAppt.client_id,
-        appointment_id: updatedAppt.id,
-        scheduled_for_date: reconciliation.scheduledForDate,
-        scheduled_send_at: reconciliation.scheduledSendAtIso,
-        status: "scheduled",
-        idempotency_key: reconciliation.idempotencyKey,
-        attempt_count: 0,
-        max_attempts: 3,
-      })
-      .select("*")
-      .maybeSingle();
-
-    if (newRem && client) {
-      await ctx.supabase.from("email_logs").insert({
-        salon_id: ctx.salonId,
-        reminder_id: newRem.id,
-        client_id: client.id,
-        appointment_id: updatedAppt.id,
-        recipient_email: client.email,
-        subject: ctx.settings.email_subject,
-        event_type: "scheduled",
-        idempotency_key: reconciliation.idempotencyKey,
-        attempt_number: 0,
-        status_code: 200,
-        is_dry_run: ctx.settings.dry_run_mode,
-      });
-    }
-  } else if (reconciliation.action === "update_existing") {
-    await ctx.supabase
-      .from("reminders")
-      .update({
-        scheduled_for_date: reconciliation.scheduledForDate,
-        scheduled_send_at: reconciliation.scheduledSendAtIso,
-        idempotency_key: reconciliation.idempotencyKey,
-        next_retry_at: null,
-        failure_reason: null,
-      })
-      .eq("id", reconciliation.reminderId)
-      .eq("salon_id", ctx.salonId);
-  } else if (reconciliation.action === "cancel_existing") {
-    await ctx.supabase
-      .from("reminders")
-      .update({
-        status: "canceled",
-        canceled_at: new Date().toISOString(),
-        cancel_reason: reconciliation.cancelReason,
-      })
-      .eq("id", reconciliation.reminderId)
-      .eq("salon_id", ctx.salonId);
-  }
-
-  // Update client's next expected date if completed epilation
-  if (parsed.data.status === "completed" && isEpilation && nextExpectedDate) {
+  if (parsed.data.status === "completed" && matchedService?.recall_days !== null && matchedService?.recall_days !== undefined && nextExpectedDate) {
     await ctx.supabase
       .from("clients")
       .update({
@@ -236,13 +156,12 @@ export async function PATCH(
 
   const { data: refreshed } = await ctx.supabase
     .from("appointments")
-    .select("*, client:clients(id, full_name, email, phone, is_archived, email_consent), reminders(*)")
+    .select("*, client:clients(id, full_name, email, phone, is_archived, email_consent, sms_consent)")
     .eq("id", id)
     .eq("salon_id", ctx.salonId)
     .single();
 
   return NextResponse.json({
     appointment: refreshed ?? updatedAppt,
-    reconciliation,
   });
 }

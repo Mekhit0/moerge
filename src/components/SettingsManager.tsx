@@ -171,6 +171,9 @@ export default function SettingsManager({
   const [slotIntervalMinutes, setSlotIntervalMinutes] = useState(
     initialSettings.slot_interval_minutes || 60
   );
+  const [bookingCancelDeadlineHours, setBookingCancelDeadlineHours] = useState(
+    initialSettings.booking_cancel_deadline_hours ?? 24
+  );
   const [sendBookingConfirmationEmail, setSendBookingConfirmationEmail] =
     useState(initialSettings.send_booking_confirmation_email ?? true);
 
@@ -429,6 +432,7 @@ export default function SettingsManager({
           working_hours_start: workingHoursStart,
           working_hours_end: workingHoursEnd,
           slot_interval_minutes: Number(slotIntervalMinutes),
+          booking_cancel_deadline_hours: Number(bookingCancelDeadlineHours),
           send_booking_confirmation_email: sendBookingConfirmationEmail,
         }),
       });
@@ -583,6 +587,9 @@ export default function SettingsManager({
         </Link>
         <Link href="/settings/time-off" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
           <Clock className="w-4 h-4 text-rose-500" /><span>{t("დასვენების დრო", "Time off")}</span>
+        </Link>
+        <Link href="/settings/notifications" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
+          <Mail className="w-4 h-4 text-rose-500" /><span>{t("შეტყობინებების შაბლონები", "Notification templates")}</span>
         </Link>
 
         <button
@@ -1129,7 +1136,7 @@ export default function SettingsManager({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 p-5 rounded-2xl bg-stone-50 border border-stone-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 rounded-2xl bg-stone-50 border border-stone-200">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
                 <Clock className="w-3.5 h-3.5 inline mr-1 text-rose-600" />
@@ -1146,6 +1153,17 @@ export default function SettingsManager({
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
+                {t("გაუქმების ბოლო ვადა (საათი)", "Cancellation deadline (hours)")}
+              </label>
+              <input type="number" min={0} max={720} value={bookingCancelDeadlineHours}
+                onChange={(e) => setBookingCancelDeadlineHours(Number(e.target.value))}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-sm bg-white font-bold text-stone-900" />
+              <p className="mt-1 text-[11px] text-stone-500">
+                {t("ამ ვადის შემდეგ კლიენტი ჯავშანს ვეღარ გააუქმებს ან გადაიტანს.", "Clients cannot cancel or reschedule after this deadline.")}
+              </p>
             </div>
 
             <div>

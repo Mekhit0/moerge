@@ -27,4 +27,10 @@ Phase 2 booking migrations add the multi-staff relational model and booking RPCs
 - `20261026145931_phase2_dst_duration_math.sql`: elapsed-time duration math across DST transitions.
 - `20261026150216_phase2_drop_legacy_service_catalog.sql`: replaces JSONB catalog use and drops `salon_settings.custom_services`.
 
-The source files for those replaced versions were removed from this directory. Existing databases may have the old versions in their migration history; the consolidated baseline is not a migration to replay on them. Reconcile migration history with the database owner before applying pending migrations. Phase 0 and Phase 2 migrations were applied to the explicitly designated staging project only; production was not changed.
+Phase 3 communications migrations add normalized phone identity and the notification outbox:
+
+- `20261026151152_phase3_notifications_and_phone_identity.sql`: channel consent, templates, notification log/outbox, unsubscribe, client self-service and delivery worker RPCs.
+- `20261026152927_phase3_service_role_booking_fix.sql`: removes an unreliable JWT claim check from the service-role booking RPC; execution remains restricted to `service_role`.
+- `20261026153400_phase3_booking_digest_search_path.sql`: includes the `extensions` schema in the booking RPC search path for the email rate-limit hash function.
+
+The source files for those replaced versions were removed from this directory. Existing databases may have the old versions in their migration history; the consolidated baseline is not a migration to replay on them. Reconcile migration history with the database owner before applying pending migrations. Phase 0, Phase 2, and Phase 3 migrations were applied to the explicitly designated staging project only; production was not changed.

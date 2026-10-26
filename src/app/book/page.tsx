@@ -87,6 +87,7 @@ interface BookingResult {
   treatment_time: string;
   treatment_type: TreatmentType;
   confirmation_email_sent?: boolean;
+  manage_url?: string | null;
 }
 
 function PublicBookingFormContent() {
@@ -128,7 +129,8 @@ function PublicBookingFormContent() {
   const [email, setEmail] = useState(prefillEmail);
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [emailConsent, setEmailConsent] = useState(true);
+  const [emailConsent, setEmailConsent] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
@@ -318,8 +320,8 @@ function PublicBookingFormContent() {
         body: JSON.stringify({
           salon_slug: salonSlugParam || null,
           full_name: fullName.trim(),
-          email: email.trim().toLowerCase(),
-          phone: phone.trim() || null,
+          email: email.trim().toLowerCase() || null,
+          phone: phone.trim(),
           treatment_date: treatmentDate,
           treatment_time: treatmentTime,
           treatment_type: activeService ? (activeService.id || activeService.type) : "custom",
@@ -328,6 +330,8 @@ function PublicBookingFormContent() {
           turnstile_token: turnstileToken,
           notes: composedNotes.slice(0, 1000) || null,
           email_consent: emailConsent,
+          sms_consent: smsConsent,
+          preferred_language: lang,
         }),
       });
 
@@ -546,13 +550,18 @@ function PublicBookingFormContent() {
                   {String(bookingConfirmation.treatment_time).slice(0, 5)}
                 </strong>
               </div>
-              <div className="flex items-center justify-between">
+              {email && <div className="flex items-center justify-between">
                 <span className="text-stone-500">
                   {t("ელ-ფოსტა:", "Client Email:")}
                 </span>
                 <strong className="text-stone-900">{email}</strong>
-              </div>
+              </div>}
             </div>
+            {!isDemo && bookingConfirmation.manage_url && (
+              <Link href={bookingConfirmation.manage_url} className="mt-4 block rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-semibold text-rose-800">
+                {t("ჯავშნის მართვა, გაუქმება ან გადატანა", "Manage, cancel, or reschedule your booking")}
+              </Link>
+            )}
 
             {isDemo ? (
               <div className="mt-5 p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-left space-y-1.5 text-xs text-amber-950">
@@ -1065,8 +1074,8 @@ function PublicBookingFormContent() {
                   </div>
                   <p className="mt-1 text-[11px] text-stone-400">
                     {t(
-                      "შეტყობინებები იგზავნება მხოლოდ ელ-ფოსტით (Resend).",
-                      "Notifications are sent exclusively by email (Resend)."
+                      "შეტყობინებების არხს თქვენ ირჩევთ.",
+                      "Choose which notification channels you want."
                     )}
                   </p>
                 </div>
@@ -1101,6 +1110,20 @@ function PublicBookingFormContent() {
                     {t(
                       "თანახმა ვარ მივიღო ელ-ფოსტის შეხსენება პროცედურის დასრულების შემდეგ მომდევნო ვიზიტის დასაჯავშნად.",
                       "Send me a courtesy email reminder after my treatment so I know when to book my next session."
+                    )}
+                  </span>
+                </label>
+                <label className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-rose-50/60 border border-rose-100 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={smsConsent}
+                    onChange={(e) => setSmsConsent(e.target.checked)}
+                    className="mt-0.5 rounded border-stone-300 text-rose-600 focus:ring-rose-500"
+                  />
+                  <span className="text-xs text-stone-700 leading-relaxed">
+                    {t(
+                      "თანახმა ვარ მივიღო SMS შეტყობინებები ჯავშნისა და შეხსენებების შესახებ.",
+                      "I agree to receive SMS booking updates and reminders."
                     )}
                   </span>
                 </label>

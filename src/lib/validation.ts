@@ -70,14 +70,17 @@ export const clientInputSchema = z.object({
     .string()
     .trim()
     .transform((v) => v.toLowerCase())
-    .refine(isValidEmailAddress, "Please enter a valid email address."),
+    .refine((v) => !v || isValidEmailAddress(v), "Please enter a valid email address.")
+    .optional()
+    .nullable()
+    .transform((v) => v || null),
   phone: z
     .string()
     .trim()
+    .min(5, "Please enter a valid Georgian mobile phone number.")
     .max(40, "Phone number cannot exceed 40 characters.")
-    .optional()
-    .nullable()
-    .transform((v) => (v && v.length > 0 ? v : null)),
+    .refine((v) => normalizeGeorgianPhone(v) !== null, "Enter a Georgian mobile number such as +995 5XX XX XX XX.")
+    .transform((v) => normalizeGeorgianPhone(v)!),
   notes: z
     .string()
     .trim()
@@ -85,8 +88,18 @@ export const clientInputSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => (v && v.length > 0 ? v : null)),
-  email_consent: z.boolean().optional().default(true),
+  email_consent: z.boolean().optional().default(false),
+  sms_consent: z.boolean().optional().default(false),
+  preferred_language: z.enum(["ka", "en"]).optional().default("ka"),
 });
+
+export function normalizeGeorgianPhone(phone: string): string | null {
+  let digits = phone.replace(/\D/g, "");
+  if (digits.length === 9 && digits.startsWith("5")) digits = `995${digits}`;
+  else if (digits.length === 13 && digits.startsWith("00995")) digits = digits.slice(2);
+  if (digits.length !== 12 || !digits.startsWith("9955")) return null;
+  return `+${digits}`;
+}
 
 export const appointmentInputSchema = z.object({
   client_id: z.string().uuid("Please select a valid client."),
@@ -262,6 +275,13 @@ export const salonSettingsSchema = z
       .max(180)
       .optional()
       .default(60),
+    booking_cancel_deadline_hours: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(720)
+      .optional()
+      .default(24),
     send_booking_confirmation_email: z.boolean().optional().default(true),
   })
   .superRefine((data, ctx) => {
@@ -304,9 +324,10 @@ export const publicBookingInputSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(5, "Please enter a valid phone number.")
+    .min(5, "Please enter a valid Georgian mobile phone number.")
     .max(40, "Phone number cannot exceed 40 characters.")
-    .transform((v) => v.trim()),
+    .refine((v) => normalizeGeorgianPhone(v) !== null, "Enter a Georgian mobile number such as +995 5XX XX XX XX.")
+    .transform((v) => normalizeGeorgianPhone(v)!),
   treatment_date: z
     .string()
     .trim()
@@ -326,7 +347,9 @@ export const publicBookingInputSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => (v && v.length > 0 ? v : null)),
-  email_consent: z.boolean().optional().default(true),
+  email_consent: z.boolean().optional().default(false),
+  sms_consent: z.boolean().optional().default(false),
+  preferred_language: z.enum(["ka", "en"]).optional().default("ka"),
   turnstile_token: z
     .string()
     .trim()

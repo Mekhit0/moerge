@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { SalonSettings } from "../types";
 
 export const SAFE_SALON_SETTINGS_SELECT =
-  "id, salon_id, salon_name, sender_display_name, verified_sender_email, timezone, reminder_interval_days, email_subject, email_body_template, booking_url, brand_color, auto_reminders_enabled, dry_run_mode, test_recipient_email, booking_title, booking_subtitle, salon_address, salon_phone, working_hours_start, working_hours_end, slot_interval_minutes, send_booking_confirmation_email, created_at, updated_at";
+  "id, salon_id, salon_name, sender_display_name, verified_sender_email, timezone, reminder_interval_days, email_subject, email_body_template, booking_url, brand_color, auto_reminders_enabled, dry_run_mode, test_recipient_email, booking_title, booking_subtitle, salon_address, salon_phone, working_hours_start, working_hours_end, slot_interval_minutes, booking_cancel_deadline_hours, send_booking_confirmation_email, created_at, updated_at";
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
