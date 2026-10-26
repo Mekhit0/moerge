@@ -16,7 +16,14 @@ type ServiceDraft = {
   category: string;
 };
 
-type StaffDraft = { id: string; name: string };
+type StaffDraft = {
+  id: string;
+  name: string;
+  serviceIds: string[];
+  workingDays: number[];
+  openTime: string;
+  closeTime: string;
+};
 
 const templates: Record<"salon" | "aesthetic", ServiceDraft[]> = {
   salon: [
@@ -51,10 +58,7 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
   const [salonPhone, setSalonPhone] = useState(initialPhone);
   const [salonAddress, setSalonAddress] = useState(initialAddress);
   const [services, setServices] = useState<ServiceDraft[]>(() => templates.salon.map((service) => ({ ...service })));
-  const [staffMembers, setStaffMembers] = useState<StaffDraft[]>([{ id: "specialist-1", name: "" }]);
-  const [workingDays, setWorkingDays] = useState([1, 2, 3, 4, 5, 6]);
-  const [openTime, setOpenTime] = useState("10:00");
-  const [closeTime, setCloseTime] = useState("19:00");
+  const [staffMembers, setStaffMembers] = useState<StaffDraft[]>([{ id: "specialist-1", name: "", serviceIds: [], workingDays: [1, 2, 3, 4, 5, 6], openTime: "10:00", closeTime: "19:00" }]);
   const [slotIntervalMinutes, setSlotIntervalMinutes] = useState(30);
   const [bookingUrl, setBookingUrl] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
@@ -73,6 +77,7 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
   function setTemplate(type: "salon" | "aesthetic") {
     setSalonType(type);
     setServices(templates[type].map((service) => ({ ...service })));
+    setStaffMembers((current) => current.map((staff) => ({ ...staff, serviceIds: [] })));
     setError(null);
   }
 
@@ -85,6 +90,10 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
 
   function updateStaffName(id: string, value: string) {
     setStaffMembers((current) => current.map((staff) => staff.id === id ? { ...staff, name: value } : staff));
+  }
+
+  function updateStaff(id: string, update: Partial<StaffDraft>) {
+    setStaffMembers((current) => current.map((staff) => staff.id === id ? { ...staff, ...update } : staff));
   }
 
   function continueToNextStep() {
@@ -130,29 +139,33 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
 
   async function finishSetup() {
     setError(null);
-    const cleanedStaffNames = staffMembers.map((staff) => staff.name.trim()).filter(Boolean);
-    if (cleanedStaffNames.length === 0) {
+    const cleanedStaff = staffMembers.map((staff) => ({ ...staff, name: staff.name.trim() }));
+    if (cleanedStaff.length === 0) {
       setError(t("დაამატეთ მინიმუმ ერთი სპეციალისტი.", "Add at least one specialist."));
       return;
     }
-    if (cleanedStaffNames.some((name) => name.length < 2)) {
+    if (cleanedStaff.some((staff) => staff.name.length < 2)) {
       setError(t("სპეციალისტის სახელი მინიმუმ 2 სიმბოლო უნდა იყოს.", "Specialist names must be at least 2 characters."));
       return;
     }
-    if (cleanedStaffNames.length > MAX_TRIAL_STAFF) {
+    if (cleanedStaff.length > MAX_TRIAL_STAFF) {
       setError(t(`საცდელ გეგმაში მაქსიმუმ ${MAX_TRIAL_STAFF} სპეციალისტის დამატებაა შესაძლებელი.`, `The trial plan includes up to ${MAX_TRIAL_STAFF} specialists.`));
       return;
     }
-    if (new Set(cleanedStaffNames.map((name) => name.toLocaleLowerCase())).size !== cleanedStaffNames.length) {
+    if (new Set(cleanedStaff.map((staff) => staff.name.toLocaleLowerCase())).size !== cleanedStaff.length) {
       setError(t("სპეციალისტის სახელები არ უნდა მეორდებოდეს.", "Specialist names must be unique."));
       return;
     }
-    if (workingDays.length === 0) {
-      setError(t("აირჩიეთ მინიმუმ ერთი სამუშაო დღე.", "Select at least one working day."));
+    if (cleanedStaff.some((staff) => staff.serviceIds.length === 0)) {
+      setError(t("თითოეულ სპეციალისტს მინიმუმ ერთი სერვისი მიუთითეთ.", "Assign at least one service to each specialist."));
       return;
     }
-    if (closeTime <= openTime) {
-      setError(t("დახურვის დრო გახსნის დროზე გვიან უნდა იყოს.", "Closing time must be after opening time."));
+    if (cleanedStaff.some((staff) => staff.workingDays.length === 0)) {
+      setError(t("თითოეულ სპეციალისტს მინიმუმ ერთი სამუშაო დღე მიუთითეთ.", "Select at least one working day for each specialist."));
+      return;
+    }
+    if (cleanedStaff.some((staff) => staff.closeTime <= staff.openTime)) {
+      setError(t("თითოეული სპეციალისტისთვის დახურვის დრო გახსნის დროზე გვიან უნდა იყოს.", "For each specialist, closing time must be after opening time."));
       return;
     }
 
@@ -171,10 +184,13 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
             duration_minutes: service.durationMinutes,
             category: service.category,
           })),
-          staffNames: cleanedStaffNames,
-          workingDays,
-          openTime,
-          closeTime,
+          staff: cleanedStaff.map((staff) => ({
+            full_name: staff.name,
+            serviceIndexes: staff.serviceIds.map((id) => services.findIndex((service) => service.id === id)),
+            workingDays: staff.workingDays,
+            openTime: staff.openTime,
+            closeTime: staff.closeTime,
+          })),
           slotIntervalMinutes,
         }),
       });
@@ -258,7 +274,10 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
                 <label className="text-xs font-medium text-stone-600">{t("ხანგრძლივობა (წუთი)", "Duration (minutes)")} *
                   <input required type="number" min="5" max="720" step="5" className={field} value={service.durationMinutes} onChange={(event) => updateService(index, "durationMinutes", event.target.value)} />
                 </label>
-                <button type="button" disabled={services.length === 1} onClick={() => setServices((current) => current.filter((_, serviceIndex) => serviceIndex !== index))} aria-label={t(`${service.name || "სერვისი"} წაშლა`, `Remove ${service.name || "service"}`)} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 px-3 text-stone-500 hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40">
+                <button type="button" disabled={services.length === 1} onClick={() => {
+                  setServices((current) => current.filter((_, serviceIndex) => serviceIndex !== index));
+                  setStaffMembers((current) => current.map((staff) => ({ ...staff, serviceIds: staff.serviceIds.filter((id) => id !== service.id) })));
+                }} aria-label={t(`${service.name || "სერვისი"} წაშლა`, `Remove ${service.name || "service"}`)} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 px-3 text-stone-500 hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -271,54 +290,71 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
 
         {step === 2 && <div className="space-y-5">
           <div>
-            <h2 className="text-lg font-bold">{t("სპეციალისტები და სამუშაო გრაფიკი", "Specialists and working hours")}</h2>
-            <p className="mt-1 text-sm text-stone-500">{t("თითოეულ სპეციალისტს ცალკე ველში მიუთითეთ. ერთი გრაფიკი ყველას მიენიჭება.", "Add each specialist in their own field. The same schedule will be applied to everyone.")}</p>
+            <h2 className="text-lg font-bold">{t("სპეციალისტები, სერვისები და გრაფიკი", "Specialists, services and schedules")}</h2>
+            <p className="mt-1 text-sm text-stone-500">{t("თითოეულ სპეციალისტთან მონიშნეთ მის მიერ შესრულებული სერვისები, სამუშაო დღეები და საათები.", "For each specialist, choose their services, working days and hours.")}</p>
           </div>
           <div className="space-y-3">
-            {staffMembers.map((staff, index) => <div key={staff.id} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-              <label className="text-xs font-medium text-stone-600">{t("სპეციალისტი", "Specialist")} {index + 1}
-                <input maxLength={120} autoComplete="off" className={field} value={staff.name} onChange={(event) => updateStaffName(staff.id, event.target.value)} placeholder={t("სახელი და გვარი", "First and last name")} />
-              </label>
-              <button type="button" disabled={staffMembers.length === 1} onClick={() => setStaffMembers((current) => current.filter((member) => member.id !== staff.id))} aria-label={t(`სპეციალისტი ${index + 1}-ის წაშლა`, `Remove specialist ${index + 1}`)} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 px-3 text-stone-500 hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>)}
+            {staffMembers.map((staff, index) => <fieldset key={staff.id} className="space-y-4 rounded-2xl border border-stone-200 p-4">
+              <legend className="px-1 text-xs font-semibold text-stone-500">{t("სპეციალისტი", "Specialist")} {index + 1}</legend>
+              <div className="flex gap-2">
+                <label className="min-w-0 flex-1 text-xs font-medium text-stone-600">{t("სახელი და გვარი", "Full name")} *
+                  <input required minLength={2} maxLength={120} autoComplete="off" className={field} value={staff.name} onChange={(event) => updateStaffName(staff.id, event.target.value)} placeholder={t("მაგალითად, ნინო ბერიძე", "For example, Alex Smith")} />
+                </label>
+                <button type="button" disabled={staffMembers.length === 1} onClick={() => setStaffMembers((current) => current.filter((member) => member.id !== staff.id))} aria-label={t(`${staff.name || `სპეციალისტი ${index + 1}`} წაშლა`, `Remove ${staff.name || `specialist ${index + 1}`}`)} className="mt-4 inline-flex min-h-11 items-center justify-center self-end rounded-xl border border-stone-200 px-3 text-stone-500 hover:border-red-200 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
+              <fieldset>
+                <legend className="mb-2 text-xs font-semibold text-stone-600">{t("რომელ სერვისებს ასრულებს?", "Which services can they perform?")} *</legend>
+                <div className="flex flex-wrap gap-2">
+                  {services.map((service) => {
+                    const checked = staff.serviceIds.includes(service.id);
+                    return <label key={service.id} className={`cursor-pointer rounded-xl border px-3 py-2 text-xs ${checked ? "border-rose-300 bg-rose-50 text-rose-800" : "border-stone-200 text-stone-600"}`}>
+                      <input className="mr-1.5 accent-rose-600" type="checkbox" checked={checked} onChange={() => updateStaff(staff.id, { serviceIds: checked ? staff.serviceIds.filter((id) => id !== service.id) : [...staff.serviceIds, service.id] })} />
+                      {service.name || t("უსახელო სერვისი", "Unnamed service")}
+                    </label>;
+                  })}
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend className="mb-2 text-xs font-semibold text-stone-600">{t("სამუშაო დღეები", "Working days")} *</legend>
+                <div className="flex flex-wrap gap-2">
+                  {weekdays.map(([ka, en], dayIndex) => {
+                    const day = (dayIndex + 1) % 7;
+                    const checked = staff.workingDays.includes(day);
+                    return <label key={en} className={`cursor-pointer rounded-xl border px-3 py-2 text-xs ${checked ? "border-rose-300 bg-rose-50" : "border-stone-200"}`}>
+                      <input className="mr-1.5 accent-rose-600" type="checkbox" checked={checked} onChange={() => updateStaff(staff.id, { workingDays: checked ? staff.workingDays.filter((item) => item !== day) : [...staff.workingDays, day] })} />{t(ka, en)}
+                    </label>;
+                  })}
+                </div>
+              </fieldset>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-xs font-medium text-stone-600">{t("სამუშაოს დაწყება", "Starts at")}
+                  <input type="time" className={field} value={staff.openTime} onChange={(event) => updateStaff(staff.id, { openTime: event.target.value })} />
+                </label>
+                <label className="text-xs font-medium text-stone-600">{t("სამუშაოს დასრულება", "Ends at")}
+                  <input type="time" className={field} value={staff.closeTime} onChange={(event) => updateStaff(staff.id, { closeTime: event.target.value })} />
+                </label>
+              </div>
+            </fieldset>)}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" disabled={staffMembers.length >= MAX_TRIAL_STAFF} onClick={() => setStaffMembers((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "" }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" disabled={staffMembers.length >= MAX_TRIAL_STAFF} onClick={() => setStaffMembers((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "", serviceIds: [], workingDays: [1, 2, 3, 4, 5, 6], openTime: "10:00", closeTime: "19:00" }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
               <Plus className="h-4 w-4" />{t("სპეციალისტის დამატება", "Add specialist")}
             </button>
             <span className="text-xs text-stone-500">{t(`საცდელ გეგმაში მაქსიმუმ ${MAX_TRIAL_STAFF} სპეციალისტია.`, `Up to ${MAX_TRIAL_STAFF} specialists on the trial plan.`)}</span>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <label className="text-sm font-medium">{t("გახსნა", "Opens")}
-              <input type="time" className={field} value={openTime} onChange={(event) => setOpenTime(event.target.value)} />
-            </label>
-            <label className="text-sm font-medium">{t("დახურვა", "Closes")}
-              <input type="time" className={field} value={closeTime} onChange={(event) => setCloseTime(event.target.value)} />
-            </label>
-            <label className="text-sm font-medium">{t("ჯავშნის ინტერვალი", "Booking interval")}
+          <label className="block text-sm font-medium">{t("ჯავშნის ინტერვალი", "Booking interval")}
               <select className={field} value={slotIntervalMinutes} onChange={(event) => setSlotIntervalMinutes(Number(event.target.value))}>
                 <option value={15}>15 {t("წუთი", "minutes")}</option>
                 <option value={30}>30 {t("წუთი", "minutes")}</option>
                 <option value={60}>60 {t("წუთი", "minutes")}</option>
               </select>
-            </label>
-          </div>
-
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">{t("სამუშაო დღეები", "Working days")}</legend>
-            <div className="flex flex-wrap gap-2">
-              {weekdays.map(([ka, en], index) => {
-                const day = (index + 1) % 7;
-                const checked = workingDays.includes(day);
-                return <label key={en} className={`rounded-xl border px-3 py-2 text-xs ${checked ? "border-rose-300 bg-rose-50" : "border-stone-200"}`}>
-                  <input className="mr-1.5 accent-rose-600" type="checkbox" checked={checked} onChange={() => setWorkingDays((current) => checked ? current.filter((item) => item !== day) : [...current, day])} />{t(ka, en)}
-                </label>;
-              })}
-            </div>
-          </fieldset>
+          </label>
         </div>}
 
         {step === 3 && <div className="space-y-5 text-center">

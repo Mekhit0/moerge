@@ -13,17 +13,32 @@ const schema = z.object({
     duration_minutes: z.number().int().min(5).max(720),
     category: z.string().trim().min(1).max(80),
   })).min(1).max(30),
-  staffNames: z.array(z.string().trim().min(2).max(120)).min(1).max(20)
-    .refine((names) => new Set(names.map((name) => name.toLocaleLowerCase())).size === names.length),
-  workingDays: z.array(z.number().int().min(0).max(6)).min(1).max(7)
-    .refine((days) => new Set(days).size === days.length),
-  openTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-  closeTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  staff: z.array(z.object({
+    full_name: z.string().trim().min(2).max(120),
+    serviceIndexes: z.array(z.number().int().min(0).max(29)).min(1).max(30),
+    workingDays: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+    openTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    closeTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  })).min(1).max(20),
   slotIntervalMinutes: z.union([z.literal(15), z.literal(30), z.literal(60)]),
-}).refine((value) => value.closeTime > value.openTime, {
-  path: ["closeTime"], message: "Closing time must be after opening time.",
-}).refine((value) => new Set(value.services.map((service) => service.name_ka.toLocaleLowerCase())).size === value.services.length, {
-  path: ["services"], message: "Service names must be unique.",
+}).superRefine((value, ctx) => {
+  if (new Set(value.services.map((service) => service.name_ka.toLocaleLowerCase())).size !== value.services.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["services"], message: "Service names must be unique." });
+  }
+  if (new Set(value.staff.map((staff) => staff.full_name.toLocaleLowerCase())).size !== value.staff.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["staff"], message: "Specialist names must be unique." });
+  }
+  value.staff.forEach((staff, staffIndex) => {
+    if (new Set(staff.serviceIndexes).size !== staff.serviceIndexes.length || staff.serviceIndexes.some((serviceIndex) => serviceIndex >= value.services.length)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["staff", staffIndex, "serviceIndexes"], message: "Choose valid services for each specialist." });
+    }
+    if (new Set(staff.workingDays).size !== staff.workingDays.length) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["staff", staffIndex, "workingDays"], message: "Working days must be unique." });
+    }
+    if (staff.closeTime <= staff.openTime) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["staff", staffIndex, "closeTime"], message: "Closing time must be after opening time." });
+    }
+  });
 });
 
 const SETUP_ERROR = "მონაცემების შენახვა ვერ მოხერხდა. სცადეთ ხელახლა. / Setup could not be saved. Please try again.";
@@ -47,7 +62,7 @@ export async function POST(request: NextRequest) {
   if ((appointmentCount ?? 0) > 0) return NextResponse.json({ error: "ჯავშნების არსებობის გამო საწყისი გამართვა ვეღარ შეიცვლება. / Setup cannot be changed after bookings exist." }, { status: 409 });
 
   const value = parsed.data;
-  if (value.staffNames.length > BILLING_CONFIG.plans.business.staffIncluded) return NextResponse.json({ error: "საცდელ გეგმაში მაქსიმუმ 7 სპეციალისტია. / The trial plan includes up to 7 specialists." }, { status: 422 });
+  if (value.staff.length > BILLING_CONFIG.plans.business.staffIncluded) return NextResponse.json({ error: "საცდელ გეგმაში მაქსიმუმ 7 სპეციალისტია. / The trial plan includes up to 7 specialists." }, { status: 422 });
   const { error: salonError } = await admin.from("salons").update({ name: value.salonName }).eq("id", ctx.salonId);
   if (salonError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
 
@@ -58,8 +73,8 @@ export async function POST(request: NextRequest) {
     // salon_settings.salon_address is NOT NULL; keep the optional UI field empty as "".
     salon_address: value.salonAddress,
     timezone: "Asia/Tbilisi",
-    working_hours_start: value.openTime,
-    working_hours_end: value.closeTime,
+    working_hours_start: value.staff.map((person) => person.openTime).sort()[0],
+    working_hours_end: value.staff.map((person) => person.closeTime).sort().at(-1),
     slot_interval_minutes: value.slotIntervalMinutes,
   }).eq("salon_id", ctx.salonId);
   if (settingsError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
@@ -67,20 +82,20 @@ export async function POST(request: NextRequest) {
   const { data: staff, error: staffReadError } = await admin.from("staff").select("id,sort_order")
     .eq("salon_id", ctx.salonId).order("sort_order").order("id");
   if (staffReadError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
-  const staffIds: string[] = [];
-  for (const [index, fullName] of value.staffNames.entries()) {
+  const staffRows: Array<{ id: string; person: (typeof value.staff)[number] }> = [];
+  for (const [index, person] of value.staff.entries()) {
     const existing = staff?.[index];
     if (existing) {
-      const { error } = await admin.from("staff").update({ full_name: fullName, is_active: true, sort_order: index }).eq("id", existing.id).eq("salon_id", ctx.salonId);
+      const { error } = await admin.from("staff").update({ full_name: person.full_name, is_active: true, sort_order: index }).eq("id", existing.id).eq("salon_id", ctx.salonId);
       if (error) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
-      staffIds.push(existing.id);
+      staffRows.push({ id: existing.id, person });
     } else {
-      const { data, error } = await admin.from("staff").insert({ salon_id: ctx.salonId, full_name: fullName, sort_order: index }).select("id").single();
+      const { data, error } = await admin.from("staff").insert({ salon_id: ctx.salonId, full_name: person.full_name, sort_order: index }).select("id").single();
       if (error || !data) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
-      staffIds.push(data.id);
+      staffRows.push({ id: data.id, person });
     }
   }
-  const inactiveStaffIds = (staff ?? []).slice(value.staffNames.length).map((row) => row.id);
+  const inactiveStaffIds = (staff ?? []).slice(value.staff.length).map((row) => row.id);
   if (inactiveStaffIds.length) {
     const { error } = await admin.from("staff").update({ is_active: false }).in("id", inactiveStaffIds).eq("salon_id", ctx.salonId);
     if (error) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
@@ -95,16 +110,20 @@ export async function POST(request: NextRequest) {
 
   const { data: services, error: servicesError } = await admin.from("services").insert(value.services.map((service) => ({
     salon_id: ctx.salonId, ...service, name_en: service.name_ka, is_active: true, is_online_bookable: true,
-  }))).select("id");
+  }))).select("id,name_ka");
   if (servicesError || !services) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
 
   const { error: serviceAssignmentsError } = await admin.from("staff_services").insert(
-    staffIds.flatMap((staff_id) => services.map((service) => ({ salon_id: ctx.salonId, staff_id, service_id: service.id })))
+    staffRows.flatMap(({ id: staff_id, person }) => person.serviceIndexes.map((serviceIndex) => {
+      const serviceName = value.services[serviceIndex].name_ka.toLocaleLowerCase();
+      const service = services.find((item) => item.name_ka.toLocaleLowerCase() === serviceName);
+      return { salon_id: ctx.salonId, staff_id, service_id: service!.id };
+    }))
   );
   if (serviceAssignmentsError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
   const { error: hoursError } = await admin.from("staff_working_hours").insert(
-    staffIds.flatMap((staff_id) => value.workingDays.map((weekday) => ({
-      salon_id: ctx.salonId, staff_id, weekday, start_time: value.openTime, end_time: value.closeTime,
+    staffRows.flatMap(({ id: staff_id, person }) => person.workingDays.map((weekday) => ({
+      salon_id: ctx.salonId, staff_id, weekday, start_time: person.openTime, end_time: person.closeTime,
     })))
   );
   if (hoursError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });

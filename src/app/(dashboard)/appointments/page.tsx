@@ -33,7 +33,7 @@ export default async function AppointmentsPage() {
       .select("*")
       .eq("salon_id", ctx.salonId)
       .order("full_name", { ascending: true }),
-    ctx.supabase.from("staff").select("id,full_name,color,is_active").eq("salon_id", ctx.salonId).order("sort_order"),
+    ctx.supabase.from("staff").select("id,full_name,color,is_active,staff_services(service_id)").eq("salon_id", ctx.salonId).order("sort_order"),
     ctx.supabase.from("services").select("id,legacy_id,name_ka,name_en,price_gel,duration_minutes,category,recall_days,is_active,is_online_bookable").eq("salon_id", ctx.salonId).eq("is_active", true),
   ]);
   const customServices: CustomBookingService[] = (serviceData ?? []).map((service) => ({
@@ -49,6 +49,13 @@ export default async function AppointmentsPage() {
     reminder_days: service.recall_days,
     enabled: service.is_active,
   }));
+  const staffForAppointments = (staffData ?? []).map((member) => ({
+    id: member.id,
+    full_name: member.full_name,
+    color: member.color,
+    is_active: member.is_active,
+    service_ids: (member.staff_services ?? []).map((assignment) => assignment.service_id),
+  }));
 
   return (
     <>
@@ -62,7 +69,7 @@ export default async function AppointmentsPage() {
       workingHoursStart={ctx.settings.working_hours_start || "10:00"}
       workingHoursEnd={ctx.settings.working_hours_end || "20:00"}
       slotIntervalMinutes={ctx.settings.slot_interval_minutes || 60}
-      staffMembers={staffData ?? []}
+      staffMembers={staffForAppointments}
     />
     </>
   );

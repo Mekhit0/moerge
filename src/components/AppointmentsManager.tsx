@@ -53,7 +53,7 @@ interface AppointmentsManagerProps {
   workingHoursStart?: string;
   workingHoursEnd?: string;
   slotIntervalMinutes?: number;
-  staffMembers?: Array<{ id: string; full_name: string; is_active: boolean }>;
+  staffMembers?: Array<{ id: string; full_name: string; is_active: boolean; service_ids?: string[] }>;
 }
 
 export default function AppointmentsManager({
@@ -1170,7 +1170,7 @@ export default function AppointmentsManager({
                   <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">{t("სპეციალისტი", "Staff member")}</label>
                   <select value={selectedStaffId} onChange={(event) => setSelectedStaffId(event.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm bg-white">
                     <option value="">{t("ნებისმიერი ხელმისაწვდომი", "Any available")}</option>
-                    {staffMembers.filter((member) => member.is_active).map((member) => <option key={member.id} value={member.id}>{member.full_name}</option>)}
+                    {staffMembers.filter((member) => member.is_active && (!selectedServiceId || member.service_ids?.includes(selectedServiceId))).map((member) => <option key={member.id} value={member.id}>{member.full_name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -1308,6 +1308,9 @@ export default function AppointmentsManager({
                       onChange={(e) => {
                         const val = e.target.value;
                         setSelectedServiceId(val);
+                        if (selectedStaffId && !staffMembers.some((member) => member.id === selectedStaffId && member.service_ids?.includes(val))) {
+                          setSelectedStaffId("");
+                        }
                         const opt = serviceOptions.find((o) => o.id === val);
                         if (opt) {
                           setTreatmentType(opt.type);

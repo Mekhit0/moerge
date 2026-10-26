@@ -18,6 +18,11 @@ export async function POST(request: NextRequest) {
   if (!requireRole(ctx, canManage)) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || typeof body.full_name !== "string" || body.full_name.trim().length < 2) return NextResponse.json({ error: "Staff name is required." }, { status: 400 });
+  const serviceIds = Array.isArray(body.service_ids) ? [...new Set(body.service_ids.filter((id): id is string => typeof id === "string"))] : [];
+  if (!serviceIds.length) return NextResponse.json({ error: "აირჩიეთ სპეციალისტის მინიმუმ ერთი სერვისი. / Assign at least one service to the specialist." }, { status: 400 });
+  const { data: assignedServices, error: serviceError } = await ctx.supabase.from("services")
+    .select("id").eq("salon_id", ctx.salonId).eq("is_active", true).in("id", serviceIds);
+  if (serviceError || assignedServices?.length !== serviceIds.length) return NextResponse.json({ error: "აირჩიეთ ამ სალონის აქტიური სერვისები. / Choose active services from this salon." }, { status: 400 });
   const admin = createServiceClient();
   const [{ data: subscription }, { count: activeCount }] = await Promise.all([admin.from("subscriptions").select("plan_code,status,trial_ends_at").eq("salon_id", ctx.salonId).maybeSingle(), admin.from("staff").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true)]);
   const plan = (subscription?.plan_code ?? "business") as PaidPlan;
@@ -25,9 +30,11 @@ export async function POST(request: NextRequest) {
   if ((activeCount ?? 0) >= allowed) return NextResponse.json({ error: `This subscription allows up to ${allowed} active staff.` }, { status: 422 });
   const { data, error } = await ctx.supabase.from("staff").insert({ salon_id: ctx.salonId, full_name: body.full_name.trim(), color: typeof body.color === "string" ? body.color : "#e11d48", sort_order: Number(body.sort_order) || 0 }).select("*").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  const serviceIds = Array.isArray(body.service_ids) ? body.service_ids.filter((id): id is string => typeof id === "string") : [];
-  const assignments = serviceIds.length ? serviceIds : (await ctx.supabase.from("services").select("id").eq("salon_id", ctx.salonId).eq("is_active", true)).data?.map((service) => service.id) ?? [];
-  if (assignments.length) await ctx.supabase.from("staff_services").insert(assignments.map((service_id) => ({ salon_id: ctx.salonId, staff_id: data.id, service_id })));
+  const { error: assignmentError } = await ctx.supabase.from("staff_services").insert(serviceIds.map((service_id) => ({ salon_id: ctx.salonId, staff_id: data.id, service_id })));
+  if (assignmentError) {
+    await ctx.supabase.from("staff").update({ is_active: false }).eq("id", data.id).eq("salon_id", ctx.salonId);
+    return NextResponse.json({ error: "სპეციალისტისთვის სერვისების მინიჭება ვერ მოხერხდა. / Could not assign services to the specialist." }, { status: 500 });
+  }
   return NextResponse.json({ staff: data }, { status: 201 });
 }
 
