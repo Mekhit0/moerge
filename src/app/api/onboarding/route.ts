@@ -13,12 +13,12 @@ const schema = z.object({
     duration_minutes: z.number().int().min(5).max(720),
     category: z.string().trim().min(1).max(80),
   })).min(1).max(30),
+  workingDays: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+  openTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  closeTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   staff: z.array(z.object({
     full_name: z.string().trim().min(2).max(120),
     serviceIndexes: z.array(z.number().int().min(0).max(29)).min(1).max(30),
-    workingDays: z.array(z.number().int().min(0).max(6)).min(1).max(7),
-    openTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-    closeTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   })).min(1).max(20),
   slotIntervalMinutes: z.union([z.literal(15), z.literal(30), z.literal(60)]),
 }).superRefine((value, ctx) => {
@@ -32,13 +32,13 @@ const schema = z.object({
     if (new Set(staff.serviceIndexes).size !== staff.serviceIndexes.length || staff.serviceIndexes.some((serviceIndex) => serviceIndex >= value.services.length)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["staff", staffIndex, "serviceIndexes"], message: "Choose valid services for each specialist." });
     }
-    if (new Set(staff.workingDays).size !== staff.workingDays.length) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["staff", staffIndex, "workingDays"], message: "Working days must be unique." });
-    }
-    if (staff.closeTime <= staff.openTime) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["staff", staffIndex, "closeTime"], message: "Closing time must be after opening time." });
-    }
   });
+  if (new Set(value.workingDays).size !== value.workingDays.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["workingDays"], message: "Working days must be unique." });
+  }
+  if (value.closeTime <= value.openTime) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["closeTime"], message: "Closing time must be after opening time." });
+  }
 });
 
 const SETUP_ERROR = "მონაცემების შენახვა ვერ მოხერხდა. სცადეთ ხელახლა. / Setup could not be saved. Please try again.";
@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
     // salon_settings.salon_address is NOT NULL; keep the optional UI field empty as "".
     salon_address: value.salonAddress,
     timezone: "Asia/Tbilisi",
-    working_hours_start: value.staff.map((person) => person.openTime).sort()[0],
-    working_hours_end: value.staff.map((person) => person.closeTime).sort().at(-1),
+    working_hours_start: value.openTime,
+    working_hours_end: value.closeTime,
     slot_interval_minutes: value.slotIntervalMinutes,
   }).eq("salon_id", ctx.salonId);
   if (settingsError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
@@ -122,8 +122,8 @@ export async function POST(request: NextRequest) {
   );
   if (serviceAssignmentsError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
   const { error: hoursError } = await admin.from("staff_working_hours").insert(
-    staffRows.flatMap(({ id: staff_id, person }) => person.workingDays.map((weekday) => ({
-      salon_id: ctx.salonId, staff_id, weekday, start_time: person.openTime, end_time: person.closeTime,
+    staffRows.flatMap(({ id: staff_id }) => value.workingDays.map((weekday) => ({
+      salon_id: ctx.salonId, staff_id, weekday, start_time: value.openTime, end_time: value.closeTime,
     })))
   );
   if (hoursError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });

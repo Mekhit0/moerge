@@ -11,7 +11,7 @@ import { BILLING_CONFIG } from "@/lib/billing-plans";
 type ServiceDraft = {
   id: string;
   name: string;
-  priceGel: number;
+  priceGel: number | null;
   durationMinutes: number;
   category: string;
 };
@@ -20,24 +20,6 @@ type StaffDraft = {
   id: string;
   name: string;
   serviceIds: string[];
-  workingDays: number[];
-  openTime: string;
-  closeTime: string;
-};
-
-const templates: Record<"salon" | "aesthetic", ServiceDraft[]> = {
-  salon: [
-    { id: "haircut", name: "თმის შეჭრა", priceGel: 35, durationMinutes: 45, category: "hair" },
-    { id: "manicure", name: "მანიკური", priceGel: 40, durationMinutes: 60, category: "nails" },
-    { id: "facial-care", name: "სახის მოვლა", priceGel: 70, durationMinutes: 60, category: "skin" },
-    { id: "consultation", name: "კონსულტაცია", priceGel: 0, durationMinutes: 30, category: "consultation" },
-  ],
-  aesthetic: [
-    { id: "skin-consultation", name: "კანის კონსულტაცია", priceGel: 0, durationMinutes: 30, category: "consultation" },
-    { id: "facial-cleaning", name: "სახის წმენდა", priceGel: 90, durationMinutes: 75, category: "facial" },
-    { id: "laser", name: "ლაზერული პროცედურა", priceGel: 80, durationMinutes: 45, category: "laser" },
-    { id: "massage", name: "მასაჟი", priceGel: 100, durationMinutes: 60, category: "massage" },
-  ],
 };
 
 const weekdays = [
@@ -53,12 +35,14 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
   const { t } = useLanguage();
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [salonType, setSalonType] = useState<"salon" | "aesthetic">("salon");
   const [salonName, setSalonName] = useState(initialName);
   const [salonPhone, setSalonPhone] = useState(initialPhone);
   const [salonAddress, setSalonAddress] = useState(initialAddress);
-  const [services, setServices] = useState<ServiceDraft[]>(() => templates.salon.map((service) => ({ ...service })));
-  const [staffMembers, setStaffMembers] = useState<StaffDraft[]>([{ id: "specialist-1", name: "", serviceIds: [], workingDays: [1, 2, 3, 4, 5, 6], openTime: "10:00", closeTime: "19:00" }]);
+  const [services, setServices] = useState<ServiceDraft[]>([]);
+  const [staffMembers, setStaffMembers] = useState<StaffDraft[]>([{ id: "specialist-1", name: "", serviceIds: [] }]);
+  const [workingDays, setWorkingDays] = useState<number[]>([1, 2, 3, 4, 5, 6]);
+  const [openTime, setOpenTime] = useState("10:00");
+  const [closeTime, setCloseTime] = useState("19:00");
   const [slotIntervalMinutes, setSlotIntervalMinutes] = useState(30);
   const [bookingUrl, setBookingUrl] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
@@ -74,17 +58,16 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
     }).then(setQrDataUrl);
   }, [bookingUrl]);
 
-  function setTemplate(type: "salon" | "aesthetic") {
-    setSalonType(type);
-    setServices(templates[type].map((service) => ({ ...service })));
-    setStaffMembers((current) => current.map((staff) => ({ ...staff, serviceIds: [] })));
+  function addSuggestedService(name: string, category: string) {
+    if (services.some((service) => service.name.trim().toLocaleLowerCase() === name.toLocaleLowerCase())) return;
+    setServices((current) => [...current, { id: globalThis.crypto.randomUUID(), name, priceGel: null, durationMinutes: 30, category }]);
     setError(null);
   }
 
   function updateService(index: number, key: "name" | "priceGel" | "durationMinutes", value: string) {
     setServices((current) => current.map((service, serviceIndex) => {
       if (serviceIndex !== index) return service;
-      return { ...service, [key]: key === "name" ? value : Number(value) };
+      return { ...service, [key]: key === "name" ? value : value === "" ? null : Number(value) };
     }));
   }
 
@@ -119,8 +102,8 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
         setError(t("თითოეულ სერვისს მიუთითეთ სახელი.", "Enter a name for each service."));
         return;
       }
-      if (services.some((service) => !Number.isFinite(service.priceGel) || service.priceGel < 0 || service.priceGel > 10000)) {
-        setError(t("შეამოწმეთ სერვისების ფასები.", "Check the service prices."));
+      if (services.some((service) => service.priceGel === null || !Number.isFinite(service.priceGel) || service.priceGel < 0 || service.priceGel > 10000)) {
+        setError(t("მიუთითეთ თითოეული მომსახურების ფასი ან ჩაწერეთ 0, თუ უფასოა.", "Enter each service price, or enter 0 if it is free."));
         return;
       }
       if (services.some((service) => !Number.isInteger(service.durationMinutes) || service.durationMinutes < 5 || service.durationMinutes > 720)) {
@@ -160,12 +143,12 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
       setError(t("თითოეულ სპეციალისტს მინიმუმ ერთი სერვისი მიუთითეთ.", "Assign at least one service to each specialist."));
       return;
     }
-    if (cleanedStaff.some((staff) => staff.workingDays.length === 0)) {
-      setError(t("თითოეულ სპეციალისტს მინიმუმ ერთი სამუშაო დღე მიუთითეთ.", "Select at least one working day for each specialist."));
+    if (workingDays.length === 0) {
+      setError(t("მონიშნეთ მინიმუმ ერთი სამუშაო დღე.", "Select at least one working day."));
       return;
     }
-    if (cleanedStaff.some((staff) => staff.closeTime <= staff.openTime)) {
-      setError(t("თითოეული სპეციალისტისთვის დახურვის დრო გახსნის დროზე გვიან უნდა იყოს.", "For each specialist, closing time must be after opening time."));
+    if (closeTime <= openTime) {
+      setError(t("დასრულების დრო დაწყების დროზე გვიან უნდა იყოს.", "Closing time must be after opening time."));
       return;
     }
 
@@ -187,10 +170,10 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
           staff: cleanedStaff.map((staff) => ({
             full_name: staff.name,
             serviceIndexes: staff.serviceIds.map((id) => services.findIndex((service) => service.id === id)),
-            workingDays: staff.workingDays,
-            openTime: staff.openTime,
-            closeTime: staff.closeTime,
           })),
+          workingDays,
+          openTime,
+          closeTime,
           slotIntervalMinutes,
         }),
       });
@@ -256,9 +239,14 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
             <h2 className="text-lg font-bold">{t("სერვისები და ფასები", "Services and prices")}</h2>
             <p className="mt-1 text-sm text-stone-500">{t("სერვისის სახელი ერთხელ შეიყვანეთ. moarge ამ სახელს ორივე ენაზე გამოიყენებს.", "Enter each service name once. moarge will use that name in both languages.")}</p>
           </div>
-          <div className="flex flex-wrap gap-2" role="group" aria-label={t("სერვისების შაბლონი", "Service template")}>
-            <button type="button" aria-pressed={salonType === "salon"} onClick={() => setTemplate("salon")} className={`rounded-xl border px-4 py-2 text-sm font-medium ${salonType === "salon" ? "border-rose-400 bg-rose-50 text-rose-800" : "border-stone-200 text-stone-600"}`}>{t("სილამაზის სალონი", "Beauty salon")}</button>
-            <button type="button" aria-pressed={salonType === "aesthetic"} onClick={() => setTemplate("aesthetic")} className={`rounded-xl border px-4 py-2 text-sm font-medium ${salonType === "aesthetic" ? "border-rose-400 bg-rose-50 text-rose-800" : "border-stone-200 text-stone-600"}`}>{t("ესთეტიკური ცენტრი", "Aesthetic center")}</button>
+          <div className="rounded-2xl bg-stone-50 p-4">
+            <p className="mb-2 text-xs font-semibold text-stone-600">{t("სწრაფი დამატება", "Quick add")}</p>
+            <div className="flex flex-wrap gap-2">
+              {[["თმის შეჭრა", "hair"], ["მანიკური", "nails"], ["პედიკური", "nails"], ["შეღებვა", "hair"], ["სახის მოვლა", "skin"], ["წარბი და წამწამი", "beauty"], ["ეპილაცია", "hair_removal"], ["მასაჟი", "massage"]].map(([name, category]) => (
+                <button key={name} type="button" onClick={() => addSuggestedService(name, category)} className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs text-stone-700 hover:border-rose-300">+ {name}</button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-stone-500">{t("ეს მხოლოდ სახელის შეთავაზებაა. მიუთითეთ თქვენი რეალური ფასი და ხანგრძლივობა.", "Suggestions only. Set your actual price and duration.")}</p>
           </div>
 
           <div className="space-y-3">
@@ -269,7 +257,8 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
                   <input required maxLength={100} className={field} value={service.name} onChange={(event) => updateService(index, "name", event.target.value)} placeholder={t("მაგალითად, მანიკური", "For example, manicure")} />
                 </label>
                 <label className="text-xs font-medium text-stone-600">{t("ფასი (₾)", "Price (GEL)")} *
-                  <input required type="number" min="0" max="10000" step="0.01" className={field} value={service.priceGel} onChange={(event) => updateService(index, "priceGel", event.target.value)} />
+                  <input required type="number" min="0" max="10000" step="0.01" className={field} value={service.priceGel ?? ""} onChange={(event) => updateService(index, "priceGel", event.target.value)} />
+                  <span className="mt-1 block font-normal text-stone-400">{t("თუ ფასი 0-ია, ჯავშანზე უფასოდ გამოჩნდება.", "A price of 0 is shown as free when booking.")}</span>
                 </label>
                 <label className="text-xs font-medium text-stone-600">{t("ხანგრძლივობა (წუთი)", "Duration (minutes)")} *
                   <input required type="number" min="5" max="720" step="5" className={field} value={service.durationMinutes} onChange={(event) => updateService(index, "durationMinutes", event.target.value)} />
@@ -283,7 +272,7 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
               </div>
             </fieldset>)}
           </div>
-          <button type="button" disabled={services.length >= 30} onClick={() => setServices((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "", priceGel: 0, durationMinutes: 30, category: "general" }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" disabled={services.length >= 30} onClick={() => setServices((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "", priceGel: null, durationMinutes: 30, category: "general" }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
             <Plus className="h-4 w-4" />{t("სერვისის დამატება", "Add service")}
           </button>
         </div>}
@@ -291,8 +280,32 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
         {step === 2 && <div className="space-y-5">
           <div>
             <h2 className="text-lg font-bold">{t("სპეციალისტები, სერვისები და გრაფიკი", "Specialists, services and schedules")}</h2>
-            <p className="mt-1 text-sm text-stone-500">{t("თითოეულ სპეციალისტთან მონიშნეთ მის მიერ შესრულებული სერვისები, სამუშაო დღეები და საათები.", "For each specialist, choose their services, working days and hours.")}</p>
+            <p className="mt-1 text-sm text-stone-500">{t("დაამატეთ გუნდი, მიუთითეთ თითოეულის სერვისები და ერთხელ დააყენეთ სალონის სამუშაო დღეები.", "Add your team, assign services, then set the salon's working days once.")}</p>
           </div>
+          <section className="rounded-2xl border border-rose-100 bg-rose-50/40 p-4">
+            <h3 className="text-sm font-semibold">{t("სალონის სამუშაო განრიგი", "Salon working hours")}</h3>
+            <fieldset className="mt-3">
+              <legend className="mb-2 text-xs font-medium text-stone-600">{t("სამუშაო დღეები", "Working days")}</legend>
+              <div className="flex flex-wrap gap-2">
+                {weekdays.map(([ka, en], dayIndex) => {
+                  const day = (dayIndex + 1) % 7;
+                  const checked = workingDays.includes(day);
+                  return <label key={en} className={`cursor-pointer rounded-xl border px-3 py-2 text-xs ${checked ? "border-rose-300 bg-white text-rose-800" : "border-stone-200 bg-white text-stone-600"}`}>
+                    <input className="mr-1.5 accent-rose-600" type="checkbox" checked={checked} onChange={() => setWorkingDays((current) => checked ? current.filter((item) => item !== day) : [...current, day])} />{t(ka, en)}
+                  </label>;
+                })}
+              </div>
+            </fieldset>
+            <div className="mt-3 grid max-w-md grid-cols-2 gap-3">
+              <label className="text-xs font-medium text-stone-600">{t("გახსნა", "Opens")}
+                <input type="time" className={field} value={openTime} onChange={(event) => setOpenTime(event.target.value)} />
+              </label>
+              <label className="text-xs font-medium text-stone-600">{t("დახურვა", "Closes")}
+                <input type="time" className={field} value={closeTime} onChange={(event) => setCloseTime(event.target.value)} />
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-stone-500">{t("ეს გრაფიკი საწყისად ყველა სპეციალისტს მიენიჭება. ინდივიდუალურ ცვლილებებს მოგვიანებით შეძლებთ.", "This schedule is assigned to every specialist. You can customize individuals later.")}</p>
+          </section>
           <div className="space-y-3">
             {staffMembers.map((staff, index) => <fieldset key={staff.id} className="space-y-4 rounded-2xl border border-stone-200 p-4">
               <legend className="px-1 text-xs font-semibold text-stone-500">{t("სპეციალისტი", "Specialist")} {index + 1}</legend>
@@ -318,43 +331,16 @@ export default function OnboardingWizard({ initialName, initialPhone = "", initi
                 </div>
               </fieldset>
 
-              <fieldset>
-                <legend className="mb-2 text-xs font-semibold text-stone-600">{t("სამუშაო დღეები", "Working days")} *</legend>
-                <div className="flex flex-wrap gap-2">
-                  {weekdays.map(([ka, en], dayIndex) => {
-                    const day = (dayIndex + 1) % 7;
-                    const checked = staff.workingDays.includes(day);
-                    return <label key={en} className={`cursor-pointer rounded-xl border px-3 py-2 text-xs ${checked ? "border-rose-300 bg-rose-50" : "border-stone-200"}`}>
-                      <input className="mr-1.5 accent-rose-600" type="checkbox" checked={checked} onChange={() => updateStaff(staff.id, { workingDays: checked ? staff.workingDays.filter((item) => item !== day) : [...staff.workingDays, day] })} />{t(ka, en)}
-                    </label>;
-                  })}
-                </div>
-              </fieldset>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-medium text-stone-600">{t("სამუშაოს დაწყება", "Starts at")}
-                  <input type="time" className={field} value={staff.openTime} onChange={(event) => updateStaff(staff.id, { openTime: event.target.value })} />
-                </label>
-                <label className="text-xs font-medium text-stone-600">{t("სამუშაოს დასრულება", "Ends at")}
-                  <input type="time" className={field} value={staff.closeTime} onChange={(event) => updateStaff(staff.id, { closeTime: event.target.value })} />
-                </label>
-              </div>
             </fieldset>)}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" disabled={staffMembers.length >= MAX_TRIAL_STAFF} onClick={() => setStaffMembers((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "", serviceIds: [], workingDays: [1, 2, 3, 4, 5, 6], openTime: "10:00", closeTime: "19:00" }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" disabled={staffMembers.length >= MAX_TRIAL_STAFF} onClick={() => setStaffMembers((current) => [...current, { id: globalThis.crypto.randomUUID(), name: "", serviceIds: [] }])} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50">
               <Plus className="h-4 w-4" />{t("სპეციალისტის დამატება", "Add specialist")}
             </button>
             <span className="text-xs text-stone-500">{t(`საცდელ გეგმაში მაქსიმუმ ${MAX_TRIAL_STAFF} სპეციალისტია.`, `Up to ${MAX_TRIAL_STAFF} specialists on the trial plan.`)}</span>
           </div>
 
-          <label className="block text-sm font-medium">{t("ჯავშნის ინტერვალი", "Booking interval")}
-              <select className={field} value={slotIntervalMinutes} onChange={(event) => setSlotIntervalMinutes(Number(event.target.value))}>
-                <option value={15}>15 {t("წუთი", "minutes")}</option>
-                <option value={30}>30 {t("წუთი", "minutes")}</option>
-                <option value={60}>60 {t("წუთი", "minutes")}</option>
-              </select>
-          </label>
+          <p className="text-xs text-stone-500">{t("ჯავშნის დრო ავტომატურად ითვლება მომსახურების ხანგრძლივობის მიხედვით.", "Appointment duration follows each service's duration automatically.")}</p>
         </div>}
 
         {step === 3 && <div className="space-y-5 text-center">

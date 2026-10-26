@@ -18,7 +18,6 @@ import {
   Ban,
   RefreshCw,
   MapPin,
-  Settings,
 } from "lucide-react";
 import {
   CustomBookingService,
@@ -90,6 +89,15 @@ interface BookingResult {
   manage_url?: string | null;
 }
 
+function georgiaDate(daysAhead = 0) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tbilisi", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: string) => Number(parts.find((item) => item.type === type)?.value);
+  const date = new Date(Date.UTC(part("year"), part("month") - 1, part("day") + daysAhead));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+}
+
 function PublicBookingFormContent() {
   const { lang, t } = useLanguage();
   const searchParams = useSearchParams();
@@ -115,11 +123,8 @@ function PublicBookingFormContent() {
   });
 
   // Default to tomorrow's date in Georgia timezone
-  const [treatmentDate, setTreatmentDate] = useState(() => {
-    const tomorrow = new Date(Date.now() + 86_400_000);
-    return tomorrow.toISOString().slice(0, 10);
-  });
-  const [treatmentTime, setTreatmentTime] = useState("11:00");
+  const [treatmentDate, setTreatmentDate] = useState(() => georgiaDate(1));
+  const [treatmentTime, setTreatmentTime] = useState("10:00");
   const [selectedServiceId, setSelectedServiceId] = useState<string>(
     DEFAULT_CUSTOM_SERVICES[0].id
   );
@@ -215,6 +220,9 @@ function PublicBookingFormContent() {
           const times = data.availability?.booked_times ?? [];
           setBookedTimesOnDate(times);
           setAvailableStaffSlots(data.availability?.slots ?? []);
+          const nextAvailable = (data.availability?.slots ?? []).find((slot) => !selectedStaffId || slot.staff_id === selectedStaffId);
+          const nextTime = nextAvailable?.slot_time.slice(0, 5);
+          if (nextTime) setTreatmentTime(nextTime);
           const services = data.custom_services ?? [];
           if (services.length && !services.some((service) => service.id === selectedServiceId)) {
             setSelectedServiceId(services[0].id);
@@ -391,22 +399,7 @@ function PublicBookingFormContent() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <LanguageSwitcher />
-            <Link
-              href="/settings"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 hover:text-rose-600 px-3 py-1.5 rounded-xl border border-stone-200 hover:border-rose-200 bg-white transition"
-            >
-              <Settings className="w-3.5 h-3.5" />
-              {t("გვერდის მორგება", "Customize Page")}
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-xs font-semibold text-stone-700 hover:text-rose-600 px-2.5 sm:px-3 py-1.5 rounded-xl border border-stone-200 hover:border-rose-200 bg-white transition whitespace-nowrap"
-            >
-              {t("პანელი →", "Portal →")}
-            </Link>
-          </div>
+          <LanguageSwitcher />
         </div>
       </header>
 
@@ -746,7 +739,7 @@ function PublicBookingFormContent() {
                     <input
                       type="date"
                       required
-                      min={new Date().toISOString().slice(0, 10)}
+                      min={georgiaDate()}
                       value={treatmentDate}
                       onChange={(e) => {
                         setTreatmentDate(e.target.value);
@@ -756,25 +749,7 @@ function PublicBookingFormContent() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1.5">
-                      {t("დროის არჩევა (24-სთ)", "Custom Time (24h HH:MM)")}
-                    </label>
-                    <input
-                      type="time"
-                      required
-                      value={treatmentTime}
-                      onChange={(e) => {
-                        setTreatmentTime(e.target.value);
-                        setError(null);
-                      }}
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
-                        smartAvailability.isAvailable
-                          ? "border-stone-200 focus:ring-rose-500"
-                          : "border-red-400 bg-red-50/40 text-red-900 focus:ring-red-500"
-                      }`}
-                    />
-                  </div>
+                  <p className="flex items-end text-xs text-stone-500">{t("აირჩიეთ ქვემოთ ნაჩვენები თავისუფალი დრო.", "Choose one of the available times below.")}</p>
                 </div>
 
                 {/* Smart Conflict Alert when selected/custom time is NOT available */}
