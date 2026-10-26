@@ -118,7 +118,7 @@ export default function PrivacyPolicyPage() {
                   <li>{t("სალონის დასახელება და მისამართი", "Salon name and physical address")}</li>
                   <li>{t("ადმინისტრატორის სახელი და ელ-ფოსტა", "Staff / owner name and email address")}</li>
                   <li>{t("სამუშაო საათები და მომსახურების კატალოგი (₾)", "Working hours and service catalog (GEL)")}</li>
-                  <li>{t("Resend API Key (თუ სალონი ინდივიდუალურად აკონფიგურირებს)", "Resend API Key (if provided by salon)")}</li>
+                  <li>{t("თანამშრომლები, სერვისები და მათი განრიგი", "Staff members, services, and their schedules")}</li>
                 </ul>
               </div>
 
@@ -129,8 +129,8 @@ export default function PrivacyPolicyPage() {
                 </h4>
                 <ul className="text-xs text-stone-600 space-y-1.5 list-disc pl-4">
                   <li>{t("კლიენტის სახელი და გვარი", "Client full name")}</li>
-                  <li>{t("ტელეფონის ნომერი (SMS დადასტურებისთვის)", "Mobile phone number")}</li>
-                  <li>{t("ელ-ფოსტის მისამართი (ავტომატური შეხსენებებისთვის)", "Email address (for automated care reminders)")}</li>
+                  <li>{t("ტელეფონის ნომერი, სალონის შიდა კლიენტის იდენტიფიკაციისთვის", "Phone number used to identify a client within the salon")}</li>
+                  <li>{t("არასავალდებულო ელფოსტა და არხების თანხმობის სტატუსი", "Optional email address and communication consent status")}</li>
                   <li>{t("ვიზიტის თარიღი, დრო და არჩეული პროცედურა", "Appointment date, slot time & service type")}</li>
                 </ul>
               </div>
@@ -165,7 +165,7 @@ export default function PrivacyPolicyPage() {
                 <strong>{t("ავტომატური შეხსენების მიწოდება:", "Automated Reminder Delivery:")}</strong>{" "}
                 {t(
                   "პროცედურის დასრულების შემდეგ კლიენტისთვის მოწვევის ავტომატური გაგზავნა მოვლის ციკლის შესაბამისად.",
-                  "Automating optimal follow-up invitations post-procedure via Resend email."
+                  "Scheduling service-specific recall and 24-hour or 2-hour appointment reminders through channels the client has consented to."
                 )}
               </li>
               <li>
@@ -231,8 +231,8 @@ export default function PrivacyPolicyPage() {
             </div>
             <p>
               {t(
-                "moarge არასოდეს ყიდის ან გადასცემს პერსონალურ მონაცემებს სარეკლამო ან მარკეტინგულ სააგენტოებს. მონაცემთა დამუშავებაში მონაწილეობენ მხოლოდ სანდო ინფრასტრუქტურული პროვაიდერები:",
-                "moarge never sells personal data to advertisers or data brokers. Data is processed exclusively by audited infrastructure partners:"
+                "მონაცემებს ვამუშავებთ სერვისის უზრუნველსაყოფად საჭირო ინფრასტრუქტურისა და შეტყობინებების პროვაიდერებთან:",
+                "We process data with infrastructure and notification providers needed to operate the service:"
               )}
             </p>
             <ul className="list-disc pl-6 space-y-1.5 text-stone-600 text-xs sm:text-sm">
@@ -242,7 +242,11 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong>Resend:</strong>{" "}
-                {t("ოფიციალური SMTP და API პროვაიდერი ტრანზაქციული მეილების გასაგზავნად.", "Dedicated transactional email delivery engine.")}
+                {t("ელფოსტის შეტყობინებების მიწოდება.", "Email notification delivery.")}
+              </li>
+              <li>
+                <strong>uBill:</strong>{" "}
+                {t("SMS მიწოდება, როცა SMS არხი ჩართულია.", "SMS delivery when the SMS channel is enabled.")}
               </li>
               <li>
                 <strong>Vercel:</strong>{" "}

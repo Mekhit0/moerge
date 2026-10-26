@@ -24,6 +24,7 @@ export default async function DashboardLayout({
       timezone={ctx.settings?.timezone || "Asia/Tbilisi"}
       autoRemindersEnabled={Boolean(ctx.settings?.auto_reminders_enabled ?? true)}
       dryRunMode={Boolean(ctx.settings?.dry_run_mode ?? false)}
+      emailDeliveryConfigured={Boolean(process.env.RESEND_API_KEY?.trim() && process.env.RESEND_FROM_DOMAIN?.trim())}
       staffName={ctx.user?.fullName || "Staff"}
       staffEmail={ctx.user?.email || ""}
       canManageData={ctx.role === "owner" || ctx.role === "admin"}

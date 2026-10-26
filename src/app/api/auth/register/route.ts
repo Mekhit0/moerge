@@ -35,17 +35,6 @@ function getClientIp(request: NextRequest): string {
 export async function POST(request: NextRequest) {
   try {
     const clientIp = getClientIp(request);
-    const adminClient = createServiceClient();
-    if (!(await consumeServerRateLimit(adminClient, `auth-register:${clientIp}`, 10, 3600))) {
-      return NextResponse.json(
-        {
-          error:
-            "ძალიან ბევრი რეგისტრაციის მცდელობა. გთხოვთ სცადოთ მოგვიანებით. / Too many registration attempts from this IP. Please try again later.",
-        },
-        { status: 429 }
-      );
-    }
-
     let body: {
       email?: string;
       password?: string;
@@ -87,6 +76,17 @@ export async function POST(request: NextRequest) {
             "პაროლი უნდა შედგებოდეს მინიმუმ 8 სიმბოლოსგან / Password must be at least 8 characters long.",
         },
         { status: 400 }
+      );
+    }
+
+    const adminClient = createServiceClient();
+    if (!(await consumeServerRateLimit(adminClient, `auth-register:${clientIp}`, 10, 3600))) {
+      return NextResponse.json(
+        {
+          error:
+            "ძალიან ბევრი რეგისტრაციის მცდელობა. გთხოვთ სცადოთ მოგვიანებით. / Too many registration attempts from this IP. Please try again later.",
+        },
+        { status: 429 }
       );
     }
 

@@ -109,8 +109,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "moarge არის ღრუბლოვანი პროგრამული უზრუნველყოფა (SaaS), რომელიც განკუთვნილია სილამაზის, თავის მოვლისა და ესთეტიკური სალონებისთვის. პლატფორმა მოიცავს ონლაინ ჯავშნების მართვას, სალონის განრიგის ორგანიზებას, ჭკვიან დროის კონტროლს (Smart Slot Guard) და პროცედურების შემდგომ ავტომატურ საინფორმაციო შეხსენებებს ელ-ფოსტის (Resend) მეშვეობით.",
-                "moarge is a cloud-based software platform tailored for beauty, wellness, and aesthetic salons. The service provides an online booking page, appointment scheduling, smart slot conflict prevention, and automated follow-up care reminders dispatched via Resend email infrastructure."
+                "moarge არის ღრუბლოვანი პროგრამული უზრუნველყოფა სილამაზისა და ესთეტიკური სალონებისთვის. პლატფორმა მოიცავს ონლაინ ჯავშნებს, სპეციალისტების განრიგებს, კლიენტების ისტორიას და თანხმობაზე დაფუძნებულ შეტყობინებებს.",
+                "moarge is cloud software for beauty and aesthetic salons. It provides online booking, staff schedules, client history, and consent-based notifications."
               )}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-stone-600 text-xs sm:text-sm">
@@ -170,8 +170,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "moarge უზრუნველყოფს საათების რეალურ დროში დაჯავშნის მექანიზმს საქართველოს დროის სარტყელში (Asia/Tbilisi, GMT+4). სისტემა ავტომატურად ბლოკავს უკვე დაკავებულ საათებს და იცავს სალონს ორმაგი ჯავშნებისგან (Double Bookings).",
-                "moarge operates strictly within the Georgia Standard Time zone (Asia/Tbilisi, GMT+4). The smart conflict detector prevents overlapping reservations in real-time."
+                "ხელმისაწვდომი დროები ითვალისწინებს სალონის დროის სარტყელს, სპეციალისტის სამუშაო საათებს, სერვისის ხანგრძლივობას, შესვენებებს, დასვენების დროს და არსებულ ჯავშნებს. ნაგულისხმევი დროის სარტყელია Asia/Tbilisi.",
+                "Available slots account for the salon timezone, staff hours, service duration, breaks, time off, and existing appointments. The default timezone is Asia/Tbilisi."
               )}
             </p>
             <p>
@@ -189,19 +189,19 @@ export default function TermsOfServicePage() {
                 4
               </div>
               <h2 className="text-lg font-bold text-stone-900">
-                {t("4. ავტომატური შეხსენებების ძრავა (Resend)", "4. Automated Reminder Engine & Resend Integration")}
+                {t("4. შეტყობინებები და შეხსენებები", "4. Notifications & Reminders")}
               </h2>
             </div>
             <p>
               {t(
-                "პროცედურის დასრულების შემდეგ, moarge ამზადებს პერსონალურ შეხსენებას შესაბამისი მოვლის ციკლის მიხედვით და უგზავნის კლიენტს შემდეგი ვიზიტის დასაგეგმად.",
-                "After a treatment, moarge schedules a personalized reminder based on the service cycle and invites the client to book their next visit."
+                "შეტყობინებების განრიგი დამოკიდებულია სერვისის recall პერიოდზე, ვიზიტამდე 24-საათიან და 2-საათიან შეხსენებებზე და კლიენტის არხის თანხმობაზე. საცდელ პერიოდში SMS არ იგზავნება.",
+                "Notification scheduling uses the service recall period, 24-hour and 2-hour appointment reminders, and the client's channel consent. SMS is not sent during the trial."
               )}
             </p>
             <p className="text-xs text-stone-500">
               {t(
-                "ყველა გაგზავნილი წერილი აღირიცხება სისტემურ ჟურნალში (Email Logs) იდემპოტენტურობისა და ორმაგი გაგზავნის თავიდან ასაცილებლად.",
-                "All dispatched emails are recorded in the transparent audit log to guarantee idempotency and avoid spamming."
+                "შეტყობინების სტატუსი და მიწოდების მცდელობები notification log-ში ინახება. პარამეტრების, თანამშრომლებისა და ვიზიტების ცვლილებებზე ინახება მოქმედების, ავტორისა და შეცვლილი ველების ისტორია.",
+                "Notification status and delivery attempts are stored in the notification log. Changes to settings, staff, and appointments record the action, actor, and changed field names."
               )}
             </p>
           </section>
@@ -218,14 +218,14 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "moarge-ის სააბონენტო ტარიფები მითითებულია ეროვნულ ვალუტაში (₾ ლარი). ახალ დარეგისტრირებულ სალონებს ეძლევათ 14-დღიანი უფასო სატესტო პერიოდი. სატესტო პერიოდის გასვლის შემდეგ სერვისით სარგებლობა გრძელდება არჩეული სატარიფო გეგმის შესაბამისად.",
-                "moarge subscription plans are denominated in Georgian Lari (GEL ₾). New salons enjoy a 14-day free trial. Following trial completion, continuous access requires an active plan subscription."
+                "ახალ სალონებს ეძლევათ 14-დღიანი საცდელი პერიოდი ბარათის გარეშე. პერიოდის დასრულების ან გადახდის ვადის გასვლისას ანგარიში მხოლოდ წასაკითხ რეჟიმზე გადადის. მონაცემები ინახება და ავტომატურად არ იშლება. გეგმისა და SMS საფასურები ნაჩვენებია ბილინგის გვერდზე. ბარათით რეალური გადახდა ჯერ არ არის ჩართული.",
+                "New salons receive a 14-day trial without a card. When the trial or payment grace period ends, the account becomes read-only. Data is retained and is not automatically deleted. Plan and SMS prices appear on the billing page. Live card payments are not enabled yet."
               )}
             </p>
             <p>
               {t(
-                "სალონს უფლება აქვს ნებისმიერ დროს გააუქმოს სააბონენტო პაკეტი. გაუქმებისას უკვე დარიცხული თვის საფასურის დაბრუნება არ ხდება, თუმცა წვდომა შენარჩუნდება მიმდინარე გადახდილი პერიოდის ამოწურვამდე.",
-                "Salons may cancel their subscription at any time. Prepaid periods are non-refundable, but full platform access remains active until the end of the paid cycle."
+                "ბილინგის გვერდზე ხელმისაწვდომია პერიოდის ბოლოს გაუქმების მოქმედება. რეალური გადახდის პროვაიდერი ჯერ არ არის ჩართული; გადახდისა და თანხის დაბრუნების პირობები განისაზღვრება პროვაიდერის ჩართვამდე.",
+                "The billing page provides a cancel-at-period-end action. A live payment provider is not enabled yet; payment and refund terms will be established before it is activated."
               )}
             </p>
           </section>

@@ -29,6 +29,6 @@ Reviewed 2026-10-26 against the route handlers under `src/app/api`, the public S
 
 ## Test and staging limits
 
-`npm test` passed its runnable suite. The Supabase RPC/RLS integration tests and staging concurrency test were skipped because their opt-in test credentials/flags are not configured in this workspace. The direct RPC grant state was inspected on staging after migration; a separate anonymous HTTP/PostgREST attempt was not made from this review.
+The staging anon RLS/RPC integration suite ran with 8 passing tests, including direct HTTP/PostgREST permission-denied checks for revoked RPCs. Its two staff-auth tests were skipped because no dedicated staff credentials are configured. The staging concurrency test was not run: `.env.local` points at a different Supabase project, its service-role key was rejected by the confirmed staging project's read-only Auth admin endpoint, and `RUN_STAGING_BOOKING_TESTS` is not configured. No mutation-capable tests were run using those mismatched credentials.
 
 The advisor snapshot was collected after the new migration and benchmark fixture cleanup. Security findings remaining: 4 RLS-no-policy informational notices, 1 extension-schema warning, and 3 authenticated SECURITY DEFINER warnings. The mutable search-path warning on `salon_set_updated_at` was fixed in the Phase 5 migration.

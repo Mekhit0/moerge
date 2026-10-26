@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
-import { publicBookingInputSchema } from "../src/lib/validation";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const hasSupabaseCredentials = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+const isConfirmedStaging = SUPABASE_URL?.includes("oolsgizchxstiuvzveos.supabase.co") ?? false;
+const hasSupabaseCredentials = Boolean(isConfirmedStaging && SUPABASE_ANON_KEY);
 
 const hasStaffCredentials = Boolean(process.env.TEST_STAFF_EMAIL && process.env.TEST_STAFF_PASSWORD);
 const hasConfiguredStaffRole = process.env.TEST_STAFF_ROLE === "staff";
@@ -52,12 +52,13 @@ describe.skipIf(!hasSupabaseCredentials)("Supabase Row Level Security (RLS), Mul
 
     const revokedCalls = [
       ["claim_due_reminders", { p_limit: 5, p_salon_id: null, p_specific_reminder_id: null }],
-      ["record_reminder_send_result", { p_reminder_id: "00000000-0000-0000-0000-000000000000", p_outcome: "api_accepted" }],
+      ["record_reminder_send_result", { p_reminder_id: "00000000-0000-0000-0000-000000000000", p_outcome: "api_accepted", p_provider_message_id: null, p_recipient_email: null, p_subject: null, p_error_message: null, p_next_retry_at: null, p_status_code: null, p_is_dry_run: false, p_raw_payload: {} }],
       ["process_email_webhook_event", { p_provider_message_id: "test_msg_id", p_event_type: "delivered", p_error_message: null, p_raw_payload: {} }],
       ["unsubscribe_client_by_token", { p_token: "00000000-0000-0000-0000-000000000000" }],
       ["submit_public_booking", { p_salon_slug: "demo", p_full_name: "Test Client", p_email: "test@example.com", p_phone: null, p_treatment_date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), p_treatment_time: "10:00", p_treatment_type: "service-id", p_notes: null, p_email_consent: true, p_client_ip: null }],
       ["get_salon_date_availability", { p_salon_slug: "demo", p_date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), p_salon_id: null, p_exclude_appointment_id: null }],
       ["get_public_salon_booking_info", { p_slug: "demo" }],
+      ["get_available_slots", { p_salon_id: "00000000-0000-0000-0000-000000000000", p_service_id: "00000000-0000-0000-0000-000000000000", p_date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), p_staff_id: null, p_exclude_appointment_id: null }],
     ] as const;
     for (const [name, params] of revokedCalls) {
       const { data, error } = await anonClient.rpc(name, params);
@@ -147,199 +148,41 @@ describe.skipIf(!hasSupabaseCredentials)("Supabase Row Level Security (RLS), Mul
     15000
   );
 
-  it.skip(
-    "public RPC booking submissions are only available through the validated server route",
+  it(
+    "public booking and availability RPCs cannot be called directly by anon",
     async () => {
-      const parsed = publicBookingInputSchema.safeParse({
-        full_name: "Sophia Beaumont",
-        email: "  SOPHIA.BEAUMONT@EXAMPLE.COM ",
-        treatment_date: "2026-11-15",
-        treatment_time: "14:30",
-        treatment_type: "laser_epilation",
-        notes: "Booked from reminder link",
-        email_consent: true,
-      });
-      expect(parsed.success).toBe(true);
-
       const anonClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
         auth: { persistSession: false },
       });
-
-      const { data: infoData, error: infoErr } = await anonClient.rpc(
-        "get_public_salon_booking_info",
-        { p_slug: null }
-      );
-      expect(infoErr).toBeNull();
-      expect((infoData as { found?: boolean })?.found).toBe(true);
-
-      // Unique future date & email per test run to prevent collisions and rate limits
-      const runId = Date.now();
-      const testEmail = `sophia.run_${runId}@example.com`;
-      const uniqueDate = new Date(Date.now() + 300 * 24 * 60 * 60 * 1000 + (runId % 100) * 86400000)
-        .toISOString()
-        .split("T")[0];
-
-      // 1. First booking at 14:30 succeeds
-      const { data: bookingData, error: bookErr } = await anonClient.rpc(
-        "submit_public_booking",
-        {
-          p_salon_slug: null,
-          p_full_name: "Sophia Beaumont",
-          p_email: testEmail,
-          p_phone: "+1 (212) 555-0142",
-          p_treatment_date: uniqueDate,
-          p_treatment_time: "14:30:00",
-          p_treatment_type: "laser_epilation",
-          p_notes: "Booked via test suite",
-          p_email_consent: true,
-        }
-      );
-
-      expect(bookErr).toBeNull();
-      const res = bookingData as {
-        success: boolean;
-        is_returning_client: boolean;
-        client_id: string;
-        appointment_id: string;
-      };
-      expect(res.success).toBe(true);
-      expect(res.client_id).toBeDefined();
-
-      // 1b. Second booking with the exact same email must match returning client
-      const { data: secondBookingData, error: secondBookErr } = await anonClient.rpc(
-        "submit_public_booking",
-        {
-          p_salon_slug: null,
-          p_full_name: "Sophia Beaumont",
-          p_email: testEmail,
-          p_phone: "+1 (212) 555-0142",
-          p_treatment_date: uniqueDate,
-          p_treatment_time: "16:00:00",
-          p_treatment_type: "laser_epilation",
-          p_notes: "Second booking",
-          p_email_consent: true,
-        }
-      );
-      expect(secondBookErr).toBeNull();
-      const res2 = secondBookingData as {
-        success: boolean;
-        is_returning_client: boolean;
-        client_id: string;
-      };
-      expect(res2.success).toBe(true);
-      expect(res2.is_returning_client).toBe(true);
-      expect(res2.client_id).toBe(res.client_id);
-
-      // 2. Check get_salon_date_availability marks 14:30 as booked
-      const { data: availData, error: availErr } = await anonClient.rpc(
-        "get_salon_date_availability",
-        {
-          p_salon_slug: null,
-          p_date: uniqueDate,
-        }
-      );
-      expect(availErr).toBeNull();
-      const avail = availData as {
-        found: boolean;
-        booked_times: string[];
-        slots: Array<{ time: string; available: boolean }>;
-      };
-      expect(avail.found).toBe(true);
-      expect(avail.booked_times).toContain("14:30");
-      const slot1400 = avail.slots.find((s) => s.time === "14:00");
-      const slot1500 = avail.slots.find((s) => s.time === "15:00");
-      expect(slot1400?.available).toBe(false);
-      expect(slot1500?.available).toBe(false);
-
-      // 3. Conflicting booking at 14:30 is blocked with smart conflict info & Georgian message
-      const { data: conflictData, error: conflictErr } = await anonClient.rpc(
-        "submit_public_booking",
-        {
-          p_salon_slug: null,
-          p_full_name: "Nino Beridze",
-          p_email: `nino.conflict_${runId}@example.com`,
-          p_phone: "+995 555 00 11 22",
-          p_treatment_date: uniqueDate,
-          p_treatment_time: "14:45:00",
-          p_treatment_type: "laser_epilation",
-          p_notes: "Should conflict with 14:30",
-          p_email_consent: true,
-        }
-      );
-      expect(conflictErr).toBeNull();
-      const conflictRes = conflictData as {
-        success: boolean;
-        conflict: boolean;
-        conflicting_time: string;
-        error: string;
-        error_ka: string;
-        available_slots: string[];
-      };
-      expect(conflictRes.success).toBe(false);
-      expect(conflictRes.conflict).toBe(true);
-      expect(conflictRes.conflicting_time).toBe("14:30");
-      expect(conflictRes.error_ka).toContain("დაკავებულია");
-      expect(conflictRes.available_slots).toContain("10:00");
-      expect(conflictRes.available_slots).not.toContain("14:00");
-      expect(conflictRes.available_slots).not.toContain("15:00");
+      const date = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+      const calls = [
+        ["get_public_salon_booking_info", { p_slug: "demo" }],
+        ["get_salon_date_availability", { p_salon_slug: "demo", p_date: date, p_salon_id: null, p_exclude_appointment_id: null }],
+        ["get_available_slots", { p_salon_id: "00000000-0000-0000-0000-000000000000", p_service_id: "00000000-0000-0000-0000-000000000000", p_date: date, p_staff_id: null, p_exclude_appointment_id: null }],
+        ["submit_public_booking", { p_salon_slug: "demo", p_full_name: "Test Client", p_email: "test@example.test", p_phone: "+995555000000", p_treatment_date: date, p_treatment_time: "10:00", p_treatment_type: "test-service", p_notes: null, p_email_consent: false, p_client_ip: null }],
+      ] as const;
+      for (const [name, params] of calls) {
+        const { data, error } = await anonClient.rpc(name, params);
+        expect(error, `${name} should be inaccessible to anon`).not.toBeNull();
+        expect(error?.message).toMatch(/permission denied|not authorized/i);
+        expect(data).toBeNull();
+      }
     },
     20000
   );
 
-  it.skip("public booking database throttles are verified through the server route", async () => {
+  it("does not allow anon callers to bypass database-backed booking rate limits", async () => {
     const anonClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
       auth: { persistSession: false },
     });
-
-    const runId = Date.now();
-    const rateLimitEmail = `ratelimit_${runId}@example.com`;
-    const baseDays = 600 + (runId % 500);
-
-    // First 5 bookings on distinct days succeed
-    for (let i = 0; i < 5; i++) {
-      const distinctDate = new Date(Date.now() + (baseDays + i * 2) * 86400000)
-        .toISOString()
-        .split("T")[0];
-
-      const { data, error } = await anonClient.rpc("submit_public_booking", {
-        p_salon_slug: null,
-        p_full_name: `Rate Tester ${i + 1}`,
-        p_email: rateLimitEmail,
-        p_phone: "+995 555 12 34 56",
-        p_treatment_date: distinctDate,
-        p_treatment_time: "11:00:00",
-        p_treatment_type: "laser_epilation",
-        p_notes: `Rate test booking ${i + 1}`,
-        p_email_consent: true,
-      });
-
-      expect(error).toBeNull();
-      expect((data as { success?: boolean })?.success).toBe(true);
-    }
-
-    const sixthDate = new Date(Date.now() + (baseDays + 20) * 86400000)
-      .toISOString()
-      .split("T")[0];
-
-    // 6th booking within the same hour MUST fail due to rate limit
-    const { data: sixthData, error: sixthError } = await anonClient.rpc(
-      "submit_public_booking",
-      {
-        p_salon_slug: null,
-        p_full_name: "Rate Tester 6",
-        p_email: rateLimitEmail,
-        p_phone: "+995 555 12 34 56",
-        p_treatment_date: sixthDate,
-        p_treatment_time: "11:00:00",
-        p_treatment_type: "laser_epilation",
-        p_notes: "6th booking should be rejected",
-        p_email_consent: true,
-      }
-    );
-
-    expect(sixthError).not.toBeNull();
-    expect(sixthError?.message).toMatch(/Booking limit exceeded|ლიმიტი/i);
-    expect(sixthData).toBeNull();
+    const { data, error } = await anonClient.rpc("consume_public_request_limit", {
+      p_rate_key: "integration-test",
+      p_limit: 1,
+      p_window_seconds: 60,
+    });
+    expect(error).not.toBeNull();
+    expect(error?.message).toMatch(/permission denied|not authorized/i);
+    expect(data).toBeNull();
   }, 30000);
 
   it("rejects unauthorized cron requests without valid CRON_SECRET", async () => {

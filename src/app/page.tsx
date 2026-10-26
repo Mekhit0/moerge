@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
+import { BILLING_CONFIG } from "@/lib/billing-plans";
 
 export default function MoargeLandingPage() {
   const { t } = useLanguage();
@@ -40,20 +41,20 @@ export default function MoargeLandingPage() {
     {
       q_ka: "როგორ მუშაობს ავტომატური შეხსენებების სისტემა?",
       q_en: "How does the automated client reminder engine work?",
-      a_ka: "მას შემდეგ, რაც სალონის ადმინისტრატორი ვიზიტს მონიშნავს როგორც 'დასრულებული', moarge ავტომატურად ამზადებს პერსონალურ შეხსენებას პროცედურის ტიპის მიხედვით. შეხსენება იგზავნება კლიენტის ელ-ფოსტაზე სალონის სახელით და პირდაპირი ჯავშნის ბმულით შემდეგი ვიზიტისთვის. შედეგად, კლიენტი დროულად ბრუნდება თქვენთან თქვენი ჩარევის გარეშე.",
-      a_en: "Once staff marks an appointment as 'Completed', moarge automatically schedules a personalized care and follow-up reminder. The email is delivered with your salon branding and a 1-click booking link, ensuring clients return right on schedule without manual phone calls.",
+      a_ka: "სერვისის დასრულების შემდეგ moarge სერვისის recall პერიოდს იყენებს კლიენტისთვის შემდგომი შეხსენების დასაგეგმად. დაგეგმილ ვიზიტამდე შესაძლებელია 24-საათიანი და 2-საათიანი შეხსენებებიც. არხი დამოკიდებულია კლიენტის თანხმობაზე. საცდელ პერიოდში იგზავნება მხოლოდ ელფოსტა.",
+      a_en: "After a service is completed, moarge uses that service's recall period to schedule a follow-up. It can also queue 24-hour and 2-hour appointment reminders. Delivery channels follow the client's consent. Trial accounts use email only.",
     },
     {
       q_ka: "შეუძლია თუ არა სალონს საკუთარი სერვისების, ფასების (₾) და საათების მითითება?",
       q_en: "Can our salon configure custom services, GEL pricing, and working hours?",
-      a_ka: "დიახ, 100%-ით! სალონის პარამეტრებიდან შეგიძლიათ მიუთითოთ სალონის სახელი, მისამართი, ტელეფონი, სამუშაო საათები (მაგ: 10:00–20:00), აირჩიოთ მზა პროფესიული თემფლეითი ან დაამატოთ ნებისმიერი პროცედურა საკუთარი ფასით ლარში (₾) და ხანგრძლივობით.",
-      a_en: "Yes, 100%! From your Salon Settings panel, you can set your salon brand name, address, contact phone, operating hours (e.g. 10:00–20:00), apply 1-click preset templates, or add custom treatments with your own GEL (₾) pricing and durations.",
+      a_ka: "პარამეტრებში შეგიძლიათ მიუთითოთ სალონის სახელი, მისამართი, ტელეფონი, სამუშაო საათები და დაამატოთ სერვისები საკუთარი ფასითა და ხანგრძლივობით.",
+      a_en: "In settings you can enter your salon name, address, phone, working hours, and services with their prices and durations.",
     },
     {
       q_ka: "როგორ იცავს სისტემა სალონს ორმაგი ჯავშნებისგან (Double Bookings)?",
       q_en: "How does the system prevent double-bookings and time slot conflicts?",
-      a_ka: "moarge აღჭურვილია ჭკვიანი დეტექტორით (Smart Slot Guard). როდესაც კლიენტი ან ადმინისტრატორი ირჩევს თარიღს და პროცედურას, სისტემა რეალურ დროში ითვლის ხანგრძლივობას, ამოწმებს უკვე ჩაწერილ ვიზიტებს და ავტომატურად ბლოკავს დაკავებულ საათებს. შედეგად, ორი კლიენტი ერთსა და იმავე დროს ვერასოდეს ჩაეწერება.",
-      a_en: "moarge features a real-time Smart Slot Guard. When a client or staff selects a treatment, the engine calculates the exact duration, checks booked appointments, and blocks conflicting hours in real-time. Conflicting reservations are completely eliminated.",
+      a_ka: "ხელმისაწვდომი ժամები ითვალისწინებს სპეციალისტის განრიგს, სერვისის ხანგრძლივობას, შესვენებებს, დასვენების დროს და უკვე არსებულ ჯავშნებს. მონაცემთა ბაზა ერთ სპეციალისტზე აქტიურ დროის გადაფარვას კრძალავს.",
+      a_en: "Available times account for staff schedules, service duration, breaks, time off, and existing appointments. A database constraint prevents overlapping active appointments for the same staff member.",
     },
     {
       q_ka: "სად იგზავნება ონლაინ ჩაწერის ბმული და როგორ იყენებენ მას კლიენტები?",
@@ -64,8 +65,8 @@ export default function MoargeLandingPage() {
     {
       q_ka: "როგორ არის დაცული სალონისა და კლიენტების მონაცემები?",
       q_en: "How is salon and customer personal data secured?",
-      a_ka: "პლატფორმა იყენებს მონაცემთა ბაზის Row Level Security (RLS) არქიტექტურას. თითოეული სალონის მონაცემები სრულად იზოლირებულია, რაც გამორიცხავს სხვა მომხმარებლების მიერ თქვენი ინფორმაციის ნახვას. სისტემა სრულად შეესაბამება საქართველოს კანონს „პერსონალურ მონაცემთა დაცვის შესახებ“.",
-      a_en: "The platform is built on PostgreSQL Row Level Security (RLS). Each salon's customer records, schedules, and settings are fully isolated at the database level. Our infrastructure complies strictly with the Georgian Law on Personal Data Protection.",
+      a_ka: "სალონის მონაცემებზე წვდომა წევრობისა და მონაცემთა ბაზის Row Level Security წესებით იზღუდება. შეტყობინებები იგზავნება მხოლოდ შესაბამისი არხის თანხმობისას. შეამოწმეთ თქვენი ორგანიზაციის მონაცემთა დაცვის ვალდებულებები.",
+      a_en: "Salon records are restricted by membership and database Row Level Security policies. Notifications are sent only when the client has consented to that channel. Review your organization's data protection obligations.",
     },
   ];
 
@@ -77,17 +78,12 @@ export default function MoargeLandingPage() {
     applicationCategory: "BusinessApplication",
     offers: {
       "@type": "Offer",
-      price: "49",
+      price: String(BILLING_CONFIG.plans.business.monthlyGel),
       priceCurrency: "GEL",
       priceValidUntil: "2027-12-31",
     },
     description:
       "სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა საქართველოში.",
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      reviewCount: "84",
-    },
   };
 
   return (
@@ -184,8 +180,8 @@ export default function MoargeLandingPage() {
 
             <p className="text-sm sm:text-lg text-stone-600 max-w-2xl leading-relaxed">
               {t(
-                "პერსონალური ონლაინ ჯავშნის გვერდი თქვენი სალონის ბრენდით, ჭკვიანი გრაფიკი გადაფარვების გარეშე და ავტომატური პერსონალური შეხსენებები, რომლებიც თქვენს კლიენტებს დროულად და სტაბილურად აბრუნებს.",
-                "Launch a branded online booking page with custom GEL pricing, protect your schedule against double-bookings, and automatically retain clients with smart, timely care reminders."
+                "ონლაინ ჯავშნები, სპეციალისტების პარალელური განრიგები, კლიენტების ისტორია და თანხმობაზე დაფუძნებული ელფოსტისა და SMS შეხსენებები.",
+                "Online booking, parallel staff schedules, client history, and consent-based email and SMS reminders."
               )}
             </p>
 
@@ -228,27 +224,27 @@ export default function MoargeLandingPage() {
             {/* 3 Metrics */}
             <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-rose-100/80 text-xs">
               <div className="bg-white/60 sm:bg-transparent p-3 sm:p-0 rounded-2xl border sm:border-0 border-rose-100">
-                <div className="font-black text-2xl text-stone-900">+40%</div>
+                <div className="font-black text-2xl text-stone-900">24h / 2h</div>
                 <div className="font-bold text-stone-800 mt-0.5">
-                  {t("განმეორებითი ვიზიტები", "Repeat Bookings")}
+                  {t("შეხსენების დრო", "Reminder timing")}
                 </div>
                 <div className="text-stone-500 mt-0.5 text-[11px]">
-                  {t("ავტომატური შეხსენებების წყალობით", "Driven by smart care reminders")}
+                  {t("ვიზიტამდე", "Before appointments")}
                 </div>
               </div>
               <div className="bg-white/60 sm:bg-transparent p-3 sm:p-0 rounded-2xl border sm:border-0 border-rose-100">
-                <div className="font-black text-2xl text-stone-900">0%</div>
+                <div className="font-black text-2xl text-stone-900">{t("მრავალი", "Multiple")}</div>
                 <div className="font-bold text-stone-800 mt-0.5">
-                  {t("გრაფიკის გადაფარვა", "Schedule Conflicts")}
+                  {t("სპეციალისტი", "Staff calendars")}
                 </div>
                 <div className="text-stone-500 mt-0.5 text-[11px]">
-                  {t("Smart Slot Guard რეალურ დროში", "Real-time conflict prevention")}
+                  {t("პარალელური განრიგები", "Working in parallel")}
                 </div>
               </div>
               <div className="bg-white/60 sm:bg-transparent p-3 sm:p-0 rounded-2xl border sm:border-0 border-rose-100">
-                <div className="font-black text-2xl text-stone-900">100%</div>
+                <div className="font-black text-2xl text-stone-900">{BILLING_CONFIG.plans.business.staffIncluded}</div>
                 <div className="font-bold text-stone-800 mt-0.5">
-                  {t("თქვენზე მორგებული", "Custom to Your Salon")}
+                  {t("ბიზნეს გეგმაში", "Included in Business")}
                 </div>
                 <div className="text-stone-500 mt-0.5 text-[11px]">
                   {t("სერვისები, ფასები და საათები", "Services, GEL prices & hours")}
@@ -395,8 +391,8 @@ export default function MoargeLandingPage() {
                 </div>
                 <p className="text-emerald-800 text-[11px] leading-relaxed">
                   {t(
-                    "პროცედურის დასრულების შემდეგ სისტემა ავტომატურად ამზადებს და უგზავნის კლიენტს პერსონალურ მოწვევას მომდევნო ვიზიტზე — თქვენი ჩარევის გარეშე.",
-                    "Upon completion, moarge automatically sends a personalized follow-up invitation for their next appointment without manual effort."
+                    "სერვისის დასრულების შემდეგ moarge გეგმავს სერვისზე მორგებულ შემდგომ შეხსენებას. ვიზიტამდე შესაძლებელია 24-საათიანი და 2-საათიანი შეტყობინებები.",
+                    "After a service, moarge schedules its service-specific follow-up. Appointment reminders can be sent 24 hours and 2 hours before a visit."
                   )}
                 </p>
               </div>
@@ -487,7 +483,7 @@ export default function MoargeLandingPage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                  <span>{t("Smart Slot Guard რეალურ დროში ბლოკავს დაკავებულ დროს — 0% გადაფარვა.", "Smart Slot Guard locks booked hours in real-time — 0% scheduling conflicts.")}</span>
+                  <span>{t("სისტემა ამოწმებს განრიგს და მონაცემთა ბაზა კრძალავს ერთი სპეციალისტის აქტიური ჯავშნების გადაფარვას.", "Availability checks schedules, and the database prevents overlapping active appointments for the same staff member.")}</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <span className="text-emerald-600 font-bold shrink-0">✓</span>
@@ -535,7 +531,7 @@ export default function MoargeLandingPage() {
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-rose-50 text-xs font-semibold text-rose-600">
-              {t("დაყენების დრო: 2 წუთი", "Setup time: 2 minutes")}
+              {t("მზა სერვისის შაბლონები", "Ready-made service templates")}
             </div>
           </div>
 
@@ -554,12 +550,12 @@ export default function MoargeLandingPage() {
               <p className="mt-2.5 text-xs sm:text-sm text-stone-600 leading-relaxed">
                 {t(
                   "ჩასვით თქვენი ავტო-გენერირებული ონლაინ ჯავშნის ბმული Instagram Bio-ში ან Facebook-ზე. კლიენტები თავად ირჩევენ დროს და ეწერებიან 24/7.",
-                  "Add your booking link to your Instagram bio, Facebook, or send via SMS. Clients effortlessly choose free slots from their phone."
+                  "Share your booking link on social media. Clients choose from available services, staff, dates, and times on mobile."
                 )}
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-rose-50 text-xs font-semibold text-rose-600">
-              {t("მობილურზე 100% ადაპტირებული", "100% Mobile Optimized")}
+              {t("მობილურზე მორგებული ჯავშნის გვერდი", "Mobile-friendly booking page")}
             </div>
           </div>
 
@@ -577,13 +573,13 @@ export default function MoargeLandingPage() {
               </h3>
               <p className="mt-2.5 text-xs sm:text-sm text-stone-600 leading-relaxed">
                 {t(
-                  "ვიზიტის დასრულების შემდეგ სისტემა ავტომატურად უგზავნის კლიენტს მოწვევას შემდეგ ვიზიტზე. კლიენტი ბრუნდება თქვენი ჩარევის გარეშე!",
-                  "After treatment completion, moarge automatically emails the client a timely follow-up. Retain high-value clients effortlessly!"
+                  "შეხსენებები იგეგმება სერვისის recall პერიოდით და ვიზიტამდე 24 საათითა და 2 საათით ადრე.",
+                  "Reminders use each service's recall period and can also be scheduled 24 hours and 2 hours before appointments."
                 )}
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-rose-50 text-xs font-semibold text-emerald-700">
-              {t("+40% განმეორებითი ვიზიტები", "+40% Repeat Bookings")}
+              {t("არხის თანხმობის მიხედვით", "Based on channel consent")}
             </div>
           </div>
         </div>
@@ -696,8 +692,8 @@ export default function MoargeLandingPage() {
                 </h3>
                 <p className="mt-2 text-xs text-stone-600 leading-relaxed">
                   {t(
-                    "პერსონალური ელ-ფოსტის შეხსენებები, საიმედო მიწოდება, ცოცხალი ტესტირების შესაძლებლობა და სრული გამჭვირვალე ისტორია.",
-                    "Personalized email reminders, high deliverability, 1-click test emails, and complete audit tracking."
+                    "24-საათიანი და 2-საათიანი ვიზიტის შეხსენებები, სერვისის recall და თანხმობაზე დაფუძნებული ელფოსტა ან SMS.",
+                    "24-hour and 2-hour appointment reminders, service recall, and consent-based email or SMS."
                   )}
                 </p>
               </div>
@@ -733,17 +729,17 @@ export default function MoargeLandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          {/* Plan 1: Starter */}
+          {/* Plan 1: Trial */}
           <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-                {t("სატესტო", "Starter")}
+                {t("საცდელი პერიოდი", "Free trial")}
               </span>
               <h3 className="mt-1 text-xl sm:text-2xl font-bold text-stone-900">
-                {t("დამწყები", "Starter Plan")}
+                {t("ბიზნესის საცდელი", "Business trial")}
               </h3>
               <p className="mt-2 text-xs text-stone-500">
-                {t("ახალი და პატარა კაბინეტებისთვის", "For independent specialists")}
+                {t("ყველა ბიზნეს ფუნქცია 14 დღის განმავლობაში", "All Business features for 14 days")}
               </p>
               <div className="mt-6 flex items-baseline gap-1">
                 <span className="text-3xl sm:text-4xl font-black text-stone-900">0 ₾</span>
@@ -753,7 +749,7 @@ export default function MoargeLandingPage() {
               <ul className="mt-6 space-y-3 text-xs text-stone-600 border-t border-stone-100 pt-6">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{t("14-დღიანი სრული სატესტო წვდომა", "14-day full platform trial")}</span>
+                  <span>{t("ბარათის გარეშე, 14 დღე", "14 days, no card required")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -765,43 +761,47 @@ export default function MoargeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{t("1 სალონის სამუშაო სივრცე", "1 dedicated salon workspace")}</span>
+                  <span>{t(`${BILLING_CONFIG.plans.business.staffIncluded} სპეციალისტამდე და ${BILLING_CONFIG.plans.business.branches} ფილიალი`, `Up to ${BILLING_CONFIG.plans.business.staffIncluded} staff and ${BILLING_CONFIG.plans.business.branches} branch`)}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{t("მხოლოდ ელფოსტა, SMS არ იგზავნება", "Email only, SMS is not sent")}</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              href="/login"
+              href="/register"
               className="mt-8 w-full py-3 px-4 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-900 font-bold text-xs text-center transition"
             >
-              {t("უფასოდ დაწყება", "Start Free Trial")}
+              {t("საცდელი პერიოდის დაწყება", "Start free trial")}
             </Link>
           </div>
 
-          {/* Plan 2: Professional (Featured) */}
+          {/* Plan 2: Business (Featured) */}
           <div className="bg-gradient-to-b from-stone-900 to-stone-950 text-white rounded-3xl border border-stone-800 p-6 sm:p-8 flex flex-col justify-between shadow-2xl shadow-rose-950/20 relative">
             <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider shadow-md whitespace-nowrap">
               {t("ყველაზე პოპულარული", "Most Popular")}
             </span>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                {t("პროფესიონალი", "Professional")}
+                {t("ბიზნესი", "Business")}
               </span>
               <h3 className="mt-1 text-xl sm:text-2xl font-bold text-white">
-                {t("Pro სალონი", "Pro Salon Plan")}
+                {t("ბიზნეს გეგმა", "Business plan")}
               </h3>
               <p className="mt-2 text-xs text-stone-400">
-                {t("მოქმედი სილამაზისა და ესთეტიკის ცენტრებისთვის", "For active beauty & aesthetic salons")}
+                {t("ერთი ფილიალის სალონებისთვის", "For single-branch salons")}
               </p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-white">49 ₾</span>
+                <span className="text-3xl sm:text-4xl font-black text-white">{BILLING_CONFIG.plans.business.monthlyGel} ₾</span>
                 <span className="text-xs text-stone-400">/ {t("თვეში", "month")}</span>
               </div>
 
               <ul className="mt-6 space-y-3 text-xs text-stone-300 border-t border-stone-800 pt-6">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{t("შეუზღუდავი ონლაინ ჯავშნები", "Unlimited online bookings")}</span>
+                  <span>{t(`${BILLING_CONFIG.plans.business.staffIncluded} სპეციალისტი შედის, დამატებითი თითოეული თვეში ₾${BILLING_CONFIG.extraStaffMonthlyGel}`, `${BILLING_CONFIG.plans.business.staffIncluded} staff included, ₾${BILLING_CONFIG.extraStaffMonthlyGel}/month for each extra staff member`)}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
@@ -809,7 +809,7 @@ export default function MoargeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{t("სალონის სრული ბრენდინგი & ფასები (₾)", "Custom salon branding & GEL pricing")}</span>
+                  <span>{t(`თვეში ${BILLING_CONFIG.plans.business.sms} SMS შედის`, `${BILLING_CONFIG.plans.business.sms} SMS included each month`)}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
@@ -817,40 +817,40 @@ export default function MoargeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{t("პრიორიტეტული მხარდაჭერა", "Priority customer support")}</span>
+                  <span>{t(`SMS ზედმეტი ხარჯის ლიმიტი ₾${BILLING_CONFIG.defaultSmsOverageCapGel}`, `SMS overage cap of ₾${BILLING_CONFIG.defaultSmsOverageCapGel}`)}</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              href="/login"
+              href="/register"
               className="mt-8 w-full py-3.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs text-center shadow-lg shadow-rose-600/30 transition cursor-pointer"
             >
-              {t("დაიწყეთ 14-დღიანი ტესტი", "Start 14-Day Free Trial")}
+              {t("დაიწყეთ 14-დღიანი ტესტი", "Start 14-day free trial")}
             </Link>
           </div>
 
-          {/* Plan 3: Studio / Network */}
+          {/* Plan 3: Multi-branch */}
           <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-                {t("ქსელი", "Chain / Enterprise")}
+                {t("მრავალი ფილიალი", "Multi-branch")}
               </span>
               <h3 className="mt-1 text-xl sm:text-2xl font-bold text-stone-900">
-                {t("სტუდიო & ქსელი", "Studio & Chain Plan")}
+                {t("მრავალფილიალიანი გეგმა", "Multi-branch plan")}
               </h3>
               <p className="mt-2 text-xs text-stone-500">
-                {t("მრავალფილიალიანი სალონებისთვის", "For multi-location salon brands")}
+                {t(`მრავალი ფილიალისა და ${BILLING_CONFIG.plans.multi_branch.staffLimit}-მდე სპეციალისტისთვის`, `For multiple branches and up to ${BILLING_CONFIG.plans.multi_branch.staffLimit} staff`)}
               </p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-stone-900">99 ₾</span>
+                <span className="text-3xl sm:text-4xl font-black text-stone-900">{BILLING_CONFIG.plans.multi_branch.monthlyGel} ₾</span>
                 <span className="text-xs text-stone-500">/ {t("თვეში", "month")}</span>
               </div>
 
               <ul className="mt-6 space-y-3 text-xs text-stone-600 border-t border-stone-100 pt-6">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{t("ყველაფერი Pro პაკეტიდან", "Everything in Pro plan")}</span>
+                  <span>{t(`თვეში ${BILLING_CONFIG.plans.multi_branch.sms.toLocaleString("en-US")} SMS შედის`, `${BILLING_CONFIG.plans.multi_branch.sms.toLocaleString("en-US")} SMS included each month`)}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -858,23 +858,26 @@ export default function MoargeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{t("შეუზღუდავი თანამშრომლები", "Unlimited staff logins & roles")}</span>
+                  <span>{t(`${BILLING_CONFIG.plans.multi_branch.staffLimit}-მდე სპეციალისტი`, `Up to ${BILLING_CONFIG.plans.multi_branch.staffLimit} staff`)}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{t("ინდივიდუალური დომენის მხარდაჭერა", "Custom domain support")}</span>
+                  <span>{t("დამატებითი სპეციალისტი ამ გეგმაში არ ემატება", "No extra staff charge within the plan limit")}</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              href="/login"
+              href="/register"
               className="mt-8 w-full py-3 px-4 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-900 font-bold text-xs text-center transition"
             >
-              {t("დაკავშირება & გააქტიურება", "Contact & Activate")}
+              {t("საცდელი პერიოდის დაწყება", "Start free trial")}
             </Link>
           </div>
         </div>
+        <p className="mx-auto mt-6 max-w-4xl text-center text-xs leading-relaxed text-stone-500">
+          {t(`3, 6 და 12 თვის წინასწარ გადახდისას ძირითადი საფასურის ფასდაკლებაა ${BILLING_CONFIG.prepaidDiscounts[3]}%, ${BILLING_CONFIG.prepaidDiscounts[6]}% და ${BILLING_CONFIG.prepaidDiscounts[12]}%. დამატებითი სპეციალისტები და SMS მოხმარება ყოველთვიურად ირიცხება. ლიმიტს ზემოთ თითო SMS ₾${BILLING_CONFIG.smsOveragePriceGel.toFixed(2)} ღირს. წინასწარი პაკეტის ფასი არის ₾${BILLING_CONFIG.smsPackPriceGel.toFixed(2)} თითო SMS-ზე, მინიმუმ ${BILLING_CONFIG.smsPackMinimum}. ბარათით რეალური გადახდა ჯერ არ არის ჩართული.`, `Prepaid terms of 3, 6, and 12 months discount the base price by ${BILLING_CONFIG.prepaidDiscounts[3]}%, ${BILLING_CONFIG.prepaidDiscounts[6]}%, and ${BILLING_CONFIG.prepaidDiscounts[12]}%. Extra staff and SMS usage are billed monthly. SMS over quota costs ₾${BILLING_CONFIG.smsOveragePriceGel.toFixed(2)} each. Prepaid packs cost ₾${BILLING_CONFIG.smsPackPriceGel.toFixed(2)} per SMS, with a minimum of ${BILLING_CONFIG.smsPackMinimum}. Live card payments are not enabled yet.`)}
+        </p>
       </section>
 
       {/* FAQ Section */}
@@ -968,8 +971,8 @@ export default function MoargeLandingPage() {
             </Link>
             <p className="text-stone-500 text-xs leading-relaxed max-w-sm">
               {t(
-                "moarge არის სალონების მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა. ჭკვიანი გრაფიკი, ნულოვანი გადაფარვა და გაზრდილი განმეორებითი ვიზიტები.",
-                "moarge is Georgia's premier salon booking and automated client retention platform. Smart scheduling, zero conflicts, and elevated repeat bookings."
+                "moarge აერთიანებს ონლაინ ჯავშნებს, სპეციალისტების განრიგს, კლიენტების ბაზას და თანხმობაზე დაფუძნებულ ელფოსტასა და SMS შეხსენებებს.",
+                "moarge brings together online booking, staff schedules, client records, and consent-based email and SMS reminders."
               )}
             </p>
             <div className="text-[11px] text-stone-400">

@@ -31,6 +31,7 @@ interface AppShellProps {
   timezone: string;
   autoRemindersEnabled: boolean;
   dryRunMode: boolean;
+  emailDeliveryConfigured: boolean;
   staffName: string;
   staffEmail: string;
   canManageData: boolean;
@@ -44,6 +45,7 @@ export default function AppShell({
   timezone,
   autoRemindersEnabled,
   dryRunMode,
+  emailDeliveryConfigured,
   staffName,
   staffEmail,
   canManageData,
@@ -140,10 +142,15 @@ export default function AppShell({
                 <ShieldAlert className="w-3 h-3 text-amber-600" />
                 {t("სატესტო რეჟიმი (Dry-Run)", "Dry-Run Mode")}
               </span>
-            ) : (
+            ) : emailDeliveryConfigured ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-medium">
                 <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                {t("აქტიური Resend", "Live Resend")}
+                {t("ელფოსტა მზადაა", "Email ready")}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium">
+                <ShieldAlert className="w-3 h-3 text-amber-600" />
+                {t("ელფოსტა გამორთულია", "Email not configured")}
               </span>
             )}
           </div>

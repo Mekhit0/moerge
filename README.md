@@ -60,6 +60,7 @@ The optional `supabase/seed.sql` contains synthetic local salon and client recor
 | `TEST_STAFF_EMAIL` | No | Supabase integration tests | Test environment only |
 | `TEST_STAFF_PASSWORD` | No | Supabase integration tests | Test environment only |
 | `TEST_STAFF_ROLE` | No | Enables the staff authorization integration test when set to `staff` | Test environment only |
+| `RUN_STAGING_BOOKING_TESTS` | No | Set to `true` to enable concurrency tests with a matching staging URL and service-role key | Test environment only |
 
 Missing required server keys fail closed. Never put service, Resend, webhook, cron, or Turnstile secret values in a `NEXT_PUBLIC_` variable.
 
@@ -101,7 +102,7 @@ npm run lint
 npm test
 ```
 
-Supabase integration tests are skipped unless the Supabase test URL/key are configured. The staff settings test also requires a dedicated test account with the `staff` membership role. The booking concurrency test runs only when `RUN_STAGING_BOOKING_TESTS=true` and the configured URL is the designated staging project; it creates and removes isolated fixture data.
+Vitest reads its environment from the process and does not automatically load `.env.local`. The Supabase RLS/RPC tests require the confirmed staging URL and its matching anon key. The two staff membership tests also require a dedicated test account with an active `staff` role. The concurrency test additionally requires the matching staging service-role key and `RUN_STAGING_BOOKING_TESTS=true`; it creates and removes isolated fixture data. Do not run these integration tests against production.
 
 ## Phase 5 performance and security review
 
