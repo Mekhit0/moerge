@@ -1,6 +1,6 @@
 import React from "react";
 import { redirect } from "next/navigation";
-import { createServiceClient, getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import AppShell from "@/components/AppShell";
 
 export default async function DashboardLayout({
@@ -14,8 +14,11 @@ export default async function DashboardLayout({
     redirect("/login");
   }
   if (!ctx.settings.onboarding_completed_at) redirect("/onboarding");
-  const db = createServiceClient();
-  const { data: subscription } = await db.from("subscriptions").select("status,trial_ends_at,grace_ends_at").eq("salon_id",ctx.salonId).maybeSingle();
+  const { data: subscription } = await ctx.supabase
+    .from("subscriptions")
+    .select("status,trial_ends_at,grace_ends_at")
+    .eq("salon_id", ctx.salonId)
+    .maybeSingle();
   const readOnly = !(subscription?.status === "active" || (subscription?.status === "trialing" && new Date(subscription.trial_ends_at).getTime() > Date.now()) || (subscription?.status === "past_due" && subscription.grace_ends_at && new Date(subscription.grace_ends_at).getTime() > Date.now()));
 
   return (
