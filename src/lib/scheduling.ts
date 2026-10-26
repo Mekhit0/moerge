@@ -19,14 +19,14 @@ export interface CalculatedReminderSchedule {
 }
 
 /**
- * Adds `days` calendar days to a YYYY-MM-DD date string deterministically.
+ * Shifts a YYYY-MM-DD calendar date by a bounded number of days deterministically.
  */
 export function addCalendarDays(dateStr: string, days: number): string {
   if (!isValidCalendarDate(dateStr)) {
     throw new Error(`Invalid treatment date "${dateStr}". Expected YYYY-MM-DD.`);
   }
-  if (!Number.isInteger(days) || days < 0 || days > 365) {
-    throw new Error(`Invalid reminder interval "${days}". Expected integer between 0 and 365.`);
+  if (!Number.isInteger(days) || days < -365 || days > 365) {
+    throw new Error(`Invalid calendar day offset "${days}". Expected integer between -365 and 365.`);
   }
 
   const [year, month, day] = dateStr.split("-").map(Number);

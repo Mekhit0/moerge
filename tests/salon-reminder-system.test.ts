@@ -45,6 +45,11 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       expect(addCalendarDays("2026-05-10", 21)).toBe("2026-05-31");
     });
 
+    it("supports looking back across month and year boundaries", () => {
+      expect(addCalendarDays("2026-10-27", -180)).toBe("2026-04-30");
+      expect(addCalendarDays("2026-01-01", -1)).toBe("2025-12-31");
+    });
+
     it("rolls over month and year boundaries accurately", () => {
       expect(addCalendarDays("2026-10-20", 21)).toBe("2026-11-10");
       expect(addCalendarDays("2026-12-15", 21)).toBe("2027-01-05");
