@@ -101,7 +101,7 @@ export const appointmentInputSchema = z.object({
     .refine((v) => TIME_REGEX.test(v), "Treatment time must be in HH:MM format."),
   treatment_type: z.string().trim().min(1, "Service / Treatment type is required"),
   status: z
-    .enum(["scheduled", "completed", "missed", "canceled"])
+    .enum(["scheduled", "arrived", "completed", "no_show", "missed", "canceled"])
     .default("scheduled"),
   notes: z
     .string()
@@ -262,10 +262,6 @@ export const salonSettingsSchema = z
       .max(180)
       .optional()
       .default(60),
-    custom_services: z
-      .array(customBookingServiceSchema)
-      .optional()
-      .default([]),
     send_booking_confirmation_email: z.boolean().optional().default(true),
   })
   .superRefine((data, ctx) => {
@@ -301,14 +297,16 @@ export const publicBookingInputSchema = z.object({
     .string()
     .trim()
     .transform((v) => v.toLowerCase())
-    .refine(isValidEmailAddress, "Please enter a valid email address."),
+    .refine((v) => !v || isValidEmailAddress(v), "Please enter a valid email address.")
+    .optional()
+    .nullable()
+    .transform((v) => v || null),
   phone: z
     .string()
     .trim()
+    .min(5, "Please enter a valid phone number.")
     .max(40, "Phone number cannot exceed 40 characters.")
-    .optional()
-    .nullable()
-    .transform((v) => (v && v.length > 0 ? v : null)),
+    .transform((v) => v.trim()),
   treatment_date: z
     .string()
     .trim()
@@ -320,6 +318,7 @@ export const publicBookingInputSchema = z.object({
     .refine((v) => TIME_REGEX.test(v), "Please select a valid appointment time."),
   treatment_type: z.string().trim().min(1, "Please select a service."),
   service_id: z.string().trim().min(1, "Please select an available service."),
+  staff_id: z.string().uuid().optional().nullable(),
   notes: z
     .string()
     .trim()

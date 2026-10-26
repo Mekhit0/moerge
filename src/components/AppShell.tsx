@@ -15,6 +15,8 @@ import {
   Menu,
   X,
   Clock,
+  Scissors,
+  Calendar,
   ShieldAlert,
   CheckCircle2,
 } from "lucide-react";
@@ -72,6 +74,10 @@ export default function AppShell({
       label: t("პარამეტრები", "Settings"),
       icon: Settings,
     },
+    { href: "/settings/staff", label: t("სპეციალისტები", "Staff"), icon: Users },
+    { href: "/settings/services", label: t("სერვისები", "Services"), icon: Scissors },
+    { href: "/settings/schedules", label: t("განრიგი", "Schedules"), icon: Clock },
+    { href: "/settings/time-off", label: t("დასვენების დრო", "Time off"), icon: Calendar },
   ];
 
   async function handleSignOut() {

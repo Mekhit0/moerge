@@ -16,4 +16,15 @@
 
 The former Phase 0 source version `20261026104942` was replaced by `20261026112314_phase0_security_hardening.sql` while the migration set was reordered.
 
-The source files for those replaced versions were removed from this directory. Existing databases may have the old versions in their migration history; the consolidated baseline is not a migration to replay on them. Reconcile migration history with the database owner before applying pending migrations. No hosted database was changed as part of this squash.
+Phase 2 booking migrations add the multi-staff relational model and booking RPCs:
+
+- `20261026114009_restrict_cron_setup_rpc.sql`: restricts cron setup RPC access.
+- `20261026114315_phase2_staff_booking_core.sql`: staff, services, schedules, resources, appointment snapshots, availability, and atomic appointment creation.
+- `20261026115928_phase2_booking_rpc_access_fix.sql`: RPC access and public booking compatibility.
+- `20261026145024_phase2_staff_admin_policies_dst.sql`: management policies and timezone-aware availability.
+- `20261026145316_phase2_optional_email_consent.sql`: optional booking email consent.
+- `20261026145630_phase2_signup_booking_defaults.sql`: starter staff, service, and schedules for new salons.
+- `20261026145931_phase2_dst_duration_math.sql`: elapsed-time duration math across DST transitions.
+- `20261026150216_phase2_drop_legacy_service_catalog.sql`: replaces JSONB catalog use and drops `salon_settings.custom_services`.
+
+The source files for those replaced versions were removed from this directory. Existing databases may have the old versions in their migration history; the consolidated baseline is not a migration to replay on them. Reconcile migration history with the database owner before applying pending migrations. Phase 0 and Phase 2 migrations were applied to the explicitly designated staging project only; production was not changed.

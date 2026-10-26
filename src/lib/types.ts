@@ -14,7 +14,7 @@ export type StandardTreatmentType =
 
 export type TreatmentType = StandardTreatmentType | (string & {});
 
-export type AppointmentStatus = "scheduled" | "completed" | "missed" | "canceled";
+export type AppointmentStatus = "scheduled" | "arrived" | "completed" | "no_show" | "missed" | "canceled";
 
 export type ReminderStatus =
   | "scheduled"
@@ -112,7 +112,7 @@ export interface Client {
   id: string;
   salon_id: string;
   full_name: string;
-  email: string;
+  email: string | null;
   normalized_email?: string;
   phone: string | null;
   notes: string | null;
@@ -146,6 +146,12 @@ export interface Appointment {
   service_name?: string | null;
   price_gel?: number | null;
   duration_minutes?: number | null;
+  staff_id?: string;
+  resource_id?: string | null;
+  starts_at?: string;
+  ends_at?: string;
+  price_snapshot?: number | null;
+  duration_snapshot_minutes?: number | null;
   client?: Pick<Client, "id" | "full_name" | "email" | "phone" | "is_archived" | "email_consent">;
   reminders?: Reminder[];
 }

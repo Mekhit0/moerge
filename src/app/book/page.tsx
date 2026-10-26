@@ -62,6 +62,7 @@ interface PublicSalonInfo {
   working_hours_end?: string;
   slot_interval_minutes?: number;
   custom_services?: CustomBookingService[];
+  staff?: Array<{ id: string; full_name: string; color: string; service_ids: string[] }>;
   availability?: {
     date: string;
     booked_times: string[];
@@ -73,6 +74,7 @@ interface PublicSalonInfo {
       available: boolean;
       conflicting_time: string | null;
     }>;
+    slots?: Array<{ slot_time: string; staff_id: string; staff_name: string; starts_at: string; ends_at: string }>;
   };
 }
 
@@ -120,6 +122,8 @@ function PublicBookingFormContent() {
   const [selectedServiceId, setSelectedServiceId] = useState<string>(
     DEFAULT_CUSTOM_SERVICES[0].id
   );
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [availableStaffSlots, setAvailableStaffSlots] = useState<Array<{ slot_time: string; staff_id: string; staff_name: string }>>([]);
   const [fullName, setFullName] = useState(prefillName);
   const [email, setEmail] = useState(prefillEmail);
   const [phone, setPhone] = useState("");
@@ -200,12 +204,19 @@ function PublicBookingFormContent() {
         const params = new URLSearchParams();
         if (salonSlugParam) params.set("salon", salonSlugParam);
         if (dateStr) params.set("date", dateStr);
+        if (selectedServiceId) params.set("service_id", selectedServiceId);
+        if (selectedStaffId) params.set("staff_id", selectedStaffId);
         const res = await fetch(`/api/public/book?${params.toString()}`);
         const data: PublicSalonInfo = await res.json();
         if (data?.found) {
           setSalonInfo(data);
           const times = data.availability?.booked_times ?? [];
           setBookedTimesOnDate(times);
+          setAvailableStaffSlots(data.availability?.slots ?? []);
+          const services = data.custom_services ?? [];
+          if (services.length && !services.some((service) => service.id === selectedServiceId)) {
+            setSelectedServiceId(services[0].id);
+          }
         }
       } catch {
         // Keep existing state on network hiccup
@@ -213,12 +224,12 @@ function PublicBookingFormContent() {
         setLoadingAvailability(false);
       }
     },
-    [salonSlugParam, isDemo, t]
+    [salonSlugParam, isDemo, t, selectedServiceId, selectedStaffId]
   );
 
   useEffect(() => {
     fetchAvailability(treatmentDate);
-  }, [treatmentDate, fetchAvailability]);
+  }, [treatmentDate, selectedServiceId, selectedStaffId, fetchAvailability]);
 
   useEffect(() => {
     if (isDemo || !turnstileSiteKey) return;
@@ -240,16 +251,21 @@ function PublicBookingFormContent() {
   }, [isDemo, turnstileSiteKey]);
 
   // Evaluate smart availability in real time for the selected time and all dynamic salon slots
-  const smartAvailability = useMemo(
-    () =>
-      evaluateSmartSlotAvailability(
+  const smartAvailability = useMemo(() => {
+    const legacy = evaluateSmartSlotAvailability(
         treatmentTime,
         bookedTimesOnDate,
-        45,
+        activeService?.duration_minutes ?? 45,
         dynamicCandidateSlots
-      ),
-    [treatmentTime, bookedTimesOnDate, dynamicCandidateSlots]
-  );
+      );
+    if (isDemo) return legacy;
+    const visibleSlots = availableStaffSlots.filter((slot) => !selectedStaffId || slot.staff_id === selectedStaffId);
+    const times = visibleSlots.map((slot) => slot.slot_time.slice(0, 5));
+    return { ...legacy, isAvailable: times.includes(treatmentTime), availableSlots: times, standardSlots: times.map((time) => ({ time, available: true, conflicting_time: null })) };
+  }, [treatmentTime, bookedTimesOnDate, dynamicCandidateSlots, activeService, isDemo, availableStaffSlots, selectedStaffId]);
+  const timeSlots = isDemo ? dynamicCandidateSlots : Array.from(new Set(availableStaffSlots
+    .filter((slot) => !selectedStaffId || slot.staff_id === selectedStaffId)
+    .map((slot) => slot.slot_time.slice(0, 5))));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -308,6 +324,7 @@ function PublicBookingFormContent() {
           treatment_time: treatmentTime,
           treatment_type: activeService ? (activeService.id || activeService.type) : "custom",
           service_id: activeService?.id || null,
+          staff_id: selectedStaffId,
           turnstile_token: turnstileToken,
           notes: composedNotes.slice(0, 1000) || null,
           email_consent: emailConsent,
@@ -671,6 +688,17 @@ function PublicBookingFormContent() {
                     );
                   })}
                 </div>
+                {!isDemo && (salonInfo.staff?.length ?? 0) > 0 && (
+                  <div className="mt-5">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-stone-600 mb-2">{t("სპეციალისტი", "Staff member")}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => setSelectedStaffId(null)} className={`px-3 py-2 rounded-xl border text-xs font-semibold ${selectedStaffId === null ? "bg-rose-600 text-white border-rose-600" : "bg-white text-stone-700 border-stone-200"}`}>{t("ნებისმიერი ხელმისაწვდომი", "Any available")}</button>
+                      {(salonInfo.staff ?? []).filter((member) => member.service_ids.includes(activeService?.id ?? "")).map((member) => (
+                        <button key={member.id} type="button" onClick={() => setSelectedStaffId(member.id)} className={`px-3 py-2 rounded-xl border text-xs font-semibold ${selectedStaffId === member.id ? "bg-rose-600 text-white border-rose-600" : "bg-white text-stone-700 border-stone-200"}`}>{member.full_name}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Smart Date & Time Availability Selector */}
@@ -835,7 +863,7 @@ function PublicBookingFormContent() {
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {dynamicCandidateSlots.map((slot) => {
+                    {timeSlots.map((slot) => {
                       const slotStatus = smartAvailability.standardSlots.find(
                         (s) => s.time === slot
                       );
@@ -1003,13 +1031,12 @@ function PublicBookingFormContent() {
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
-                    {t("ელ-ფოსტის მისამართი *", "Email Address *")}
+                    {t("ელ-ფოსტის მისამართი (არასავალდებულო)", "Email Address (Optional)")}
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                     <input
                       type="email"
-                      required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="nino.beridze@gmail.com"
@@ -1021,14 +1048,15 @@ function PublicBookingFormContent() {
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
                     {t(
-                      "ტელეფონის ნომერი (არასავალდებულო)",
-                      "Phone Number (Optional)"
+                      "ტელეფონის ნომერი *",
+                      "Phone Number *"
                     )}
                   </label>
                   <div className="relative">
                     <Phone className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                     <input
                       type="tel"
+                      required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+995 555 12 34 56"

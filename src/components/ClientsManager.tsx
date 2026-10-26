@@ -60,7 +60,7 @@ export default function ClientsManager({
         const q = search.trim().toLowerCase();
         return (
           c.full_name.toLowerCase().includes(q) ||
-          c.email.toLowerCase().includes(q) ||
+          (c.email ?? "").toLowerCase().includes(q) ||
           (c.phone ?? "").toLowerCase().includes(q)
         );
       }
@@ -82,7 +82,7 @@ export default function ClientsManager({
   function openEditClientModal(client: Client) {
     setEditingClient(client);
     setFullName(client.full_name);
-    setEmail(client.email);
+    setEmail(client.email ?? "");
     setPhone(client.phone ?? "");
     setNotes(client.notes ?? "");
     setEmailConsent(client.email_consent);

@@ -132,7 +132,6 @@ export async function POST(request: NextRequest) {
       working_hours_start: parsed.data.working_hours_start,
       working_hours_end: parsed.data.working_hours_end,
       slot_interval_minutes: parsed.data.slot_interval_minutes,
-      custom_services: parsed.data.custom_services,
       send_booking_confirmation_email:
         parsed.data.send_booking_confirmation_email ?? true,
     })

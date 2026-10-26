@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   CalendarCheck2,
@@ -53,6 +53,7 @@ interface AppointmentsManagerProps {
   workingHoursStart?: string;
   workingHoursEnd?: string;
   slotIntervalMinutes?: number;
+  staffMembers?: Array<{ id: string; full_name: string; is_active: boolean }>;
 }
 
 export default function AppointmentsManager({
@@ -64,6 +65,7 @@ export default function AppointmentsManager({
   workingHoursStart = "10:00",
   workingHoursEnd = "20:00",
   slotIntervalMinutes = 60,
+  staffMembers = [],
 }: AppointmentsManagerProps) {
   const { lang, t } = useLanguage();
   const router = useRouter();
@@ -100,9 +102,11 @@ export default function AppointmentsManager({
   const [newClientPhone, setNewClientPhone] = useState("+995 ");
 
   const [treatmentDate, setTreatmentDate] = useState(
-    new Date().toISOString().slice(0, 10)
+    searchParams.get("date") ?? new Date().toISOString().slice(0, 10)
   );
-  const [treatmentTime, setTreatmentTime] = useState("11:00");
+  const [treatmentTime, setTreatmentTime] = useState(searchParams.get("time") ?? "11:00");
+  const [selectedStaffId, setSelectedStaffId] = useState(searchParams.get("staffId") ?? "");
+  const [serverSlots, setServerSlots] = useState<Array<{ slot_time: string; staff_id: string }>>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [treatmentType, setTreatmentType] = useState<TreatmentType>("laser_epilation");
   const [serviceName, setServiceName] = useState<string>("");
@@ -110,7 +114,7 @@ export default function AppointmentsManager({
   const [serviceDuration, setServiceDuration] = useState<number>(45);
   const [isEpilation, setIsEpilation] = useState<boolean>(true);
 
-  const [status, setStatus] = useState<AppointmentStatus>("completed");
+  const [status, setStatus] = useState<AppointmentStatus>("scheduled");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -141,33 +145,38 @@ export default function AppointmentsManager({
     return active.filter(
       (c) =>
         c.full_name.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q) ||
+        (c.email ?? "").toLowerCase().includes(q) ||
         (c.phone && c.phone.toLowerCase().includes(q))
     );
   }, [clients, clientId, clientSearch]);
 
   // Smart slot availability for the date selected inside the modal
-  const bookedTimesOnModalDate = useMemo(() => {
-    return appointments
-      .filter(
-        (a) =>
-          a.treatment_date === treatmentDate &&
-          (a.status === "scheduled" || a.status === "completed") &&
-          (!editingAppt || a.id !== editingAppt.id)
-      )
-      .map((a) => String(a.treatment_time).slice(0, 5));
-  }, [appointments, treatmentDate, editingAppt]);
+  useEffect(() => {
+    if (!modalOpen || !selectedServiceId) return;
+    const params = new URLSearchParams({ date: treatmentDate, service_id: selectedServiceId });
+    if (selectedStaffId) params.set("staff_id", selectedStaffId);
+    if (editingAppt?.id) params.set("exclude_appointment_id", editingAppt.id);
+    let active = true;
+    void fetch(`/api/availability?${params}`).then((response) => response.json()).then((result) => {
+      if (!active) return;
+      const slots = Array.isArray(result.slots) ? result.slots as Array<{ slot_time: string; staff_id: string }> : [];
+      setServerSlots(slots);
+    }).catch(() => { if (active) setServerSlots([]); });
+    return () => { active = false; };
+  }, [modalOpen, treatmentDate, selectedServiceId, selectedStaffId, editingAppt?.id]);
 
-  const modalSmartAvailability = useMemo(
-    () =>
-      evaluateSmartSlotAvailability(
-        treatmentTime,
-        bookedTimesOnModalDate,
-        serviceDuration || 45,
-        dynamicSlots
-      ),
-    [treatmentTime, bookedTimesOnModalDate, dynamicSlots, serviceDuration]
-  );
+  const modalTimes = useMemo(() => Array.from(new Set(serverSlots
+    .filter((slot) => !selectedStaffId || slot.staff_id === selectedStaffId)
+    .map((slot) => slot.slot_time.slice(0, 5)))), [serverSlots, selectedStaffId]);
+  useEffect(() => {
+    if (modalOpen && modalTimes.length > 0 && !modalTimes.includes(treatmentTime)) setTreatmentTime(modalTimes[0]);
+  }, [modalOpen, modalTimes, treatmentTime]);
+  const modalSmartAvailability = useMemo(() => ({
+    availableSlots: modalTimes,
+    standardSlots: modalTimes.map((time) => ({ time, available: true, conflicting_time: null })),
+    isAvailable: modalTimes.includes(treatmentTime),
+    conflictingTime: null as string | null,
+  }), [modalTimes, treatmentTime]);
 
   function openNewModal(
     defaultDate?: string,
@@ -263,6 +272,7 @@ export default function AppointmentsManager({
     );
 
     setStatus(appt.status);
+    setSelectedStaffId((appt as Appointment & { staff_id?: string }).staff_id ?? "");
     setNotes(appt.notes ?? "");
     setFormError(null);
     setModalOpen(true);
@@ -278,6 +288,7 @@ export default function AppointmentsManager({
         treatment_date: treatmentDate,
         treatment_time: treatmentTime,
         treatment_type: treatmentType,
+        staff_id: selectedStaffId || null,
         service_id: selectedServiceId || null,
         service_name: serviceName || null,
         price_gel: servicePrice ?? null,
@@ -643,7 +654,7 @@ export default function AppointmentsManager({
           {/* Status Filter Bar */}
           <div className="flex flex-wrap items-center gap-2">
             {(
-              ["all", "completed", "scheduled", "missed", "canceled"] as const
+              ["all", "completed", "arrived", "scheduled", "no_show", "missed", "canceled"] as const
             ).map((st) => (
               <button
                 key={st}
@@ -837,6 +848,11 @@ export default function AppointmentsManager({
                                   </button>
                                   <button
                                     type="button"
+                                    onClick={() => handleQuickStatusChange(appt, "arrived")}
+                                    className="px-2.5 py-1.5 rounded-xl border border-sky-200 bg-sky-50 text-sky-800 text-xs font-semibold"
+                                  >{t("მივიდა", "Arrived")}</button>
+                                  <button
+                                    type="button"
                                     onClick={() =>
                                       handleQuickStatusChange(appt, "missed")
                                     }
@@ -844,6 +860,7 @@ export default function AppointmentsManager({
                                   >
                                     {t("გაცდენა", "Missed")}
                                   </button>
+                                  <button type="button" onClick={() => handleQuickStatusChange(appt, "no_show")} className="px-2.5 py-1.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs font-semibold">{t("არ გამოცხადდა", "No show")}</button>
                                 </>
                               )}
                               <button
@@ -1150,6 +1167,13 @@ export default function AppointmentsManager({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">{t("სპეციალისტი", "Staff member")}</label>
+                  <select value={selectedStaffId} onChange={(event) => setSelectedStaffId(event.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-stone-200 text-sm bg-white">
+                    <option value="">{t("ნებისმიერი ხელმისაწვდომი", "Any available")}</option>
+                    {staffMembers.filter((member) => member.is_active).map((member) => <option key={member.id} value={member.id}>{member.full_name}</option>)}
+                  </select>
+                </div>
+                <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-stone-600 mb-1">
                     {t("ვიზიტის თარიღი *", "Treatment Date *")}
                   </label>
@@ -1179,7 +1203,8 @@ export default function AppointmentsManager({
                     className={`w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 ${
                       modalSmartAvailability.isAvailable ||
                       status === "canceled" ||
-                      status === "missed"
+                      status === "missed" ||
+                      status === "no_show"
                         ? "border-stone-200 focus:ring-rose-500"
                         : "border-red-400 bg-red-50/40 text-red-900 focus:ring-red-500"
                     }`}
@@ -1206,11 +1231,8 @@ export default function AppointmentsManager({
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
-                  {dynamicSlots.map((slot) => {
-                    const slotObj = modalSmartAvailability.standardSlots.find(
-                      (s) => s.time === slot
-                    );
-                    const isFree = slotObj ? slotObj.available : true;
+                  {modalTimes.map((slot) => {
+                    const isFree = true;
                     const isSelected = treatmentTime === slot;
                     return (
                       <button
@@ -1236,6 +1258,7 @@ export default function AppointmentsManager({
                     );
                   })}
                 </div>
+                {modalTimes.length === 0 && <p className="text-xs text-amber-800">{t("არჩეული სერვისისთვის ამ თარიღზე თავისუფალი დრო არ არის.", "No available time for this service on the selected date.")}</p>}
 
                 {!modalSmartAvailability.isAvailable &&
                   status !== "canceled" &&
@@ -1346,10 +1369,14 @@ export default function AppointmentsManager({
                         "Completed (Schedules Auto-Reminder)"
                       )}
                     </option>
+                    <option value="arrived">{t("მივიდა", "Arrived")}</option>
                     <option value="scheduled">
                       {t("დაგეგმილი (მომავალი)", "Scheduled (Upcoming)")}
                     </option>
+                    <option value="arrived">{t("მივიდა", "Arrived")}</option>
                     <option value="missed">{t("გაცდენილი", "Missed")}</option>
+                    <option value="no_show">{t("არ გამოცხადდა", "No show")}</option>
+                    <option value="no_show">{t("არ გამოცხადდა", "No show")}</option>
                     <option value="canceled">
                       {t("გაუქმებული", "Canceled")}
                     </option>

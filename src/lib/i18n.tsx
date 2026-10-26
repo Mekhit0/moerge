@@ -112,13 +112,17 @@ export const APPOINTMENT_STATUS_I18N: Record<
 > = {
   ka: {
     scheduled: "დაგეგმილი",
+    arrived: "მივიდა",
     completed: "დასრულებული",
+    no_show: "არ გამოცხადდა",
     missed: "გაცდენილი",
     canceled: "გაუქმებული",
   },
   en: {
     scheduled: "Scheduled",
+    arrived: "Arrived",
     completed: "Completed",
+    no_show: "No show",
     missed: "Missed",
     canceled: "Canceled",
   },

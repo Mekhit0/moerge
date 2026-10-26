@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
-import { appointmentInputSchema, isEpilationTreatment } from "@/lib/validation";
-import {
-  addCalendarDays,
-  evaluateSmartSlotAvailability,
-  planReminderReconciliation,
-} from "@/lib/scheduling";
+import { createServiceClient, getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { appointmentInputSchema } from "@/lib/validation";
+import { addCalendarDays, planReminderReconciliation } from "@/lib/scheduling";
 import { Reminder } from "@/lib/types";
 
 export async function PATCH(
@@ -62,36 +58,23 @@ export async function PATCH(
     );
   }
 
-  // Resolve custom service metadata if present in salon catalog
-  const customServices = Array.isArray(ctx.settings.custom_services)
-    ? ctx.settings.custom_services
-    : [];
-  const matchedService = customServices.find(
-    (s) =>
-      s.id === parsed.data.service_id ||
-      s.id === parsed.data.treatment_type ||
-      s.type === parsed.data.treatment_type
-  );
+  const wantedService = parsed.data.service_id ?? existingAppt.service_id;
+  const { data: salonServices } = await ctx.supabase.from("services").select("id,legacy_id,name_ka,name_en,price_gel,duration_minutes,recall_days").eq("salon_id", ctx.salonId);
+  const matchedService = salonServices?.find((service) => service.id === wantedService || service.legacy_id === wantedService || service.legacy_id === parsed.data.treatment_type);
 
-  const durationMinutes =
-    parsed.data.duration_minutes ??
-    matchedService?.duration_minutes ??
-    existingAppt.duration_minutes ??
-    45;
+  const durationMinutes = matchedService?.duration_minutes ?? existingAppt.duration_minutes ?? 45;
+  const isEpilation = matchedService?.recall_days !== null && matchedService?.recall_days !== undefined;
 
-  const isEpilation =
-    parsed.data.is_epilation !== undefined
-      ? parsed.data.is_epilation
-      : (matchedService?.is_epilation ?? isEpilationTreatment(parsed.data.treatment_type));
-
-  const serviceId = parsed.data.service_id ?? matchedService?.id ?? existingAppt.service_id ?? null;
-  const serviceName =
-    parsed.data.service_name ??
-    (matchedService ? (matchedService.name_ka || matchedService.name_en) : existingAppt.service_name ?? null);
-  const priceGel = parsed.data.price_gel ?? matchedService?.price_gel ?? existingAppt.price_gel ?? null;
+  let serviceId = matchedService?.id ?? parsed.data.service_id ?? existingAppt.service_id ?? null;
+  if (serviceId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceId)) {
+    const { data: relationalService } = await ctx.supabase.from("services").select("id").eq("salon_id", ctx.salonId).eq("legacy_id", serviceId).maybeSingle();
+    if (relationalService) serviceId = relationalService.id;
+  }
+  const serviceName = matchedService?.name_en ?? existingAppt.service_name ?? null;
+  const priceGel = matchedService?.price_gel ?? existingAppt.price_gel ?? null;
 
   const intervalDays =
-    matchedService?.reminder_days ?? ctx.settings.reminder_interval_days ?? 21;
+    matchedService?.recall_days ?? ctx.settings.reminder_interval_days ?? 21;
   const timeZone = ctx.settings.timezone || "Asia/Tbilisi";
 
   const nextExpectedDate =
@@ -109,34 +92,26 @@ export async function PATCH(
     parsed.data.treatment_date !== existingAppt.treatment_date ||
     normalizedTime.slice(0, 5) !== String(existingAppt.treatment_time).slice(0, 5);
 
-  if (
-    dateOrTimeChanged &&
-    parsed.data.status !== "canceled" &&
-    parsed.data.status !== "missed" &&
-    !body.force_overlap
-  ) {
-    const { data: sameDayAppts } = await ctx.supabase
-      .from("appointments")
-      .select("id, treatment_time")
-      .eq("salon_id", ctx.salonId)
-      .eq("treatment_date", parsed.data.treatment_date)
-      .neq("id", id)
-      .in("status", ["scheduled", "completed"]);
-
-    const bookedTimes = (sameDayAppts ?? []).map((a) => String(a.treatment_time));
-    const check = evaluateSmartSlotAvailability(normalizedTime, bookedTimes, durationMinutes);
-    if (!check.isAvailable) {
-      return NextResponse.json(
-        {
-          conflict: true,
-          conflicting_time: check.conflictingTime,
-          available_slots: check.availableSlots,
-          error: `Time slot ${normalizedTime.slice(0, 5)} is unavailable (conflicts with ${check.conflictingTime} appointment). Suggested free slots: ${check.availableSlots.join(", ") || "none"}.`,
-          error_ka: `დრო ${normalizedTime.slice(0, 5)} დაკავებულია (ემთხვევა ${check.conflictingTime} ჯავშანს). თავისუფალი საათებია: ${check.availableSlots.join(", ") || "არ არის"}.`,
-        },
-        { status: 409 }
-      );
+  if (dateOrTimeChanged || (typeof body.staff_id === "string" && body.staff_id !== existingAppt.staff_id)) {
+    let existingServiceId = existingAppt.service_id;
+    if (existingServiceId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(existingServiceId)) {
+      const { data: relationalExisting } = await ctx.supabase.from("services").select("id").eq("salon_id", ctx.salonId).eq("legacy_id", existingServiceId).maybeSingle();
+      existingServiceId = relationalExisting?.id ?? existingServiceId;
     }
+    if (serviceId !== existingServiceId) {
+      return NextResponse.json({ error: "Changing a booked service requires creating a new appointment." }, { status: 400 });
+    }
+    const serviceClient = createServiceClient();
+    const { data: rescheduled, error: scheduleError } = await serviceClient.rpc("reschedule_appointment", {
+      p_salon_id: ctx.salonId,
+      p_appointment_id: id,
+      p_date: parsed.data.treatment_date,
+      p_start_time: normalizedTime,
+      p_staff_id: typeof body.staff_id === "string" ? body.staff_id : existingAppt.staff_id,
+    });
+    if (scheduleError) return NextResponse.json({ error: scheduleError.message }, { status: 500 });
+    const outcome = rescheduled as { success?: boolean; conflict?: boolean; error?: string; available_slots?: string[] };
+    if (!outcome?.success) return NextResponse.json({ conflict: outcome?.conflict, error: outcome?.error, available_slots: outcome?.available_slots ?? [] }, { status: outcome?.conflict ? 409 : 400 });
   }
 
   const { data: updatedAppt, error: updateErr } = await ctx.supabase
@@ -147,6 +122,7 @@ export async function PATCH(
       treatment_type: parsed.data.treatment_type,
       is_epilation: isEpilation,
       status: parsed.data.status,
+      arrived_at: parsed.data.status === "arrived" ? existingAppt.arrived_at ?? new Date().toISOString() : null,
       completed_at:
         parsed.data.status === "completed"
           ? existingAppt.completed_at ?? new Date().toISOString()

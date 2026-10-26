@@ -4,13 +4,15 @@ moarge is a booking and client-management app for beauty salons in Georgia. The 
 
 ## Current features
 
-- Public booking from a salon's enabled service list, with availability checks, date limits, Turnstile protection, and database-backed rate limits. Email is required to book.
+- Public booking with relational services, staff selection or any available staff, date limits, Turnstile protection, database-backed rate limits, and optional email.
+- Staff schedules, breaks, time off, and service assignments drive public availability and dashboard booking. A database exclusion constraint prevents overlapping active appointments for one staff member or resource.
+- Day and week staff calendars with quick booking, drag rescheduling, time blocks, and arrived, no-show, and canceled statuses.
 - Salon appointment and client records, including client consent and archive controls.
 - Owner, admin, and staff memberships. Settings and membership management are restricted to owners and admins.
 - Email booking confirmations for eligible verified addresses, email reminders for completed epilation appointments, webhook status updates, and unsubscribe links.
 - New salons receive a 14-day trial. Public bookings and reminder delivery are disabled after the trial expires unless the salon is active.
 
-SMS reminders, per-staff/resource availability, subscription payments, and reminders for non-epilation services are not implemented.
+SMS reminders, resource administration, subscription payments, and reminders for non-epilation services are not implemented.
 
 ## Local development
 
@@ -52,9 +54,9 @@ Missing required server keys fail closed. Never put service, Resend, webhook, cr
 
 ## Database migrations
 
-The migrations directory has a clean baseline followed by the Phase 0 security migration. The baseline is for new local or staging databases. It consolidates the former migration versions `20261016000001` through `20261016000011`; the former Phase 0 source at `20261026104942` is replaced by the current Phase 0 migration. The replaced SQL files are no longer in the migration directory.
+The migrations directory has a clean baseline followed by the Phase 0 security migration and Phase 2 booking migrations. The baseline consolidates former versions `20261016000001` through `20261016000011`; the former Phase 0 source at `20261026104942` was replaced when the history was reordered. Phase 2 adds staff scheduling, relational services, appointment conflict protection, and removes the legacy JSONB service catalog. The replaced SQL files are listed in `supabase/migrations/README.md`.
 
-Existing databases may already have the replaced versions recorded. Do not apply the new baseline to those databases as a fresh migration. Before syncing an existing staging database, have the database owner reconcile its migration history so the baseline is marked as already represented, then apply only migrations that are actually pending. Do not run migrations against production as part of this phase.
+Existing databases may already have the replaced versions recorded. Do not apply the new baseline to those databases as a fresh migration. The configured staging project (`oolsgizchxstiuvzveos`) has the current Phase 0 and Phase 2 migrations applied and was used for the booking integration test. Production was not changed. For other existing databases, reconcile migration history before applying only pending migrations.
 
 ## Deployment
 
@@ -75,4 +77,4 @@ npm run lint
 npm test
 ```
 
-Supabase integration tests are skipped unless the Supabase test URL/key are configured. The staff settings test also requires a dedicated test account with the `staff` membership role.
+Supabase integration tests are skipped unless the Supabase test URL/key are configured. The staff settings test also requires a dedicated test account with the `staff` membership role. The booking concurrency test runs only when `RUN_STAGING_BOOKING_TESTS=true` and the configured URL is the designated staging project; it creates and removes isolated fixture data.

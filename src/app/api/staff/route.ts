@@ -1,0 +1,54 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
+
+const canManage = ["owner", "admin"] as const;
+
+export async function GET() {
+  const ctx = await getAuthenticatedSalonContext();
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { data, error } = await ctx.supabase.from("staff").select("*, staff_services(service_id)").eq("salon_id", ctx.salonId).order("sort_order");
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ staff: data ?? [] });
+}
+
+export async function POST(request: NextRequest) {
+  const ctx = await getAuthenticatedSalonContext();
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!requireRole(ctx, canManage)) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
+  const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+  if (!body || typeof body.full_name !== "string" || body.full_name.trim().length < 2) return NextResponse.json({ error: "Staff name is required." }, { status: 400 });
+  const { data, error } = await ctx.supabase.from("staff").insert({ salon_id: ctx.salonId, full_name: body.full_name.trim(), color: typeof body.color === "string" ? body.color : "#e11d48", sort_order: Number(body.sort_order) || 0 }).select("*").single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  const serviceIds = Array.isArray(body.service_ids) ? body.service_ids.filter((id): id is string => typeof id === "string") : [];
+  const assignments = serviceIds.length ? serviceIds : (await ctx.supabase.from("services").select("id").eq("salon_id", ctx.salonId).eq("is_active", true)).data?.map((service) => service.id) ?? [];
+  if (assignments.length) await ctx.supabase.from("staff_services").insert(assignments.map((service_id) => ({ salon_id: ctx.salonId, staff_id: data.id, service_id })));
+  return NextResponse.json({ staff: data }, { status: 201 });
+}
+
+export async function PATCH(request: NextRequest) {
+  const ctx = await getAuthenticatedSalonContext();
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!requireRole(ctx, canManage)) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
+  const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+  if (!body || typeof body.id !== "string") return NextResponse.json({ error: "Staff id is required." }, { status: 400 });
+  const allowed: Record<string, unknown> = {};
+  if (typeof body.full_name === "string") allowed.full_name = body.full_name.trim();
+  if (typeof body.color === "string") allowed.color = body.color;
+  if (typeof body.photo_url === "string" || body.photo_url === null) allowed.photo_url = body.photo_url;
+  if (typeof body.is_active === "boolean") allowed.is_active = body.is_active;
+  if (Number.isInteger(body.sort_order)) allowed.sort_order = body.sort_order;
+  const { data, error } = await ctx.supabase.from("staff").update(allowed).eq("id", body.id).eq("salon_id", ctx.salonId).select("*").maybeSingle();
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ staff: data });
+}
+
+export async function DELETE(request: NextRequest) {
+  const ctx = await getAuthenticatedSalonContext();
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!requireRole(ctx, canManage)) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Staff id is required." }, { status: 400 });
+  const { error } = await ctx.supabase.from("staff").update({ is_active: false }).eq("id", id).eq("salon_id", ctx.salonId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ success: true });
+}

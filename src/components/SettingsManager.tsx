@@ -19,6 +19,7 @@ import {
   KeyRound,
   ExternalLink,
   Clock,
+  Users,
   MapPin,
   Phone,
   LayoutTemplate,
@@ -429,7 +430,6 @@ export default function SettingsManager({
           working_hours_end: workingHoursEnd,
           slot_interval_minutes: Number(slotIntervalMinutes),
           send_booking_confirmation_email: sendBookingConfirmationEmail,
-          custom_services: normalizedServices,
         }),
       });
 
@@ -456,7 +456,7 @@ export default function SettingsManager({
         type: "success",
         text: t(
           "სალონის ყველა პარამეტრი, სერვისების კატალოგი და ონლაინ ჯავშნის გვერდი წარმატებით განახლდა!",
-          "All salon settings, services catalog, and booking page saved successfully!"
+          "Salon settings and booking page saved successfully!"
         ),
       });
       router.refresh();
@@ -570,40 +570,20 @@ export default function SettingsManager({
           <span>{t("1. სალონის პროფილი", "1. Salon Profile")}</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("services")}
-          className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition whitespace-nowrap cursor-pointer ${
-            activeTab === "services"
-              ? "bg-stone-900 text-white shadow-md"
-              : "bg-white text-stone-600 hover:bg-stone-100 border border-stone-200"
-          }`}
-        >
+        <Link href="/settings/services" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
           <Scissors className="w-4 h-4 text-rose-500" />
-          <span>{t("2. სერვისები და ფასები", "2. Services & Pricing")}</span>
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-              activeTab === "services"
-                ? "bg-rose-500 text-white"
-                : "bg-stone-200 text-stone-700"
-            }`}
-          >
-            {customServices.length}
-          </span>
-        </button>
+          <span>{t("სერვისები და ფასები", "Services & Pricing")}</span>
+        </Link>
+        <Link href="/settings/staff" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
+          <Users className="w-4 h-4 text-rose-500" /><span>{t("სპეციალისტები", "Staff")}</span>
+        </Link>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("schedule")}
-          className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold transition whitespace-nowrap cursor-pointer ${
-            activeTab === "schedule"
-              ? "bg-stone-900 text-white shadow-md"
-              : "bg-white text-stone-600 hover:bg-stone-100 border border-stone-200"
-          }`}
-        >
-          <Calendar className="w-4 h-4 text-rose-500" />
-          <span>{t("3. განრიგი და ჯავშანი", "3. Schedule & Booking")}</span>
-        </button>
+        <Link href="/settings/schedules" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
+          <Calendar className="w-4 h-4 text-rose-500" /><span>{t("განრიგი", "Schedules")}</span>
+        </Link>
+        <Link href="/settings/time-off" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
+          <Clock className="w-4 h-4 text-rose-500" /><span>{t("დასვენების დრო", "Time off")}</span>
+        </Link>
 
         <button
           type="button"

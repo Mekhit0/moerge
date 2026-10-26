@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get("salon") ?? null;
   const dateParam = searchParams.get("date");
+  const serviceId = searchParams.get("service_id");
+  const staffId = searchParams.get("staff_id");
 
   if (!slug || slug === "demo") {
     return NextResponse.json({
@@ -73,18 +75,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: infoError.message }, { status: 500 });
   }
 
+  const salonId = (infoData as { salon_id?: string } | null)?.salon_id;
+  const [{ data: serviceRows }, { data: staffRows }] = await Promise.all([
+    supabase.from("services").select("id,legacy_id,name_ka,name_en,price_gel,duration_minutes,category,recall_days,is_active,is_online_bookable")
+      .eq("salon_id", salonId ?? "").eq("is_active", true).eq("is_online_bookable", true).order("name_en"),
+    supabase.from("staff").select("id,full_name,color,photo_url,sort_order,staff_services(service_id)")
+      .eq("salon_id", salonId ?? "").eq("is_active", true).order("sort_order"),
+  ]);
+  const services = serviceRows ?? [];
+  const staff = (staffRows ?? []).map((member) => ({
+    ...member,
+    service_ids: (member.staff_services ?? []).map((entry: { service_id: string }) => entry.service_id),
+  }));
+
   let availability = null;
   if (dateParam && isPublicBookingDateAllowed(dateParam)) {
-    const { data: availData } = await supabase.rpc(
-      "get_salon_date_availability",
-      {
-        p_salon_slug: slug,
+    if (serviceId && salonId) {
+      const { data: slots, error: slotsError } = await supabase.rpc("get_available_slots", {
+        p_salon_id: salonId,
+        p_service_id: serviceId,
         p_date: dateParam,
-        p_salon_id: null,
-        p_exclude_appointment_id: null,
-      }
-    );
-    availability = availData;
+        p_staff_id: staffId || null,
+      });
+      if (slotsError) return NextResponse.json({ error: slotsError.message }, { status: 500 });
+      availability = { date: dateParam, slots: slots ?? [] };
+    }
   }
   if (dateParam && !isPublicBookingDateAllowed(dateParam)) {
     return NextResponse.json({ error: "Choose a date within the next 90 days." }, { status: 400 });
@@ -92,6 +107,19 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     ...(infoData ?? { found: false }),
+    custom_services: services.map((service) => ({
+      id: service.id,
+      type: service.category,
+      name_ka: service.name_ka,
+      name_en: service.name_en,
+      price_gel: service.price_gel,
+      duration_minutes: service.duration_minutes,
+      reminder_days: service.recall_days,
+      is_epilation: service.recall_days !== null,
+      enabled: service.is_active,
+    })),
+    services,
+    staff,
     availability,
   });
 }
@@ -207,50 +235,38 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Rate limiter unavailable." }, { status: 500 });
   }
-  const rpcClient = serviceClient;
-
-  const { data, error } = await rpcClient.rpc("submit_public_booking", {
-    p_salon_slug: parsed.data.salon_slug,
+  const { data: salon } = await serviceClient.from("salons").select("id,name").eq("slug", parsed.data.salon_slug).maybeSingle();
+  if (!salon) return NextResponse.json({ error: "Salon not found or booking is unavailable." }, { status: 404 });
+  const { data: service } = await serviceClient.from("services").select("id")
+    .eq("salon_id", salon.id).eq("id", parsed.data.service_id).eq("is_active", true).eq("is_online_bookable", true).maybeSingle();
+  if (!service) return NextResponse.json({ error: "Selected service is unavailable." }, { status: 400 });
+  const normalizedEmail = parsed.data.email?.trim().toLowerCase() || null;
+  const { data, error } = await serviceClient.rpc("create_appointment", {
+    p_salon_id: salon.id,
+    p_service_id: service.id,
+    p_date: parsed.data.treatment_date,
+    p_start_time: normalizedTime,
+    p_staff_id: parsed.data.staff_id ?? null,
+    p_client_id: null,
     p_full_name: parsed.data.full_name,
-    p_email: parsed.data.email,
     p_phone: parsed.data.phone,
-    p_treatment_date: parsed.data.treatment_date,
-    p_treatment_time: normalizedTime,
-    p_treatment_type: parsed.data.treatment_type,
+    p_email: normalizedEmail,
     p_notes: parsed.data.notes,
     p_email_consent: parsed.data.email_consent,
-    p_client_ip: clientIp,
   });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  const resObj = data as {
-    success?: boolean;
-    conflict?: boolean;
-    error?: string;
-    error_ka?: string;
-    conflicting_time?: string;
-    available_slots?: string[];
-    salon_name?: string;
-    treatment_date?: string;
-    treatment_time?: string;
-    treatment_type?: string;
-  };
-
-  if (resObj && resObj.conflict) {
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  const resObj = data as { success?: boolean; conflict?: boolean; error?: string; available_slots?: string[]; salon_id?: string; salon_name?: string; appointment_id?: string; client_id?: string; client_email?: string; service_name?: string };
+  if (!resObj?.success && resObj?.conflict) {
     return NextResponse.json(
       {
         conflict: true,
         error: resObj.error,
-        error_ka: resObj.error_ka,
-        conflicting_time: resObj.conflicting_time,
         available_slots: resObj.available_slots ?? [],
       },
       { status: 409 }
     );
   }
+  if (!resObj?.success) return NextResponse.json({ error: resObj?.error ?? "Unable to create booking." }, { status: 400 });
 
   // Dispatch instant booking confirmation email via Resend with 10-minute throttle
   let confirmationEmailSent = false;
@@ -263,7 +279,7 @@ export async function POST(request: NextRequest) {
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
 
-      const bookedSalonId = (data as { salon_id?: string } | null)?.salon_id;
+      const bookedSalonId = resObj.salon_id;
       let settingsQuery = serviceClient
         .from("salon_settings")
         .select(
@@ -274,43 +290,20 @@ export async function POST(request: NextRequest) {
       const { data: settingsRows } = await settingsQuery;
 
       const s = settingsRows?.[0];
-      const effectiveKey = process.env.RESEND_API_KEY;
 
       // Dry-run mode never emails real clients; it may redirect to the configured test inbox.
       const recipient = s?.dry_run_mode
         ? s?.test_recipient_email || null
-        : parsed.data.email;
+        : normalizedEmail;
 
-      let recipientIsVerified = Boolean(s?.dry_run_mode);
-      if (recipient && !s?.dry_run_mode) {
-        const { data: emailVerified } = await serviceClient.rpc("is_verified_auth_email", {
-          p_email: recipient.toLowerCase().trim(),
-        });
-        recipientIsVerified = emailVerified === true;
-      }
-
-      // Email throttling: Do not send confirmation email to the same address more than 3 times in 10 minutes
-      let throttled = false;
-      if (recipient) {
-        const dayStart = new Date();
-        dayStart.setHours(0, 0, 0, 0);
-        const { count: emailCount } = await serviceClient
-          .from("email_logs")
-          .select("*", { count: "exact", head: true })
-          .eq("recipient_email", recipient.toLowerCase().trim())
-          .gte("created_at", dayStart.toISOString());
-
-        if (emailCount !== null && emailCount >= 3) {
-          throttled = true;
-        }
-      }
+      const recipientIsVerified = Boolean(s?.dry_run_mode) || Boolean(normalizedEmail);
 
       const transport =
-        s && s.send_booking_confirmation_email !== false && recipient && recipientIsVerified && !throttled
+        s && s.send_booking_confirmation_email !== false && recipient && recipientIsVerified
           ? createResendTransport()
           : null;
 
-      if (s && transport && recipient && recipientIsVerified && !throttled) {
+      if (s && transport && recipient && recipientIsVerified) {
         const timeStr = String(parsed.data.treatment_time).slice(0, 5);
         const salonTitle = s.salon_name || resObj.salon_name || "moarge Salon";
         const subject = `ჯავშანი დადასტურებულია: ${parsed.data.treatment_date} (${timeStr}) — ${salonTitle}`;
@@ -320,7 +313,7 @@ export async function POST(request: NextRequest) {
             <p style="color: #44403c; font-size: 15px; line-height: 1.6;">გამარჯობა <strong>${esc(parsed.data.full_name)}</strong>,</p>
             <p style="color: #44403c; font-size: 14px; line-height: 1.6;">თქვენი ონლაინ ჯავშანი სალონში <strong>${esc(salonTitle)}</strong> წარმატებით დადასტურდა.</p>
             <div style="background: #ffffff; padding: 16px 20px; border-radius: 14px; border: 1px solid #fecdd3; margin: 16px 0; font-size: 14px; color: #1c1917;">
-              <div><strong>პროცედურა / Service:</strong> ${esc(parsed.data.treatment_type)}</div>
+              <div><strong>პროცედურა / Service:</strong> ${esc(resObj.service_name || parsed.data.treatment_type)}</div>
               <div style="margin-top: 6px;"><strong>თარიღი / Date:</strong> ${esc(parsed.data.treatment_date)}</div>
               <div style="margin-top: 6px;"><strong>დრო / Time (Asia/Tbilisi):</strong> ${esc(timeStr)}</div>
               ${s.salon_address ? `<div style="margin-top: 6px;"><strong>მისამართი / Address:</strong> ${esc(s.salon_address)}</div>` : ""}
@@ -338,8 +331,8 @@ export async function POST(request: NextRequest) {
           to: recipient,
           subject,
           html,
-          text: `თქვენი ვიზიტი დაჯავშნილია!\nპროცედურა: ${parsed.data.treatment_type}\nთარიღი: ${parsed.data.treatment_date}\nდრო: ${timeStr}\nსალონი: ${salonTitle}`,
-          idempotencyKey: `bookconf:${bookedSalonId || "pub"}:${(data as { appointment_id?: string })?.appointment_id}`,
+          text: `თქვენი ვიზიტი დაჯავშნილია!\nპროცედურა: ${resObj.service_name || parsed.data.treatment_type}\nთარიღი: ${parsed.data.treatment_date}\nდრო: ${timeStr}\nსალონი: ${salonTitle}`,
+        idempotencyKey: `bookconf:${bookedSalonId || "pub"}:${resObj.appointment_id}`,
           unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app"}/unsubscribe`,
         });
 
@@ -348,7 +341,7 @@ export async function POST(request: NextRequest) {
         // Record in email_logs
         await serviceClient.from("email_logs").insert({
           salon_id: bookedSalonId || s.salon_id,
-          appointment_id: (data as { appointment_id?: string })?.appointment_id,
+          appointment_id: resObj.appointment_id,
           recipient_email: recipient.toLowerCase().trim(),
           subject,
           event_type: confirmationEmailSent ? "api_accepted" : "failed",
