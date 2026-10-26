@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
     salon_name: value.salonName,
     sender_display_name: value.salonName,
     salon_phone: value.salonPhone,
-    salon_address: value.salonAddress || null,
+    // salon_settings.salon_address is NOT NULL; keep the optional UI field empty as "".
+    salon_address: value.salonAddress,
     timezone: "Asia/Tbilisi",
     working_hours_start: value.openTime,
     working_hours_end: value.closeTime,
