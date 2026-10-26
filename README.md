@@ -53,8 +53,8 @@ The optional `supabase/seed.sql` contains synthetic local salon and client recor
 | `RESEND_WEBHOOK_SECRET` | Yes for webhook processing | Resend webhook signature validation | Server only |
 | `CRON_SECRET` | Yes for reminder processing | Bearer authentication for the cron endpoint | Server only |
 | `PLATFORM_OWNER_USER_ID` | Yes to enable the owner dashboard | Supabase Auth user UUID allowed to access `/platform` and the platform overview API | Server only |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Yes for live public booking | Turnstile browser widget | Browser and server |
-| `TURNSTILE_SECRET_KEY` | Yes for live public booking | Turnstile server verification | Server only |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | No | Optional Turnstile widget; booking also uses the database-backed limiter and hidden honeypot field | Browser |
+| `TURNSTILE_SECRET_KEY` | No | Optional Turnstile verification | Server only |
 | `EMAIL_DRY_RUN` | No | Simulate email delivery in development | Server only |
 | `EMAIL_TEST_RECIPIENT` | No | Redirect non-production test email | Server only |
 | `TEST_STAFF_EMAIL` | No | Supabase integration tests | Test environment only |

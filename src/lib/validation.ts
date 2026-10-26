@@ -309,6 +309,7 @@ export const salonSettingsSchema = z
   });
 
 export const publicBookingInputSchema = z.object({
+  website: z.string().max(160).optional().default(""),
   salon_slug: z
     .string()
     .trim()
@@ -358,18 +359,6 @@ export const publicBookingInputSchema = z.object({
   email_consent: z.boolean().optional().default(false),
   sms_consent: z.boolean().optional().default(false),
   preferred_language: z.enum(["ka", "en"]).optional().default("ka"),
-  turnstile_token: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .transform((v) => (v && v.length > 0 ? v : null)),
-  token: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .transform((v) => (v && v.length > 0 ? v : null)),
 }).superRefine((data, ctx) => {
   if (data.treatment_type !== data.service_id) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["service_id"], message: "Service id mismatch." });

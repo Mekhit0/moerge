@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { createServiceClient, getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import { isPublicBookingDateAllowed } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
@@ -12,7 +12,10 @@ export async function GET(request: NextRequest) {
   const { data: services } = await ctx.supabase.from("services").select("id,legacy_id").eq("salon_id", ctx.salonId).eq("is_active", true);
   const service = services?.find((item) => item.id === wanted || item.legacy_id === wanted);
   if (!service) return NextResponse.json({ error: "Service is unavailable." }, { status: 404 });
-  const { data, error } = await ctx.supabase.rpc("get_available_slots", {
+  // The database RPC is intentionally executable only by service_role. Resolve
+  // the salon from the authenticated session above, then call it server-side.
+  const serviceClient = createServiceClient();
+  const { data, error } = await serviceClient.rpc("get_available_slots", {
     p_salon_id: ctx.salonId,
     p_service_id: service.id,
     p_date: date,

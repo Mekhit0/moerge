@@ -75,13 +75,19 @@ export async function GET(request: NextRequest) {
   }
 
   const salonId = (infoData as { salon_id?: string } | null)?.salon_id;
-  const [{ data: serviceRows }, { data: staffRows }] = await Promise.all([
+  const [{ data: serviceRows, error: servicesError }, { data: staffRows, error: staffError }] = await Promise.all([
     supabase.from("services").select("id,legacy_id,name_ka,name_en,price_gel,duration_minutes,category,recall_days,is_active,is_online_bookable")
       .eq("salon_id", salonId ?? "").eq("is_active", true).eq("is_online_bookable", true).order("name_en"),
     supabase.from("staff").select("id,full_name,color,photo_url,sort_order,staff_services(service_id)")
       .eq("salon_id", salonId ?? "").eq("is_active", true).order("sort_order"),
   ]);
+  if (servicesError || staffError) {
+    return NextResponse.json({ error: "Could not load the salon booking setup." }, { status: 500 });
+  }
   const services = serviceRows ?? [];
+  if (serviceId && salonId && !services.some((service) => service.id === serviceId)) {
+    return NextResponse.json({ error: "Selected service is unavailable." }, { status: 400 });
+  }
   const staff = (staffRows ?? []).map((member) => ({
     ...member,
     service_ids: (member.staff_services ?? []).map((entry: { service_id: string }) => entry.service_id),
@@ -146,6 +152,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Quietly accept bot submissions without creating a client or appointment.
+  if (parsed.data.website.trim()) {
+    return NextResponse.json({
+      booking: {
+        appointment_id: `ignored-${Date.now().toString(36)}`,
+        client_id: "",
+        salon_name: "",
+        is_returning_client: false,
+        treatment_date: parsed.data.treatment_date,
+        treatment_time: parsed.data.treatment_time,
+        treatment_type: parsed.data.treatment_type,
+        confirmation_email_sent: false,
+      },
+      demo: true,
+    });
+  }
+
   // Demo submissions never reach the database or send email.
   if (!parsed.data.salon_slug || parsed.data.salon_slug === "demo") {
     const normalizedTime = parsed.data.treatment_time.length === 5
@@ -167,54 +190,6 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // Cloudflare Turnstile Verification
-  const turnstileSecret = process.env.TURNSTILE_SECRET_KEY?.trim();
-  const turnstileToken = parsed.data.turnstile_token || parsed.data.token;
-
-  if (!turnstileSecret) return NextResponse.json({ error: "Security verification is not configured." }, { status: 500 });
-  {
-    if (!turnstileToken) {
-      return NextResponse.json(
-        {
-          error:
-            "Security verification token is missing. Please refresh and try again / უსაფრთხოების ტოკენი აკლია.",
-        },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const verifyForm = new URLSearchParams();
-      verifyForm.append("secret", turnstileSecret);
-      verifyForm.append("response", turnstileToken);
-      verifyForm.append("remoteip", clientIp);
-
-      const cfRes = await fetch(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: verifyForm.toString(),
-        }
-      );
-      const cfData = await cfRes.json();
-      if (!cfData.success) {
-        return NextResponse.json(
-          {
-            error:
-              "Turnstile security verification failed. Please try again / უსაფრთხოების შემოწმება ვერ მოხერხდა.",
-          },
-          { status: 400 }
-        );
-      }
-    } catch {
-      return NextResponse.json(
-        { error: "Security verification service temporarily unavailable." },
-        { status: 500 }
-      );
-    }
-  }
-
   const normalizedTime =
     parsed.data.treatment_time.length === 5
       ? `${parsed.data.treatment_time}:00`
@@ -228,7 +203,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Server configuration error" }, { status: 500 });
   }
   try {
-    if (!(await consumeServerRateLimit(serviceClient, `booking:${clientIp}`, 20, 60))) {
+    if (!(await consumeServerRateLimit(serviceClient, `booking:${clientIp}`, 8, 3600))) {
       return NextResponse.json({ error: "Too many booking requests. Please retry shortly." }, { status: 429 });
     }
   } catch {
