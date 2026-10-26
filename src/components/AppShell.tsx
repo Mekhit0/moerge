@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "./MoargeLogo";
+import FeedbackButton from "./FeedbackButton";
 
 interface AppShellProps {
   salonName: string;
@@ -34,6 +35,7 @@ interface AppShellProps {
   staffEmail: string;
   canManageData: boolean;
   readOnly: boolean;
+  isPlatformOwner?: boolean;
   children: React.ReactNode;
 }
 
@@ -46,6 +48,7 @@ export default function AppShell({
   staffEmail,
   canManageData,
   readOnly,
+  isPlatformOwner = false,
   children,
 }: AppShellProps) {
   const { t } = useLanguage();
@@ -85,6 +88,7 @@ export default function AppShell({
     { href: "/settings/schedules", label: t("განრიგი", "Schedules"), icon: Clock },
     { href: "/settings/time-off", label: t("დასვენების დრო", "Time off"), icon: Calendar },
     ...(canManageData ? [{ href: "/reports", label: t("ანგარიშები", "Reports"), icon: BarChart3 }, { href: "/billing", label: t("გადახდები", "Billing"), icon: CreditCard }] : []),
+    ...(isPlatformOwner ? [{ href: "/platform", label: t("პლატფორმის მართვა", "Platform admin"), icon: ShieldAlert }] : []),
   ];
 
   async function handleSignOut() {
@@ -295,6 +299,7 @@ export default function AppShell({
           {readOnly && <div role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{t("საცდელი პერიოდი ან გადახდის ვადა დასრულდა. ანგარიში მხოლოდ წასაკითხია. მონაცემები შენარჩუნებულია.", "The trial or payment grace period has ended. This account is read-only. Your data is retained.")} <Link className="ml-2 underline" href="/billing">{t("ბილინგის ნახვა", "View billing")}</Link></div>}
           {children}
         </main>
+        <FeedbackButton />
       </div>
     </div>
   );

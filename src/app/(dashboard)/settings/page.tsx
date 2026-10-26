@@ -2,6 +2,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import SettingsManager from "@/components/SettingsManager";
+import AuditLogPanel from "@/components/AuditLogPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function SettingsPage() {
   );
 
   return (
+    <>
     <SettingsManager
       initialSettings={{
         ...ctx.settings,
@@ -30,5 +32,7 @@ export default async function SettingsPage() {
       resendConfigured={resendConfigured}
       webhookSecretConfigured={webhookSecretConfigured}
     />
+    {(ctx.role === "owner" || ctx.role === "admin") && <AuditLogPanel />}
+    </>
   );
 }

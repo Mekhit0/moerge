@@ -4,6 +4,7 @@ import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import AppointmentsManager from "@/components/AppointmentsManager";
 import StaffCalendar from "@/components/StaffCalendar";
 import { Appointment, Client, CustomBookingService } from "@/lib/types";
+import { addCalendarDays } from "@/lib/scheduling";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,9 @@ export default async function AppointmentsPage() {
   if (!ctx) {
     redirect("/login");
   }
+  const timezone = ctx.settings.timezone || "Asia/Tbilisi";
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const today = `${parts.find((part) => part.type === "year")?.value}-${parts.find((part) => part.type === "month")?.value}-${parts.find((part) => part.type === "day")?.value}`;
 
   const [{ data: appointmentsData }, { data: clientsData }, { data: staffData }, { data: serviceData }] = await Promise.all([
     ctx.supabase
@@ -20,7 +24,10 @@ export default async function AppointmentsPage() {
         "*, client:clients(id, full_name, email, phone, is_archived, email_consent), reminders(*), staff:staff(id,full_name,color)"
       )
       .eq("salon_id", ctx.salonId)
-      .order("starts_at", { ascending: true }),
+      .gte("treatment_date", addCalendarDays(today, -180))
+      .lte("treatment_date", addCalendarDays(today, 90))
+      .order("starts_at", { ascending: true })
+      .limit(1000),
     ctx.supabase
       .from("clients")
       .select("*")
@@ -45,12 +52,12 @@ export default async function AppointmentsPage() {
 
   return (
     <>
-    <StaffCalendar initialBookings={(appointmentsData ?? []) as never[]} staff={staffData ?? []} timezone={ctx.settings.timezone || "Asia/Tbilisi"} />
+    <StaffCalendar initialBookings={(appointmentsData ?? []) as never[]} staff={staffData ?? []} timezone={timezone} />
     <AppointmentsManager
       initialAppointments={(appointmentsData ?? []) as Appointment[]}
       clients={(clientsData ?? []) as Client[]}
       reminderIntervalDays={ctx.settings.reminder_interval_days}
-      timezone={ctx.settings.timezone || "Asia/Tbilisi"}
+      timezone={timezone}
       customServices={customServices}
       workingHoursStart={ctx.settings.working_hours_start || "10:00"}
       workingHoursEnd={ctx.settings.working_hours_end || "20:00"}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
 
@@ -20,7 +20,7 @@ function localTime(iso: string, timezone: string) {
 export default function StaffCalendar({ initialBookings, staff, timezone }: { initialBookings: Booking[]; staff: Staff[]; timezone: string }) {
   const { t } = useLanguage();
   const [view, setView] = useState<"day" | "week">("day");
-  const [anchorDate, setAnchorDate] = useState(() => dateString(new Date()));
+  const [anchorDate, setAnchorDate] = useState(() => localDate(new Date().toISOString(), timezone));
   const [bookings, setBookings] = useState(initialBookings);
   const [blocking, setBlocking] = useState(false);
   const [blockStart, setBlockStart] = useState("");
@@ -33,6 +33,18 @@ export default function StaffCalendar({ initialBookings, staff, timezone }: { in
     if (view === "week") start.setDate(base.getDate() - ((base.getDay() + 6) % 7));
     return Array.from({ length: view === "day" ? 1 : 7 }, (_, i) => { const d = new Date(start); d.setDate(start.getDate()+i); return dateString(d); });
   }, [anchorDate, view]);
+  useEffect(() => {
+    if (!days.length) return;
+    const controller = new AbortController();
+    fetch(`/api/appointments?from=${days[0]}&to=${days[days.length - 1]}`, { signal: controller.signal })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? "Could not load appointments.");
+        setBookings(result.appointments ?? []);
+      })
+      .catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) setMessage(error instanceof Error ? error.message : "Could not load appointments."); });
+    return () => controller.abort();
+  }, [days]);
   const activeStaff = staff.filter((item) => item.is_active);
   const columns = days.flatMap((day) => activeStaff.map((member) => ({ day, member })));
   const hours = Array.from({ length: 52 }, (_, i) => 8 * 60 + i * 15);

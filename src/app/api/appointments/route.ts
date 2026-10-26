@@ -7,14 +7,22 @@ export async function GET(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { searchParams } = new URL(request.url);
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  if ((from && !datePattern.test(from)) || (to && !datePattern.test(to)) || (from && to && (to < from || (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000 > 30))) {
+    return NextResponse.json({ error: "Choose a valid date range of 31 days or less." }, { status: 400 });
+  }
   let query = ctx.supabase.from("appointments")
     .select("*, client:clients(*), staff:staff(id,full_name,color)")
     .eq("salon_id", ctx.salonId).order("starts_at", { ascending: true });
+  if (from) query = query.gte("treatment_date", from);
+  if (to) query = query.lte("treatment_date", to);
   const status = searchParams.get("status");
   const clientId = searchParams.get("clientId");
   if (status && status !== "all") query = query.eq("status", status);
   if (clientId) query = query.eq("client_id", clientId);
-  const { data, error } = await query;
+  const { data, error } = await query.limit(1000);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ appointments: data ?? [] });
 }

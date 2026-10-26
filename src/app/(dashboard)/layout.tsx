@@ -28,6 +28,7 @@ export default async function DashboardLayout({
       staffEmail={ctx.user?.email || ""}
       canManageData={ctx.role === "owner" || ctx.role === "admin"}
       readOnly={readOnly}
+      isPlatformOwner={Boolean(process.env.PLATFORM_OWNER_USER_ID && ctx.user.id === process.env.PLATFORM_OWNER_USER_ID)}
     >
       {children}
     </AppShell>

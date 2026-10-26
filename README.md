@@ -9,6 +9,9 @@ moarge is a booking and client-management app for beauty salons in Georgia. The 
 - Day and week staff calendars with quick booking, drag rescheduling, time blocks, and arrived, no-show, and canceled statuses.
 - Salon appointment and client records, including client consent and archive controls.
 - Owner, admin, and staff memberships. Settings and membership management are restricted to owners and admins.
+- Settings, staff, and appointment changes are recorded in an audit log that stores changed field names, not prior or new values.
+- A platform-owner dashboard summarizes salon trials, plan status, staff/branch counts, recent bookings, SMS volume/cost, and dashboard feedback.
+- Dashboard feedback can be submitted from any signed-in salon workspace and is rate limited on the server.
 - Consent-based notifications with salon templates in Georgian and English: booking confirmation, 24-hour and 2-hour reminders, cancel/reschedule confirmation, service-specific recall, and no-show follow-up.
 - A retryable, idempotent notification outbox with per-channel consent, delivery log, email unsubscribe, SMS unsubscribe, and client self-service cancellation/rescheduling.
 - New salons receive a 14-day trial. Public bookings and reminder delivery are disabled after the trial expires unless the salon is active.
@@ -49,6 +52,7 @@ The optional `supabase/seed.sql` contains synthetic local salon and client recor
 | `NOTIFICATION_PROVIDER` | No | Set to `fake` to simulate delivery | Server only |
 | `RESEND_WEBHOOK_SECRET` | Yes for webhook processing | Resend webhook signature validation | Server only |
 | `CRON_SECRET` | Yes for reminder processing | Bearer authentication for the cron endpoint | Server only |
+| `PLATFORM_OWNER_USER_ID` | Yes to enable the owner dashboard | Supabase Auth user UUID allowed to access `/platform` and the platform overview API | Server only |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Yes for live public booking | Turnstile browser widget | Browser and server |
 | `TURNSTILE_SECRET_KEY` | Yes for live public booking | Turnstile server verification | Server only |
 | `EMAIL_DRY_RUN` | No | Simulate email delivery in development | Server only |
@@ -61,9 +65,11 @@ Missing required server keys fail closed. Never put service, Resend, webhook, cr
 
 ## Database migrations
 
-The migrations directory has a clean baseline followed by the Phase 0 security migration and Phase 2 and Phase 3 migrations. The baseline consolidates former versions `20261016000001` through `20261016000011`; the former Phase 0 source at `20261026104942` was replaced when the history was reordered. Phase 2 adds staff scheduling and relational services. Phase 3 adds normalized phone identity, channel consent, templates, notification queue, and self-service booking management.
+The migrations directory has a clean baseline followed by the Phase 0 security migration and Phase 2 through Phase 5 migrations. The baseline consolidates former versions `20261016000001` through `20261016000011`; the former Phase 0 source at `20261026104942` was replaced when the history was reordered. Phase 2 adds staff scheduling and relational services. Phase 3 adds normalized phone identity, channel consent, templates, notification queue, and self-service booking management. Phase 4 adds onboarding and the provider-agnostic billing ledger. Phase 5 adds audit history, feedback, platform overview, and performance indexes.
 
-Existing databases may already have the replaced versions recorded. Do not apply the new baseline to those databases as a fresh migration. The configured staging project (`oolsgizchxstiuvzveos`) has the Phase 0, Phase 2, and Phase 3 migrations applied. Production was not changed. For other existing databases, reconcile migration history before applying only pending migrations.
+Existing databases may already have the replaced versions recorded. Do not apply the new baseline to those databases as a fresh migration. The configured staging project (`oolsgizchxstiuvzveos`) has the Phase 0 and Phase 2 through Phase 5 migrations applied. Production was not changed. For other existing databases, reconcile migration history before applying only pending migrations.
+
+Phase 5 adds audit history, dashboard feedback, a platform-owner overview, and calendar/availability indexes. Its migrations were applied to staging only. Configure `PLATFORM_OWNER_USER_ID` with the platform operator's Supabase Auth user UUID in the deployment environment; the ID is checked server-side and never accepted from a request.
 
 ## Deployment
 
@@ -96,3 +102,9 @@ npm test
 ```
 
 Supabase integration tests are skipped unless the Supabase test URL/key are configured. The staff settings test also requires a dedicated test account with the `staff` membership role. The booking concurrency test runs only when `RUN_STAGING_BOOKING_TESTS=true` and the configured URL is the designated staging project; it creates and removes isolated fixture data.
+
+## Phase 5 performance and security review
+
+On staging, a generated fixture of 6,000 appointments across five staff and 30 days was used for `EXPLAIN (ANALYZE, BUFFERS)`. A one-week calendar range used `appointments_calendar_range_idx` and returned 500 rows in 0.846 ms execution time (503 shared buffer hits). The availability RPC completed in 15.8 ms on a fully booked fixture day (2,352 buffer hits). The fixture was deleted after measurement. These are staging observations, not production latency guarantees.
+
+The security review and unresolved advisory list are in [`docs/phase5-security-review.md`](docs/phase5-security-review.md). Public booking availability RPCs are service-role-only and called through server routes; `ensure_user_salon` remains authenticated-only. Remaining items include callable membership helper RPCs, restricted service-only tables with no user RLS policy, and Supabase advisor recommendations that need a separate migration or operational decision.
