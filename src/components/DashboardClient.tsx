@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, Clock3, Plus, Scissors, Users } from "lucide-react";
+import { CalendarDays, Clock3, Plus, Users } from "lucide-react";
 import { AppointmentStatus } from "@/lib/types";
 import { getAppointmentStatusLabel, useLanguage } from "@/lib/i18n";
 
@@ -9,7 +9,6 @@ interface DashboardClientProps {
   salonName: string;
   timezone: string;
   stats: { activeClients: number; upcomingAppointments: number; upcomingReminders: number };
-  recentClients: Array<{ id: string; full_name: string }>;
   upcomingReminders: DashboardReminder[];
   upcomingAppointments: DashboardAppointment[];
 }
@@ -31,21 +30,13 @@ export type DashboardReminder = {
   client?: { full_name: string; email: string | null } | null;
 };
 
-const quickLinks = [
-  { href: "/appointments", ka: "ვიზიტები", en: "Appointments", icon: CalendarDays },
-  { href: "/clients", ka: "კლიენტები", en: "Clients", icon: Users },
-  { href: "/settings/staff", ka: "სპეციალისტები", en: "Specialists", icon: Users },
-  { href: "/settings/services", ka: "სერვისები", en: "Services", icon: Scissors },
-  { href: "/settings/schedules", ka: "გრაფიკი", en: "Schedules", icon: Clock3 },
-];
-
-export default function DashboardClient({ salonName, timezone, stats, recentClients, upcomingReminders, upcomingAppointments }: DashboardClientProps) {
+export default function DashboardClient({ salonName, timezone, stats, upcomingReminders, upcomingAppointments }: DashboardClientProps) {
   const { lang, t } = useLanguage();
   const dateFormat = new Intl.DateTimeFormat(lang === "ka" ? "ka-GE" : "en-US", {
     timeZone: timezone || "Asia/Tbilisi", weekday: "long", day: "numeric", month: "long",
   });
 
-  return <main className="mx-auto max-w-6xl space-y-6 p-4 sm:p-8">
+  return <div className="space-y-6">
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p className="text-sm text-stone-500">{dateFormat.format(new Date())}</p>
@@ -101,14 +92,7 @@ export default function DashboardClient({ salonName, timezone, stats, recentClie
       </div>
     </section>
 
-    <section className="rounded-2xl border border-stone-200 bg-white p-5">
-      <h2 className="font-semibold text-stone-900">{t("სწრაფი გადასვლა", "Quick links")}</h2>
-      <nav className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5" aria-label={t("სწრაფი გადასვლა", "Quick links")}>
-        {quickLinks.map(({ href, ka, en, icon: Icon }) => <Link key={href} href={href} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 px-3 text-sm font-medium text-stone-700 hover:border-rose-300 hover:bg-rose-50"><Icon className="h-4 w-4 text-rose-600" />{t(ka, en)}</Link>)}
-      </nav>
-      {!!recentClients.length && <p className="mt-3 text-xs text-stone-500">{t(`ბოლო დამატებული კლიენტი: ${recentClients[0].full_name}`, `Most recently added client: ${recentClients[0].full_name}`)}</p>}
-    </section>
-  </main>;
+  </div>;
 }
 
 function StatCard({ label, value, icon }: { label: string; value: number; icon: import("react").ReactNode }) {

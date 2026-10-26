@@ -20,7 +20,7 @@ export default async function ClientProfilePage({
 
   const { data: clientData } = await ctx.supabase
     .from("clients")
-    .select("*")
+    .select("id,full_name,email,phone,notes,tags,email_consent,unsubscribed_at,sms_consent,is_archived,last_completed_epilation_date,next_expected_appointment_date,created_at")
     .eq("id", id)
     .eq("salon_id", ctx.salonId)
     .maybeSingle();
@@ -34,13 +34,13 @@ export default async function ClientProfilePage({
   const [{ data: appointmentsData }, { data: logsData }] = await Promise.all([
     ctx.supabase
       .from("appointments")
-      .select("*, reminders(*)")
+      .select("id,client_id,treatment_date,treatment_time,treatment_type,status,completed_at,notes,service_name,price_gel,price_snapshot,reminders(id,scheduled_for_date,status)")
       .eq("client_id", client.id)
       .eq("salon_id", ctx.salonId)
       .order("treatment_date", { ascending: false }),
     ctx.supabase
       .from("email_logs")
-      .select("*")
+      .select("id,event_type,subject,error_message,created_at")
       .eq("client_id", client.id)
       .eq("salon_id", ctx.salonId)
       .order("created_at", { ascending: false }),

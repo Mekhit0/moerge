@@ -22,7 +22,7 @@ export default async function EmailHistoryPage() {
       .order("scheduled_for_date", { ascending: false }),
     ctx.supabase
       .from("email_logs")
-      .select("*")
+      .select("id,reminder_id,client_id,appointment_id,recipient_email,subject,event_type,provider_message_id,idempotency_key,attempt_number,status_code,error_message,is_dry_run,created_at")
       .eq("salon_id", ctx.salonId)
       .order("created_at", { ascending: false })
       .limit(100),

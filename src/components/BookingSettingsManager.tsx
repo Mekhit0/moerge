@@ -59,7 +59,7 @@ export default function BookingSettingsManager({ section }: { section: "staff" |
     schedules: t("სამუშაო განრიგი", "Working hours"), "time-off": t("დასვენების დრო", "Time off"),
   }[section];
 
-  return <main className="mx-auto max-w-5xl p-6 sm:p-10">
+  return <div className="space-y-5">
     <h1 className="text-2xl font-bold text-stone-900">{title}</h1>
     <p className="mt-1 text-sm text-stone-500">{t("განრიგი და დაჯავშნის გუნდი", "Manage the team and booking schedule")}</p>
     <nav className="mt-5 flex flex-wrap gap-2" aria-label={t("განრიგის პარამეტრები", "Booking settings")}>
@@ -103,5 +103,5 @@ export default function BookingSettingsManager({ section }: { section: "staff" |
       <button disabled={busy || !start || !end} onClick={() => void submit("/api/time-off", "POST", { staff_id: staffId || null, starts_at: new Date(start).toISOString(), ends_at: new Date(end).toISOString() })} className="mt-4 rounded-lg bg-rose-600 px-4 py-2 font-semibold text-white">{t("დროის დაბლოკვა", "Block time")}</button>
       <ul className="mt-5 divide-y">{timeOff.map((item) => <li key={item.id} className="flex items-center justify-between gap-3 py-3 text-sm"><span>{item.staff_id ? staff.find((person) => person.id === item.staff_id)?.full_name : t("მთელი სალონი", "Whole salon")} · {new Date(item.starts_at).toLocaleString()} – {new Date(item.ends_at).toLocaleString()}</span><button onClick={() => void submit(`/api/time-off?id=${item.id}`, "DELETE", undefined)} className="shrink-0 text-rose-700">{t("წაშლა", "Remove")}</button></li>)}</ul>
     </section>}
-  </main>;
+  </div>;
 }

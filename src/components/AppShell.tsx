@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -59,6 +59,10 @@ export default function AppShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const navItems = [
     {
       href: "/dashboard",
@@ -89,9 +93,60 @@ export default function AppShell({
     { href: "/settings/services", label: t("სერვისები", "Services"), icon: Scissors },
     { href: "/settings/schedules", label: t("განრიგი", "Schedules"), icon: Clock },
     { href: "/settings/time-off", label: t("დასვენების დრო", "Time off"), icon: Calendar },
+    { href: "/settings/notifications", label: t("შეტყობინებები", "Notifications"), icon: MailCheck },
     ...(canManageData ? [{ href: "/reports", label: t("ანგარიშები", "Reports"), icon: BarChart3 }, { href: "/billing", label: t("გადახდები", "Billing"), icon: CreditCard }] : []),
     ...(isPlatformOwner ? [{ href: "/platform", label: t("პლატფორმის მართვა", "Platform admin"), icon: ShieldAlert }] : []),
   ];
+
+  const navSections = [
+    {
+      label: t("დღიური სამუშაო", "Daily work"),
+      items: navItems.filter((item) => ["/dashboard", "/appointments", "/clients"].includes(item.href)),
+    },
+    {
+      label: t("შეხსენებები", "Reminders"),
+      items: navItems.filter((item) => item.href === "/email-history"),
+    },
+    {
+      label: t("სალონის მართვა", "Salon setup"),
+      items: navItems.filter((item) => item.href.startsWith("/settings")),
+    },
+    {
+      label: t("ანგარიშები", "Business"),
+      items: navItems.filter((item) => ["/reports", "/billing", "/platform"].includes(item.href)),
+    },
+  ].filter((section) => section.items.length > 0);
+
+  const isItemActive = (href: string) =>
+    pathname === href || (href !== "/settings" && pathname.startsWith(`${href}/`));
+
+  const renderNav = (mobile = false) => navSections.map((section) => (
+    <section key={section.label} aria-label={section.label} className="space-y-1">
+      <h2 className={`px-3 pt-3 text-[10px] font-semibold uppercase tracking-wider text-stone-400 ${mobile ? "first:pt-0" : ""}`}>
+        {section.label}
+      </h2>
+      {section.items.map((item) => {
+        const Icon = item.icon;
+        const isActive = isItemActive(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
+            aria-current={isActive ? "page" : undefined}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+              isActive
+                ? "bg-rose-600 text-white"
+                : "text-stone-600 hover:bg-rose-50 hover:text-rose-900"
+            }`}
+          >
+            <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-rose-500"}`} />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        );
+      })}
+    </section>
+  ));
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -104,20 +159,16 @@ export default function AppShell({
   return (
     <div className="min-h-screen flex bg-[#fdf8f6] text-stone-900">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-rose-100/80 shadow-sm z-30">
-        <div className="p-6 border-b border-rose-100/80">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-stone-200 z-30">
+        <div className="p-5 border-b border-stone-100">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <MoargeLogo variant="icon" size="md" />
               <div className="min-w-0">
-                <div className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600 flex items-center gap-1.5">
-                  <span>moarge</span>
-                  <span className="text-stone-300">•</span>
-                  <span>{t("სალონის სისტემა", "Salon Suite")}</span>
-                </div>
-                <h1 className="text-base font-bold text-stone-900 truncate" title={salonName}>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600">moarge</div>
+                <p className="text-sm font-semibold text-stone-900 truncate" title={salonName}>
                   {salonName}
-                </h1>
+                </p>
               </div>
             </div>
           </div>
@@ -156,32 +207,9 @@ export default function AppShell({
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1.5" aria-label="Main Navigation">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition ${
-                  isActive
-                    ? "bg-rose-600 text-white shadow-md shadow-rose-600/20"
-                    : "text-stone-600 hover:bg-rose-50/80 hover:text-rose-900"
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 ${
-                    isActive ? "text-white" : "text-rose-500"
-                  }`}
-                />
-                {item.label}
-              </Link>
-            );
-          })}
-
-          <div className="pt-4 mt-4 border-t border-rose-100/80">
+        <nav className="flex-1 space-y-3 overflow-y-auto px-3 py-3" aria-label={t("მთავარი ნავიგაცია", "Main navigation")}>
+          {renderNav()}
+          <div className="border-t border-stone-100 pt-3">
             <Link
               href="/book"
               target="_blank"
@@ -229,7 +257,7 @@ export default function AppShell({
       </aside>
 
       {/* Main Content Column */}
-      <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
+      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-rose-100 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -248,7 +276,9 @@ export default function AppShell({
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle Navigation Menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-dashboard-navigation"
+              aria-label={mobileMenuOpen ? t("მენიუს დახურვა", "Close menu") : t("მენიუს გახსნა", "Open menu")}
               className="p-2 rounded-xl border border-stone-200 text-stone-700 hover:bg-rose-50"
             >
               {mobileMenuOpen ? (
@@ -262,27 +292,8 @@ export default function AppShell({
 
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-rose-100 px-4 py-4 space-y-2 shadow-lg">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium ${
-                    isActive
-                      ? "bg-rose-600 text-white"
-                      : "text-stone-700 hover:bg-rose-50"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
+          <nav id="mobile-dashboard-navigation" className="lg:hidden bg-white border-b border-stone-200 px-4 py-3 shadow-lg" aria-label={t("მთავარი ნავიგაცია", "Main navigation")}>
+            <div className="space-y-3">{renderNav(true)}</div>
             <Link
               href="/book"
               target="_blank"
@@ -294,15 +305,16 @@ export default function AppShell({
             <button
               type="button"
               onClick={handleSignOut}
+              disabled={signingOut}
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-rose-700 hover:bg-rose-50"
             >
               <LogOut className="w-4 h-4" />
-              {t("გასვლა", "Sign Out")} ({staffEmail})
+              {signingOut ? t("გასვლა...", "Signing out...") : t("გასვლა", "Sign out")}
             </button>
-          </div>
+          </nav>
         )}
 
-        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {readOnly && <div role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{t("საცდელი პერიოდი ან გადახდის ვადა დასრულდა. ანგარიში მხოლოდ წასაკითხია. მონაცემები შენარჩუნებულია.", "The trial or payment grace period has ended. This account is read-only. Your data is retained.")} <Link className="ml-2 underline" href="/billing">{t("ბილინგის ნახვა", "View billing")}</Link></div>}
           {children}
         </main>

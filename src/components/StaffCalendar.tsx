@@ -48,6 +48,16 @@ export default function StaffCalendar({ initialBookings, staff, timezone }: { in
   const activeStaff = staff.filter((item) => item.is_active);
   const columns = days.flatMap((day) => activeStaff.map((member) => ({ day, member })));
   const hours = Array.from({ length: 52 }, (_, i) => 8 * 60 + i * 15);
+  const bookingsByColumn = useMemo(() => {
+    const grouped = new Map<string, Booking[]>();
+    for (const booking of bookings) {
+      const key = `${booking.staff_id}:${localDate(booking.starts_at, timezone)}`;
+      const current = grouped.get(key);
+      if (current) current.push(booking);
+      else grouped.set(key, [booking]);
+    }
+    return grouped;
+  }, [bookings, timezone]);
 
   function onDrop(event: React.DragEvent<HTMLDivElement>, day: string, staffId: string) {
     event.preventDefault();
@@ -68,7 +78,7 @@ export default function StaffCalendar({ initialBookings, staff, timezone }: { in
     if (response.ok) { setBlocking(false); window.location.reload(); }
   }
 
-  return <section className="mx-6 mt-6 rounded-2xl border border-rose-100 bg-white p-4 sm:p-6">
+  return <section className="mb-6 rounded-2xl border border-rose-100 bg-white p-4 sm:p-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 className="text-lg font-bold">{t("სპეციალისტების კალენდარი", "Staff calendar")}</h2>
       <div className="flex flex-wrap items-center gap-2">
@@ -92,7 +102,7 @@ export default function StaffCalendar({ initialBookings, staff, timezone }: { in
           <header className="h-12 border-b border-l p-2 text-center text-xs font-semibold"><div>{day}</div><div className="mt-1" style={{ color: member.color }}>{member.full_name}</div></header>
           <div className="relative h-[1248px] border-l border-b" style={{ backgroundImage: "repeating-linear-gradient(to bottom, transparent 0, transparent 23px, #f5f5f4 23px, #f5f5f4 24px)" }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => onDrop(event, day, member.id)}>
           {hours.map((minute) => <button key={minute} type="button" aria-label={t(`დაჯავშნა ${day} ${String(Math.floor(minute/60)).padStart(2,"0")}:${String(minute%60).padStart(2,"0")}`, `Book ${day} ${String(Math.floor(minute/60)).padStart(2,"0")}:${String(minute%60).padStart(2,"0")}`)} onDoubleClick={() => { const time = `${String(Math.floor(minute/60)).padStart(2,"0")}:${String(minute%60).padStart(2,"0")}`; window.location.href = `/appointments?new=1&date=${day}&time=${time}&staffId=${member.id}`; }} className="absolute inset-x-0 h-6 hover:bg-rose-50/60" style={{ top: ((minute - 8*60) / 15) * 24 }} />)}
-          {bookings.filter((booking) => booking.staff_id === member.id && localDate(booking.starts_at, timezone) === day && booking.status !== "canceled" && booking.status !== "no_show" && booking.status !== "missed").map((booking) => {
+          {(bookingsByColumn.get(`${member.id}:${day}`) ?? []).filter((booking) => booking.status !== "canceled" && booking.status !== "no_show" && booking.status !== "missed").map((booking) => {
             const start = localTime(booking.starts_at, timezone).split(":").map(Number);
             const end = localTime(booking.ends_at, timezone).split(":").map(Number);
             const top = ((start[0]*60+start[1]-8*60)/15)*24;

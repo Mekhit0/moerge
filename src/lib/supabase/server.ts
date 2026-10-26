@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { SalonSettings } from "../types";
 
 export const SAFE_SALON_SETTINGS_SELECT =
@@ -105,7 +106,7 @@ export function requireRole(
  * the SECURITY DEFINER `ensure_user_salon` RPC).
  * Never trusts a client-supplied salon_id.
  */
-export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalonContext | null> {
+export const getAuthenticatedSalonContext = cache(async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalonContext | null> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -219,4 +220,4 @@ export async function getAuthenticatedSalonContext(): Promise<AuthenticatedSalon
     role: (roleMembership?.role ?? "staff") as "owner" | "admin" | "staff",
     settings,
   };
-}
+});

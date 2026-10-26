@@ -14,7 +14,7 @@ export default async function ClientsPage() {
 
   const { data } = await ctx.supabase
     .from("clients")
-    .select("*")
+    .select("id,full_name,email,phone,notes,tags,email_consent,unsubscribed_at,sms_consent,is_archived,last_completed_epilation_date,next_expected_appointment_date,created_at")
     .eq("salon_id", ctx.salonId)
     .order("created_at", { ascending: false });
 

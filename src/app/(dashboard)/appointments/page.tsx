@@ -4,7 +4,7 @@ import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import AppointmentsManager from "@/components/AppointmentsManager";
 import StaffCalendar from "@/components/StaffCalendar";
 import { Appointment, Client, CustomBookingService } from "@/lib/types";
-import { addCalendarDays } from "@/lib/scheduling";
+import { addCalendarDays, getTodayInTimeZone } from "@/lib/scheduling";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +14,13 @@ export default async function AppointmentsPage() {
     redirect("/login");
   }
   const timezone = ctx.settings.timezone || "Asia/Tbilisi";
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
-  const today = `${parts.find((part) => part.type === "year")?.value}-${parts.find((part) => part.type === "month")?.value}-${parts.find((part) => part.type === "day")?.value}`;
+  const today = getTodayInTimeZone(timezone);
 
   const [{ data: appointmentsData }, { data: clientsData }, { data: staffData }, { data: serviceData }] = await Promise.all([
     ctx.supabase
       .from("appointments")
       .select(
-        "*, client:clients(id, full_name, email, phone, is_archived, email_consent), reminders(*), staff:staff(id,full_name,color)"
+        "id,client_id,treatment_date,treatment_time,treatment_type,is_epilation,status,completed_at,next_expected_date,notes,service_id,service_name,price_gel,duration_minutes,staff_id,starts_at,ends_at,client:clients(id,full_name,email,phone,is_archived,email_consent),reminders(id,scheduled_for_date,status),staff:staff(id,full_name,color)"
       )
       .eq("salon_id", ctx.salonId)
       .gte("treatment_date", addCalendarDays(today, -180))
@@ -30,7 +29,7 @@ export default async function AppointmentsPage() {
       .limit(1000),
     ctx.supabase
       .from("clients")
-      .select("*")
+      .select("id,full_name,email,phone,is_archived")
       .eq("salon_id", ctx.salonId)
       .order("full_name", { ascending: true }),
     ctx.supabase.from("staff").select("id,full_name,color,is_active,staff_services(service_id)").eq("salon_id", ctx.salonId).order("sort_order"),
@@ -59,9 +58,9 @@ export default async function AppointmentsPage() {
 
   return (
     <>
-    <StaffCalendar initialBookings={(appointmentsData ?? []) as never[]} staff={staffData ?? []} timezone={timezone} />
+    <StaffCalendar initialBookings={[]} staff={staffData ?? []} timezone={timezone} />
     <AppointmentsManager
-      initialAppointments={(appointmentsData ?? []) as Appointment[]}
+      initialAppointments={(appointmentsData ?? []) as unknown as Appointment[]}
       clients={(clientsData ?? []) as Client[]}
       reminderIntervalDays={ctx.settings.reminder_interval_days}
       timezone={timezone}
