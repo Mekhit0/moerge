@@ -21,7 +21,6 @@ export default function PricingDetails() {
       features: [
         t("1 ფილიალი", "1 branch"),
         t("7 სპეციალისტამდე", "Up to 7 staff"),
-        t("ელფოსტის შეხსენებები", "Email reminders"),
         t("SMS არ შედის", "SMS not included"),
       ],
     },
@@ -61,7 +60,6 @@ export default function PricingDetails() {
     { name: t("ფილიალები", "Branches"), trial: "1", business: "1", multi: "3" },
     { name: t("სპეციალისტები", "Staff"), trial: t("7-მდე", "Up to 7"), business: t("7 შედის, დამატებითი ₾9/თვეში", "7 included, extra ₾9/month"), multi: t("50-მდე", "Up to 50") },
     { name: t("SMS თვეში", "SMS per month"), trial: "0", business: "1,000", multi: "3,000" },
-    { name: t("ელფოსტის შეხსენებები", "Email reminders"), trial: t("შედის", "Included"), business: t("შედის", "Included"), multi: t("შედის", "Included") },
   ];
 
   return (

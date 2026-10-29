@@ -805,10 +805,6 @@ export default function MoargeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{t("ავტომატური პერსონალური შეხსენებები", "Automated smart email reminder cycle")}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{t(`თვეში ${BILLING_CONFIG.plans.business.sms} SMS შედის`, `${BILLING_CONFIG.plans.business.sms} SMS included each month`)}</span>
                 </li>
                 <li className="flex items-center gap-2">
