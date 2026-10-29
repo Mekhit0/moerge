@@ -733,7 +733,7 @@ export default function MoargeLandingPage() {
           <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-                {t("უფასო პაკეტი", "Free plan")}
+                {t("უფასო საცდელი", "Free trial")}
               </span>
               <h3 className="mt-1 text-xl sm:text-2xl font-bold text-stone-900">
                 {t("ფუნქციების გაცნობა", "Explore the features")}
@@ -862,7 +862,11 @@ export default function MoargeLandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{t("დამატებითი სპეციალისტი ამ გეგმაში არ ემატება", "No extra staff charge within the plan limit")}</span>
+                  <span>{t(`${BILLING_CONFIG.plans.multi_branch.branches} ფილიალი შედის`, `${BILLING_CONFIG.plans.multi_branch.branches} branches included`)}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{t(`${BILLING_CONFIG.plans.multi_branch.branches + 1}-ე ფილიალიდან ₾${BILLING_CONFIG.extraBranchMonthlyGel}/თვე თითოეულზე`, `₾${BILLING_CONFIG.extraBranchMonthlyGel}/month per branch from branch ${BILLING_CONFIG.plans.multi_branch.branches + 1}`)}</span>
                 </li>
               </ul>
             </div>
@@ -878,6 +882,11 @@ export default function MoargeLandingPage() {
         <p className="mx-auto mt-6 max-w-4xl text-center text-xs leading-relaxed text-stone-500">
           {t(`3, 6 და 12 თვის წინასწარ გადახდისას ძირითადი საფასურის ფასდაკლებაა ${BILLING_CONFIG.prepaidDiscounts[3]}%, ${BILLING_CONFIG.prepaidDiscounts[6]}% და ${BILLING_CONFIG.prepaidDiscounts[12]}%. დამატებითი სპეციალისტები და SMS მოხმარება ყოველთვიურად ირიცხება. ლიმიტს ზემოთ თითო SMS ₾${BILLING_CONFIG.smsOveragePriceGel.toFixed(2)} ღირს. წინასწარი პაკეტის ფასი არის ₾${BILLING_CONFIG.smsPackPriceGel.toFixed(2)} თითო SMS-ზე, მინიმუმ ${BILLING_CONFIG.smsPackMinimum}. ბარათით რეალური გადახდა ჯერ არ არის ჩართული.`, `Prepaid terms of 3, 6, and 12 months discount the base price by ${BILLING_CONFIG.prepaidDiscounts[3]}%, ${BILLING_CONFIG.prepaidDiscounts[6]}%, and ${BILLING_CONFIG.prepaidDiscounts[12]}%. Extra staff and SMS usage are billed monthly. SMS over quota costs ₾${BILLING_CONFIG.smsOveragePriceGel.toFixed(2)} each. Prepaid packs cost ₾${BILLING_CONFIG.smsPackPriceGel.toFixed(2)} per SMS, with a minimum of ${BILLING_CONFIG.smsPackMinimum}. Live card payments are not enabled yet.`)}
         </p>
+        <div className="mt-5 text-center">
+          <Link href="/pricing" className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-5 py-3 text-sm font-bold text-rose-800 transition hover:border-rose-300 hover:bg-rose-50">
+            {t("ფასებისა და პირობების ნახვა", "View full pricing details")}<ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </section>
 
       {/* FAQ Section */}

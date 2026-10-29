@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { BILLING_CONFIG, type PaidPlan } from "@/lib/billing-plans";
+import { BILLING_CONFIG, getBillableExtraBranches, type PaidPlan } from "@/lib/billing-plans";
 import { getPaymentProvider } from "@/lib/payment-provider";
 import { createServiceClient, getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 
@@ -11,17 +11,19 @@ export async function GET() {
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const db = createServiceClient();
-  const [{ data: subscription }, { data: invoices }, { data: wallet }, { count: staffCount }] = await Promise.all([
+  const [{ data: subscription }, { data: invoices }, { data: wallet }, { count: staffCount }, { count: branchCount }] = await Promise.all([
     db.from("subscriptions").select("*, plans(*)").eq("salon_id", ctx.salonId).maybeSingle(),
     db.from("invoices").select("id,kind,status,total_gel,due_at,period_start,period_end,created_at,invoice_lines(*)").eq("salon_id", ctx.salonId).order("created_at", { ascending: false }).limit(50),
     db.from("sms_wallet").select("included_quota,prepaid_balance,used_this_period,overage_count,overage_cap_gel,period_start").eq("salon_id", ctx.salonId).maybeSingle(),
     db.from("staff").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true),
+    db.from("salon_branches").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true),
   ]);
   const plan = subscription?.plan_code as PaidPlan | undefined;
   const estimate = plan ? BILLING_CONFIG.plans[plan]?.monthlyGel ?? 0 : 0;
   const extraStaff = Math.max(0, (staffCount ?? 0) - (plan ? BILLING_CONFIG.plans[plan].staffIncluded : 7));
-  return NextResponse.json({ config: BILLING_CONFIG, subscription, invoices: invoices ?? [], wallet, activeStaffCount: staffCount ?? 0,
-    nextInvoicePreviewGel: estimate + extraStaff * BILLING_CONFIG.extraStaffMonthlyGel + (wallet?.overage_count ?? 0) * BILLING_CONFIG.smsOveragePriceGel,
+  const extraBranches = plan ? getBillableExtraBranches(branchCount ?? 0, BILLING_CONFIG.plans[plan].branches) : 0;
+  return NextResponse.json({ config: BILLING_CONFIG, subscription, invoices: invoices ?? [], wallet, activeStaffCount: staffCount ?? 0, activeBranchCount: branchCount ?? 0, extraBranchCount: extraBranches,
+    nextInvoicePreviewGel: estimate + extraStaff * BILLING_CONFIG.extraStaffMonthlyGel + extraBranches * BILLING_CONFIG.extraBranchMonthlyGel + (wallet?.overage_count ?? 0) * BILLING_CONFIG.smsOveragePriceGel,
     paymentsEnabled: process.env.PAYMENT_PROVIDER === "fake" });
 }
 export async function POST(request: NextRequest) {

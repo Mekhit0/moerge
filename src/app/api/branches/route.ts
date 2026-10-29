@@ -24,10 +24,11 @@ export async function POST(request: NextRequest) {
   ]);
   if (subscription?.status !== "active") return NextResponse.json({ error: "Branch changes are available after plan activation." }, { status: 402 });
   const plan = (subscription?.plan_code ?? "business") as PaidPlan;
-  const cap = BILLING_CONFIG.plans[plan].branches;
+  const cap = plan === "multi_branch" ? BILLING_CONFIG.maxActiveBranches : BILLING_CONFIG.plans[plan].branches;
   if ((count ?? 0) >= cap) return NextResponse.json({ error: `This plan allows up to ${cap} active branch(es).` }, { status: 422 });
   const { data, error } = await db.from("salon_branches").insert({ salon_id: ctx.salonId, name: parsed.data.name }).select("id,name,is_active,created_at").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ branch: data }, { status: 201 });
+  const billableBranches = Math.max(0, (count ?? 0) + 1 - BILLING_CONFIG.plans[plan].branches);
+  return NextResponse.json({ branch: data, addedMonthlyChargeGel: billableBranches > 0 ? BILLING_CONFIG.extraBranchMonthlyGel : 0 }, { status: 201 });
 }
 
