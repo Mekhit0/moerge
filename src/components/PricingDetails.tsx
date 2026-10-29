@@ -121,7 +121,7 @@ export default function PricingDetails() {
                 {plan.points.map((point) => <li key={point} className="flex items-start gap-2.5"><Check className={`mt-0.5 h-4 w-4 shrink-0 ${plan.featured ? "text-rose-300" : "text-rose-600"}`} /><span>{point}</span></li>)}
               </ul>
               <Link href="/register" className={`mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition ${plan.featured ? "bg-rose-600 text-white shadow-lg shadow-rose-900/30 hover:bg-rose-500" : "border border-stone-200 bg-white text-stone-900 hover:border-rose-300 hover:bg-rose-50"}`}>
-                {plan.id === "trial" ? t("უფასო საცდელი პერიოდის დაწყება", "Start free trial") : t("გეგმის არჩევა", "Choose this plan")}<ArrowRight className="h-4 w-4" />
+                {t("14-დღიანი საცდელი პერიოდის დაწყება", "Start 14-day free trial")}<ArrowRight className="h-4 w-4" />
               </Link>
             </article>
           ))}
