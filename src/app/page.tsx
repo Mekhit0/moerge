@@ -733,13 +733,13 @@ export default function MoargeLandingPage() {
           <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 flex flex-col justify-between shadow-xs">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-                {t("საცდელი პერიოდი", "Free trial")}
+                {t("უფასო პაკეტი", "Free plan")}
               </span>
               <h3 className="mt-1 text-xl sm:text-2xl font-bold text-stone-900">
-                {t("ბიზნესის საცდელი", "Business trial")}
+                {t("ფუნქციების გაცნობა", "Explore the features")}
               </h3>
               <p className="mt-2 text-xs text-stone-500">
-                {t("ყველა ბიზნეს ფუნქცია 14 დღის განმავლობაში", "All Business features for 14 days")}
+                {t("გაეცანით moarge-ის შესაძლებლობებს უფასო საცდელ პერიოდში", "Explore moarge features during the free trial")}
               </p>
               <div className="mt-6 flex items-baseline gap-1">
                 <span className="text-3xl sm:text-4xl font-black text-stone-900">0 ₾</span>
