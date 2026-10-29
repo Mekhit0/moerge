@@ -722,8 +722,8 @@ export default function MoargeLandingPage() {
           </h2>
           <p className="mt-3 text-stone-600 text-xs sm:text-base">
             {t(
-              "ყველა პაკეტი მოიცავს 14-დღიან უფასო სატესტო პერიოდს. გადაიხადეთ მხოლოდ მაშინ, როცა შედეგს დაინახავთ.",
-              "All plans include a 14-day free trial. No upfront credit card required."
+              "დაიწყეთ 14-დღიანი უფასო საცდელი პერიოდით ან პირდაპირ აირჩიეთ ფასიანი პაკეტი.",
+              "Try moarge free for 14 days, or go straight to a paid plan."
             )}
           </p>
         </div>
@@ -781,7 +781,7 @@ export default function MoargeLandingPage() {
           {/* Plan 2: Business (Featured) */}
           <div className="bg-gradient-to-b from-stone-900 to-stone-950 text-white rounded-3xl border border-stone-800 p-6 sm:p-8 flex flex-col justify-between shadow-2xl shadow-rose-950/20 relative">
             <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider shadow-md whitespace-nowrap">
-              {t("ყველაზე პოპულარული", "Most Popular")}
+              {t("ერთი ფილიალისთვის", "One branch")}
             </span>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
@@ -823,10 +823,10 @@ export default function MoargeLandingPage() {
             </div>
 
             <Link
-              href="/register"
+              href="/login?mode=signup&plan=business"
               className="mt-8 w-full py-3.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs text-center shadow-lg shadow-rose-600/30 transition cursor-pointer"
             >
-              {t("დაიწყეთ 14-დღიანი ტესტი", "Start 14-day free trial")}
+              {t("Business-ის არჩევა", "Choose Business")}
             </Link>
           </div>
 
@@ -872,10 +872,10 @@ export default function MoargeLandingPage() {
             </div>
 
             <Link
-              href="/register"
+              href="/login?mode=signup&plan=multi_branch"
               className="mt-8 w-full py-3 px-4 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-900 font-bold text-xs text-center transition"
             >
-              {t("საცდელი პერიოდის დაწყება", "Start free trial")}
+              {t("Multi-branch-ის არჩევა", "Choose Multi-branch")}
             </Link>
           </div>
         </div>

@@ -1,20 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Building2, CalendarDays, Check, Clock3, MessageSquareText, Sparkles, Users } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import MoargeLogo from "@/components/MoargeLogo";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
-
-const rows = [
-  { ka: "ონლაინ ჩაწერის გვერდი", en: "Online booking page", trial: true, business: true, multi: true },
-  { ka: "ჯავშნების კალენდარი და განრიგები", en: "Appointment calendar and schedules", trial: true, business: true, multi: true },
-  { ka: "კლიენტების ბაზა და ვიზიტების ისტორია", en: "Client list and visit history", trial: true, business: true, multi: true },
-  { ka: "ელფოსტის შეხსენებები", en: "Email reminders", trial: true, business: true, multi: true },
-  { ka: "SMS თვეში", en: "SMS included per month", trial: false, business: true, multi: true },
-  { ka: "ფილიალები პაკეტში", en: "Branches included", trial: true, business: true, multi: true },
-  { ka: "სპეციალისტები პაკეტში", en: "Staff included", trial: true, business: true, multi: true },
-] as const;
 
 export default function PricingDetails() {
   const { t } = useLanguage();
@@ -23,165 +13,127 @@ export default function PricingDetails() {
     {
       id: "trial",
       title: t("უფასო საცდელი", "Free trial"),
-      eyebrow: t("დაიწყეთ მარტივად", "Get started"),
+      note: t("moarge-ის გასაცნობად", "To explore moarge"),
       price: 0,
       period: t("14 დღე", "14 days"),
-      summary: t("დაათვალიერეთ moarge და გამოცადეთ ძირითადი სამუშაო პროცესი.", "Explore moarge and try the core workflow."),
-      points: [
+      href: "/register",
+      action: t("საცდელი პერიოდის დაწყება", "Start free trial"),
+      features: [
         t("1 ფილიალი", "1 branch"),
         t("7 სპეციალისტამდე", "Up to 7 staff"),
         t("ელფოსტის შეხსენებები", "Email reminders"),
-        t("SMS საცდელ პერიოდში არ იგზავნება", "SMS is not sent during the trial"),
+        t("SMS არ შედის", "SMS not included"),
       ],
-      featured: false,
     },
     {
       id: "business",
-      title: t("ბიზნეს გეგმა", "Business"),
-      eyebrow: t("ერთი ფილიალისთვის", "For one location"),
+      title: "Business",
+      note: t("ერთი ფილიალი", "One branch"),
       price: config.plans.business.monthlyGel,
       period: t("თვეში", "per month"),
-      summary: t("ერთი სალონის ყოველდღიური ჯავშნებისა და კლიენტების მართვისთვის.", "For daily bookings and client management at one salon."),
-      points: [
+      href: "/login?mode=signup&plan=business",
+      action: t("Business-ის არჩევა", "Choose Business"),
+      features: [
         t("1 ფილიალი", "1 branch"),
         t(`${config.plans.business.staffIncluded} სპეციალისტი შედის`, `${config.plans.business.staffIncluded} staff included`),
-        t(`${config.plans.business.staffLimit}-მდე სპეციალისტი`, `Up to ${config.plans.business.staffLimit} staff`),
-        t(`დამატებითი სპეციალისტი: ₾${config.extraStaffMonthlyGel}/თვე`, `Additional staff: ₾${config.extraStaffMonthlyGel}/month`),
+        t(`დამატებითი სპეციალისტი ₾${config.extraStaffMonthlyGel}/თვეში`, `Additional staff ₾${config.extraStaffMonthlyGel}/month`),
         t(`${config.plans.business.sms.toLocaleString("en-US")} SMS თვეში`, `${config.plans.business.sms.toLocaleString("en-US")} SMS per month`),
       ],
-      featured: true,
     },
     {
-      id: "multi",
-      title: t("მრავალფილიალიანი", "Multi-branch"),
-      eyebrow: t("რამდენიმე ლოკაციისთვის", "For growing teams"),
+      id: "multi_branch",
+      title: "Multi-branch",
+      note: t("რამდენიმე ფილიალი", "Multiple branches"),
       price: config.plans.multi_branch.monthlyGel,
       period: t("თვეში", "per month"),
-      summary: t("გააერთიანეთ რამდენიმე ფილიალი ერთ სამუშაო სივრცეში.", "Manage multiple locations in one workspace."),
-      points: [
+      href: "/login?mode=signup&plan=multi_branch",
+      action: t("Multi-branch-ის არჩევა", "Choose Multi-branch"),
+      features: [
         t(`${config.plans.multi_branch.branches} ფილიალი შედის`, `${config.plans.multi_branch.branches} branches included`),
-        t(`მე-4 ფილიალიდან: ₾${config.extraBranchMonthlyGel}/ფილიალი თვეში`, `From branch 4: ₾${config.extraBranchMonthlyGel}/branch per month`),
+        t(`მე-4 და ყოველი შემდეგი ფილიალი ₾${config.extraBranchMonthlyGel}/თვეში`, `₾${config.extraBranchMonthlyGel}/month for each branch from the 4th`),
         t(`${config.plans.multi_branch.staffIncluded} სპეციალისტამდე`, `Up to ${config.plans.multi_branch.staffIncluded} staff`),
         t(`${config.plans.multi_branch.sms.toLocaleString("en-US")} SMS თვეში`, `${config.plans.multi_branch.sms.toLocaleString("en-US")} SMS per month`),
       ],
-      featured: false,
     },
+  ];
+
+  const comparison = [
+    { name: t("ფილიალები", "Branches"), trial: "1", business: "1", multi: "3" },
+    { name: t("სპეციალისტები", "Staff"), trial: t("7-მდე", "Up to 7"), business: t("7 შედის, დამატებითი ₾9/თვეში", "7 included, extra ₾9/month"), multi: t("50-მდე", "Up to 50") },
+    { name: t("SMS თვეში", "SMS per month"), trial: "0", business: "1,000", multi: "3,000" },
+    { name: t("ელფოსტის შეხსენებები", "Email reminders"), trial: t("შედის", "Included"), business: t("შედის", "Included"), multi: t("შედის", "Included") },
   ];
 
   return (
     <main className="min-h-screen bg-[#fdf8f6] text-stone-900">
-      <header className="sticky top-0 z-40 border-b border-rose-100/80 bg-white/95 shadow-xs backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <MoargeLogo size="md" variant="icon" />
-            <span className="text-xl font-black tracking-tight">moarge</span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/" className="hidden items-center gap-1 text-sm font-semibold text-stone-600 hover:text-rose-700 sm:inline-flex">
-              <ArrowLeft className="h-4 w-4" />{t("მთავარი", "Home")}
-            </Link>
+      <header className="border-b border-stone-200 bg-white">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" aria-label="moarge home"><MoargeLogo size="md" variant="full" /></Link>
+          <nav className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Link href="/login" className="rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-stone-800">
-              {t("შესვლა", "Sign in")}
-            </Link>
-          </div>
+            <Link href="/login" className="text-sm font-semibold text-stone-700 hover:text-rose-700">{t("შესვლა", "Sign in")}</Link>
+          </nav>
         </div>
       </header>
 
-      <section className="relative overflow-hidden border-b border-rose-100 bg-white">
-        <div className="pointer-events-none absolute -right-24 -top-40 h-96 w-96 rounded-full bg-rose-200/40 blur-3xl" />
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-          <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-rose-700">
-              <Sparkles className="h-3.5 w-3.5" />{t("მარტივი და გასაგები ფასები", "Clear, straightforward pricing")}
-            </span>
-            <h1 className="mt-5 text-4xl font-black tracking-tight text-stone-950 sm:text-6xl">
-              {t("აირჩიეთ გეგმა თქვენი სალონისთვის", "Find the right plan for your salon")}
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-stone-600 sm:text-lg">
-              {t("დაიწყეთ 14-დღიანი საცდელი პერიოდით. ერთი ფილიალისთვის აირჩიეთ Business, ხოლო რამდენიმე ლოკაციისთვის Multi-branch.", "Start with a 14-day trial. Choose Business for one location or Multi-branch for several.")}
-            </p>
-          </div>
-        </div>
+      <section className="mx-auto max-w-6xl px-4 pb-8 pt-12 sm:px-6 sm:pt-16">
+        <p className="text-sm font-semibold text-rose-700">moarge · {t("ფასები", "Pricing")}</p>
+        <h1 className="mt-3 max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
+          {t("აირჩიეთ თქვენთვის საჭირო პაკეტი", "Choose the plan that fits your salon")}
+        </h1>
+        <p className="mt-4 max-w-2xl text-base leading-7 text-stone-600">
+          {t("დაიწყეთ უფასო საცდელი პერიოდით ან პირდაპირ აირჩიეთ ფასიანი პაკეტი.", "Start with the free trial or go straight to a paid plan.")}
+        </p>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="grid gap-5 lg:grid-cols-3">
+      <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
+        <div className="grid gap-4 md:grid-cols-3">
           {plans.map((plan) => (
-            <article key={plan.id} className={`relative flex flex-col rounded-3xl border p-6 sm:p-8 ${plan.featured ? "border-stone-900 bg-gradient-to-b from-stone-900 to-stone-950 text-white shadow-2xl shadow-rose-950/15" : "border-stone-200 bg-white shadow-sm"}`}>
-              {plan.featured && <span className="absolute -top-3 left-6 rounded-full bg-rose-600 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white">{t("ერთი ფილიალის არჩევანი", "Popular for one location")}</span>}
-              <p className={`text-xs font-bold uppercase tracking-widest ${plan.featured ? "text-rose-300" : "text-rose-700"}`}>{plan.eyebrow}</p>
-              <h2 className="mt-3 text-2xl font-extrabold">{plan.title}</h2>
-              <p className={`mt-2 min-h-12 text-sm leading-6 ${plan.featured ? "text-stone-300" : "text-stone-600"}`}>{plan.summary}</p>
-              <div className="mt-7 flex items-baseline gap-2">
-                <span className="text-5xl font-black tracking-tight">₾{plan.price}</span>
-                <span className={`text-sm ${plan.featured ? "text-stone-400" : "text-stone-500"}`}>/ {plan.period}</span>
-              </div>
-              <ul className={`mt-7 flex-1 space-y-3 border-t pt-6 text-sm ${plan.featured ? "border-stone-700 text-stone-200" : "border-stone-100 text-stone-700"}`}>
-                {plan.points.map((point) => <li key={point} className="flex items-start gap-2.5"><Check className={`mt-0.5 h-4 w-4 shrink-0 ${plan.featured ? "text-rose-300" : "text-rose-600"}`} /><span>{point}</span></li>)}
+            <article key={plan.id} className="flex flex-col border border-stone-200 bg-white p-6 sm:p-7">
+              <p className="text-sm text-stone-500">{plan.note}</p>
+              <h2 className="mt-1 text-xl font-bold">{plan.title}</h2>
+              <p className="mt-6 flex items-baseline gap-2">
+                <span className="text-4xl font-bold tracking-tight">₾{plan.price}</span>
+                <span className="text-sm text-stone-500">{plan.period}</span>
+              </p>
+              <ul className="mt-6 flex-1 border-t border-stone-200 pt-5 text-sm leading-6 text-stone-700">
+                {plan.features.map((feature) => <li key={feature} className="border-b border-stone-100 py-2.5 last:border-0">{feature}</li>)}
               </ul>
-              <Link href="/register" className={`mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition ${plan.featured ? "bg-rose-600 text-white shadow-lg shadow-rose-900/30 hover:bg-rose-500" : "border border-stone-200 bg-white text-stone-900 hover:border-rose-300 hover:bg-rose-50"}`}>
-                {t("14-დღიანი საცდელი პერიოდის დაწყება", "Start 14-day free trial")}<ArrowRight className="h-4 w-4" />
+              <Link href={plan.href} className={`mt-5 inline-flex min-h-11 items-center justify-center gap-2 px-4 py-3 text-sm font-semibold transition ${plan.id === "trial" ? "border border-stone-300 text-stone-800 hover:border-stone-500" : "bg-rose-700 text-white hover:bg-rose-800"}`}>
+                {plan.action}<ArrowRight className="h-4 w-4" />
               </Link>
             </article>
           ))}
         </div>
+        <p className="mt-4 text-sm leading-6 text-stone-500">
+          {t("ფასები ლარშია. Multi-branch პაკეტში მეოთხე და ყოველი შემდეგი აქტიური ფილიალი დამატებით ₾40 ღირს თვეში. რეალური ბარათით გადახდა ჯერ არ არის ჩართული.", "Prices are in GEL. Each active branch after the first three on Multi-branch adds ₾40 per month. Live card payments are not enabled yet.")}
+        </p>
+      </section>
 
-        <div className="mt-10 rounded-3xl border border-rose-100 bg-white p-6 sm:p-8">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-rose-700">{t("შედარება", "Compare plans")}</p>
-              <h2 className="mt-2 text-2xl font-extrabold">{t("რა შედის თითოეულ გეგმაში", "What each plan includes")}</h2>
-            </div>
-            <p className="text-sm text-stone-500">{t("ფასები მითითებულია ლარში, თვეში.", "Prices are in GEL per month.")}</p>
+      <section className="border-y border-stone-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-xl font-bold">{t("პაკეტების შედარება", "Plan comparison")}</h2>
+            <p className="text-sm text-stone-500">{t("ყოველთვიური ფასი", "Monthly pricing")}</p>
           </div>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-              <thead><tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500"><th className="py-3 pr-4 font-semibold">{t("შესაძლებლობა", "Feature")}</th><th className="px-4 py-3 font-semibold">{t("საცდელი", "Trial")}</th><th className="px-4 py-3 font-semibold">Business</th><th className="px-4 py-3 font-semibold">Multi-branch</th></tr></thead>
-              <tbody>{rows.map((row) => <tr key={row.en} className="border-b border-stone-100 last:border-0"><th className="py-4 pr-4 font-medium text-stone-700">{t(row.ka, row.en)}</th><td className="px-4 py-4">{row.trial ? <Check className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-stone-400">{t("არ შედის", "Not included")}</span>}</td><td className="px-4 py-4">{row.business ? <Check className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-stone-400">{t("არ შედის", "Not included")}</span>}</td><td className="px-4 py-4">{row.multi ? <Check className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-stone-400">{t("არ შედის", "Not included")}</span>}</td></tr>)}</tbody>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[620px] border-collapse text-left text-sm">
+              <thead><tr className="border-b border-stone-300 text-stone-500"><th className="py-3 pr-4 font-medium">{t("შესაძლებლობა", "Included")}</th><th className="px-4 py-3 font-medium">{t("უფასო", "Free")}</th><th className="px-4 py-3 font-medium">Business</th><th className="px-4 py-3 font-medium">Multi-branch</th></tr></thead>
+              <tbody>{comparison.map((row) => <tr key={row.name} className="border-b border-stone-100 last:border-0"><th scope="row" className="py-3 pr-4 font-medium text-stone-700">{row.name}</th><td className="px-4 py-3 text-stone-600">{row.trial}</td><td className="px-4 py-3 text-stone-600">{row.business}</td><td className="px-4 py-3 text-stone-600">{row.multi}</td></tr>)}</tbody>
             </table>
           </div>
-          <div className="mt-5 grid gap-3 text-sm text-stone-600 sm:grid-cols-3">
-            <p className="flex items-center gap-2"><Building2 className="h-4 w-4 text-rose-600" />Business: 1 {t("ფილიალი", "branch")}; Multi-branch: {config.plans.multi_branch.branches} {t("ფილიალი", "branches")}.</p>
-            <p className="flex items-center gap-2"><Users className="h-4 w-4 text-rose-600" />{t("დამატებითი სპეციალისტი Business გეგმაში", "Additional staff on Business")}: ₾{config.extraStaffMonthlyGel}/{t("თვე", "month")}.</p>
-            <p className="flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-rose-600" />{t("SMS ლიმიტს ზემოთ", "SMS over quota")}: ₾{config.smsOveragePriceGel.toFixed(2)} {t("თითო შეტყობინება", "per message")}.</p>
-          </div>
         </div>
+      </section>
 
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <article className="rounded-3xl border border-rose-100 bg-rose-50/70 p-6 sm:p-8">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-rose-700 shadow-sm"><Building2 className="h-5 w-5" /></div>
-            <h2 className="mt-5 text-xl font-extrabold">{t("დამატებითი ფილიალები", "Additional branches")}</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-600">{t(`Multi-branch გეგმაში შედის ${config.plans.multi_branch.branches} ფილიალი. მე-${config.plans.multi_branch.branches + 1} და ყოველი შემდეგი აქტიური ფილიალი ღირს ₾${config.extraBranchMonthlyGel} თვეში. თანხა აისახება ყოველთვიურ გამოყენების ინვოისში.`, `The Multi-branch plan includes ${config.plans.multi_branch.branches} locations. The ${config.plans.multi_branch.branches + 1}th and each additional active branch costs ₾${config.extraBranchMonthlyGel} per month, billed in the monthly usage invoice.`)}</p>
-            <p className="mt-4 rounded-xl bg-white/80 p-3 text-sm font-bold text-stone-800">{t("მაგალითი: 4 ფილიალი ჯამში ₾190 თვეში.", "Example: 4 branches cost ₾190 per month in total.")}</p>
-          </article>
-          <article className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-100 text-stone-700"><MessageSquareText className="h-5 w-5" /></div>
-            <h2 className="mt-5 text-xl font-extrabold">{t("SMS და დამატებითი მოხმარება", "SMS and usage")}</h2>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-stone-600">
-              <li>{t(`Business: ${config.plans.business.sms.toLocaleString("en-US")} SMS თვეში.`, `Business: ${config.plans.business.sms.toLocaleString("en-US")} SMS per month.`)}</li>
-              <li>{t(`Multi-branch: ${config.plans.multi_branch.sms.toLocaleString("en-US")} SMS თვეში.`, `Multi-branch: ${config.plans.multi_branch.sms.toLocaleString("en-US")} SMS per month.`)}</li>
-              <li>{t(`ლიმიტს ზემოთ SMS: ₾${config.smsOveragePriceGel.toFixed(2)} თითო SMS-ზე; თვიური ხარჯის საწყისი ლიმიტი ₾${config.defaultSmsOverageCapGel}.`, `SMS over quota: ₾${config.smsOveragePriceGel.toFixed(2)} each; default monthly spend cap is ₾${config.defaultSmsOverageCapGel}.`)}</li>
-              <li>{t(`წინასწარი SMS პაკეტი: ₾${config.smsPackPriceGel.toFixed(2)} თითო SMS-ზე, მინიმუმ ${config.smsPackMinimum}.`, `Prepaid SMS: ₾${config.smsPackPriceGel.toFixed(2)} each, minimum ${config.smsPackMinimum}.`)}</li>
-            </ul>
-          </article>
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-2">
+        <div>
+          <h2 className="text-lg font-bold">{t("დამატებითი მოხმარება", "Additional usage")}</h2>
+          <p className="mt-2 text-sm leading-6 text-stone-600">{t(`Business პაკეტში 7 სპეციალისტი შედის. თითო დამატებითი სპეციალისტი ღირს ₾${config.extraStaffMonthlyGel} თვეში. SMS ლიმიტს ზემოთ თითო შეტყობინება ₾${config.smsOveragePriceGel.toFixed(2)} ღირს. SMS-ის ხარჯის საწყისი თვიური ლიმიტია ₾${config.defaultSmsOverageCapGel}. წინასწარი SMS პაკეტის ფასი ₾${config.smsPackPriceGel.toFixed(2)} თითო SMS-ზეა, მინიმუმ ${config.smsPackMinimum} SMS.`, `Business includes 7 staff. Each additional staff member costs ₾${config.extraStaffMonthlyGel} per month. SMS beyond the included quota costs ₾${config.smsOveragePriceGel.toFixed(2)} per message, with a default monthly spend cap of ₾${config.defaultSmsOverageCapGel}. Prepaid SMS packs cost ₾${config.smsPackPriceGel.toFixed(2)} per message, minimum ${config.smsPackMinimum} messages.`)}</p>
         </div>
-
-        <div className="mt-6 rounded-3xl bg-stone-900 p-6 text-white sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-8">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2 text-rose-300"><Clock3 className="h-4 w-4" /><span className="text-xs font-bold uppercase tracking-widest">{t("საცდელი პერიოდი", "Free trial")}</span></div>
-            <h2 className="mt-3 text-2xl font-extrabold">{t("14 დღე moarge-ის გასაცნობად", "14 days to try moarge")}</h2>
-            <p className="mt-2 text-sm leading-6 text-stone-300">{t("საცდელი პერიოდი მოიცავს 1 ფილიალს, 7 სპეციალისტამდე და ელფოსტის შეხსენებებს. საცდელ პერიოდში SMS არ იგზავნება.", "The trial includes 1 branch, up to 7 staff, and email reminders. SMS is not sent during the trial.")}</p>
-          </div>
-          <Link href="/register" className="mt-5 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-rose-500 sm:mt-0">
-            {t("დაიწყეთ უფასოდ", "Start for free")}<ArrowRight className="h-4 w-4" />
-          </Link>
+        <div>
+          <h2 className="text-lg font-bold">{t("გადახდის პირობები", "Payment terms")}</h2>
+          <p className="mt-2 text-sm leading-6 text-stone-600">{t(`3, 6 და 12 თვის წინასწარ გადახდაზე მოქმედებს ${config.prepaidDiscounts[3]}%, ${config.prepaidDiscounts[6]}% და ${config.prepaidDiscounts[12]}% ფასდაკლება საბაზო პაკეტზე. ამჟამად რეალური ბარათით გადახდა ჩართული არ არის.`, `Prepaying for 3, 6, or 12 months discounts the base plan by ${config.prepaidDiscounts[3]}%, ${config.prepaidDiscounts[6]}%, or ${config.prepaidDiscounts[12]}%. Live card payments are not enabled yet.`)}</p>
         </div>
-
-        <p className="mx-auto mt-6 max-w-4xl text-center text-xs leading-6 text-stone-500">
-          <CalendarDays className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
-          {t(`3, 6 და 12 თვის წინასწარ გადახდაზე მოქმედებს ${config.prepaidDiscounts[3]}%, ${config.prepaidDiscounts[6]}% და ${config.prepaidDiscounts[12]}% ფასდაკლება საბაზო პაკეტზე. დამატებითი ფილიალები, სპეციალისტები და SMS მოხმარება ცალკე ირიცხება. რეალური ბარათით გადახდა ჯერ არ არის ჩართული.`, `Prepaying 3, 6, or 12 months discounts the base plan by ${config.prepaidDiscounts[3]}%, ${config.prepaidDiscounts[6]}%, or ${config.prepaidDiscounts[12]}%. Additional branches, staff, and SMS usage are billed separately. Live card payments are not enabled yet.`)}
-        </p>
       </section>
     </main>
   );

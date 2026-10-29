@@ -36,12 +36,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<"business" | "multi_branch" | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("mode") === "signup") {
         setMode("signup");
+      }
+      const plan = params.get("plan");
+      if (plan === "business" || plan === "multi_branch") {
+        setSelectedPlan(plan);
       }
       if (params.get("confirmed") === "true") {
         setInfoMessage(
@@ -83,7 +88,7 @@ export default function LoginPage() {
           return;
         }
 
-        router.push("/dashboard");
+        router.push(selectedPlan ? `/billing?plan=${selectedPlan}` : "/dashboard");
         router.refresh();
       } else {
         // Secure server-side registration with pre-confirmed email (bypasses failing SMTP restrictions)
@@ -130,7 +135,7 @@ export default function LoginPage() {
           return;
         }
 
-        router.push("/dashboard");
+        router.push(selectedPlan ? `/billing?plan=${selectedPlan}` : "/dashboard");
         router.refresh();
       }
     } catch (err) {
@@ -209,7 +214,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <div className="text-xs font-bold text-white">
-                  {t("Smart Slot Guard (0% გადაფარვა)", "Smart Slot Guard (0% Overlaps)")}
+                  {t("ჯავშნების გადაფარვისგან დაცვა", "Booking conflict prevention")}
                 </div>
                 <div className="text-[12px] text-stone-300 mt-0.5 leading-relaxed">
                   {t(
@@ -238,27 +243,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Social Proof Stats */}
-          <div className="pt-2 grid grid-cols-3 gap-3 border-t border-white/10 text-xs">
-            <div>
-              <div className="text-xl font-black text-rose-300">+40%</div>
-              <div className="text-[11px] text-stone-400 mt-0.5">
-                {t("განმეორებითი ვიზიტები", "Repeat Visits")}
-              </div>
-            </div>
-            <div>
-              <div className="text-xl font-black text-white">0%</div>
-              <div className="text-[11px] text-stone-400 mt-0.5">
-                {t("გრაფიკის გადაფარვა", "Conflicts")}
-              </div>
-            </div>
-            <div>
-              <div className="text-xl font-black text-emerald-300">100%</div>
-              <div className="text-[11px] text-stone-400 mt-0.5">
-                {t("იზოლირებული სივრცე", "Isolated Workspace")}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Bottom Security Assurance */}
@@ -297,10 +281,15 @@ export default function LoginPage() {
                     "შედით თქვენი სალონის სამუშაო სივრცეში და მართეთ განრიგი.",
                     "Sign in to your salon workspace, calendar, and reminders."
                   )
-                : t(
-                    "დაარეგისტრირეთ თქვენი სალონი 1 წუთში (14 დღე უფასოდ).",
-                    "Register your salon in 60 seconds (14-day free trial)."
-                  )}
+                : selectedPlan
+                  ? t(
+                      `რეგისტრაციის შემდეგ გააგრძელებთ ${selectedPlan === "business" ? "Business" : "Multi-branch"} პაკეტის გადახდას.`,
+                      `After registration, continue to checkout for the ${selectedPlan === "business" ? "Business" : "Multi-branch"} plan.`
+                    )
+                  : t(
+                      "დაარეგისტრირეთ სალონი და გამოიყენეთ moarge 14 დღე უფასოდ.",
+                      "Register your salon and try moarge free for 14 days."
+                    )}
             </p>
           </div>
 
@@ -332,7 +321,9 @@ export default function LoginPage() {
                   : "text-stone-500 hover:text-stone-900"
               }`}
             >
-              {t("რეგისტრაცია (14 დღე უფასოდ)", "Register (Free Trial)")}
+              {selectedPlan
+                ? t("გეგმით რეგისტრაცია", "Register with selected plan")
+                : t("რეგისტრაცია (14 დღე უფასოდ)", "Register (Free Trial)")}
             </button>
           </div>
 
@@ -491,17 +482,16 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Guarantees */}
-          <div className="mt-6 pt-5 border-t border-stone-100 space-y-2 text-[11px] text-stone-500">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>{t("14-დღიანი უფასო სატესტო პერიოდი", "14-Day Full Free Trial")}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>{t("საკრედიტო ბარათი არ არის საჭირო", "No Credit Card Required")}</span>
-            </div>
-          </div>
+          {mode === "signup" && <div className="mt-6 border-t border-stone-100 pt-5 text-[11px] text-stone-500">
+            {selectedPlan ? (
+              <p>{t("არჩეული პაკეტი ბილინგის გვერდზე გამოჩნდება რეგისტრაციის შემდეგ. ბარათით გადახდა ჯერ ჩართული არ არის.", "Your selected plan will appear on the billing page after registration. Card payments are not enabled yet.")}</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /><span>{t("14-დღიანი უფასო საცდელი პერიოდი", "14-day free trial")}</span></div>
+                <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /><span>{t("საკრედიტო ბარათი არ არის საჭირო", "No credit card required")}</span></div>
+              </div>
+            )}
+          </div>}
 
           {/* Legal and Terms Notice */}
           <div className="mt-5 text-center text-[11px] text-stone-400 leading-relaxed">
