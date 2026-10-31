@@ -421,7 +421,7 @@ export default function MoargeLandingPage() {
         <section className="py-14 sm:py-16 bg-gradient-to-br from-rose-950 via-rose-900 to-stone-900 text-white">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center space-y-5">
             <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
-              {t("მზად ხართ რვეულის დასამშვიდობებლად?", "Ready to put the notebook away?")}
+              {t("მზად ხართ დაემშვიდობოთ რვეულს?", "Ready to put the notebook away?")}
             </h2>
             <p className="text-rose-100/80 text-base sm:text-lg">
               {t(`რეგისტრაციას რამდენიმე წუთი სჭირდება. ${trialDays} დღე უფასოა.`, `Signing up takes a few minutes. ${trialDays} days are free.`)}
