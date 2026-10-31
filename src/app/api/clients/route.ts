@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { getAuthenticatedSalonContext, requireRole, OFFICE_ONLY_ERROR } from "@/lib/supabase/server";
 import { clientInputSchema, normalizeEmail } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
   if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: OFFICE_ONLY_ERROR }, { status: 403 });
 
   const rl = checkRateLimit(`clients:create:${ctx.user.id}`, 30, 60_000);
   if (!rl.allowed) {

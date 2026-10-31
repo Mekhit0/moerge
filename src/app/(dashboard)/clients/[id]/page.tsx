@@ -13,7 +13,7 @@ export default async function ClientProfilePage({
 }) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) {
-    redirect("/login");
+    redirect("/login?access=none");
   }
 
   const { id } = await params;

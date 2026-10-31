@@ -14,7 +14,7 @@ export default async function AppointmentsPage({ searchParams }: {
   searchParams: Promise<{ date?: string; view?: string; new?: string; time?: string; staffId?: string; clientId?: string }>;
 }) {
   const ctx = await getAuthenticatedSalonContext();
-  if (!ctx) redirect("/login");
+  if (!ctx) redirect("/login?access=none");
 
   const timezone = ctx.settings.timezone || "Asia/Tbilisi";
   const today = getTodayInTimeZone(timezone);
@@ -28,14 +28,17 @@ export default async function AppointmentsPage({ searchParams }: {
       .eq("salon_id", ctx.salonId).eq("is_active", true).order("name_ka"),
   ]);
 
-  const staff = (staffRows ?? []).map((member) => ({
+  const office = requireRole(ctx, ["owner", "admin"]);
+  // A master works only in their own column. Without a linked master row they see no column at all.
+  const visibleRows = office ? staffRows ?? [] : (staffRows ?? []).filter((member) => member.id === ctx.staffId);
+  const staff = visibleRows.map((member) => ({
     id: member.id,
     full_name: member.full_name,
     color: member.color,
     service_ids: (member.staff_services ?? []).map((assignment: { service_id: string }) => assignment.service_id),
   }));
 
-  const initialBooking = params.new === "1"
+  const initialBooking = office && params.new === "1"
     ? {
         date: initialDate,
         time: params.time && TIME.test(params.time) ? params.time : undefined,
@@ -54,7 +57,8 @@ export default async function AppointmentsPage({ searchParams }: {
         start: toMinutes(ctx.settings.working_hours_start || "10:00"),
         end: toMinutes(ctx.settings.working_hours_end || "20:00"),
       }}
-      canManage={requireRole(ctx, ["owner", "admin"])}
+      canManage={office}
+      isMaster={!office}
       initialDate={initialDate}
       initialView={params.view === "week" ? "week" : "day"}
       initialBooking={initialBooking}

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function ClientsPage() {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) {
-    redirect("/login");
+    redirect("/login?access=none");
   }
 
   const { data } = await ctx.supabase

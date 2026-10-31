@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 const canManage = ["owner", "admin"] as const;
+const OWN_TIME_ONLY = "შეგიძლიათ მხოლოდ საკუთარი დროის დაბლოკვა. / You can only block your own time.";
 
 export async function GET() {
   const ctx = await getAuthenticatedSalonContext();
@@ -13,10 +14,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!requireRole(ctx, canManage)) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
+  const office = requireRole(ctx, canManage);
+  if (!office && !ctx.staffId) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || typeof body.starts_at !== "string" || typeof body.ends_at !== "string" || !Number.isFinite(Date.parse(body.starts_at)) || !Number.isFinite(Date.parse(body.ends_at)) || Date.parse(body.ends_at) <= Date.parse(body.starts_at)) return NextResponse.json({ error: "Choose a valid time-off range." }, { status: 400 });
   const staffId = typeof body.staff_id === "string" && body.staff_id ? body.staff_id : null;
+  // A master blocks only their own time, never the whole salon.
+  if (!office && staffId !== ctx.staffId) return NextResponse.json({ error: OWN_TIME_ONLY }, { status: 403 });
   if (staffId) {
     // The master must belong to this salon; never trust an id sent by the browser.
     const { data: member } = await ctx.supabase.from("staff").select("id").eq("id", staffId).eq("salon_id", ctx.salonId).maybeSingle();
@@ -30,10 +34,14 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!requireRole(ctx, canManage)) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
+  const office = requireRole(ctx, canManage);
+  if (!office && !ctx.staffId) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Time-off id is required." }, { status: 400 });
-  const { error } = await ctx.supabase.from("time_off").delete().eq("id", id).eq("salon_id", ctx.salonId);
+  let query = ctx.supabase.from("time_off").delete().eq("id", id).eq("salon_id", ctx.salonId);
+  if (!office) query = query.eq("staff_id", ctx.staffId!);
+  const { data, error } = await query.select("id");
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!data?.length) return NextResponse.json({ error: OWN_TIME_ONLY }, { status: 404 });
   return NextResponse.json({ success: true });
 }

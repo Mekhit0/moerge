@@ -5,7 +5,9 @@ import SettingsNav from "@/components/SettingsNav";
 
 export default async function SetupLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getAuthenticatedSalonContext();
-  if (!ctx) redirect("/login");
+  if (!ctx) redirect("/login?access=none");
+  // Settings belong to the salon office; masters only work with their own day.
+  if (!requireRole(ctx, ["owner", "admin"])) redirect("/dashboard");
 
   return (
     <>

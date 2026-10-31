@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
+import { getAuthenticatedSalonContext, requireRole, OFFICE_ONLY_ERROR } from "@/lib/supabase/server";
 import { clientInputSchema, normalizeEmail } from "@/lib/validation";
 
 export async function GET(
@@ -53,6 +53,7 @@ export async function PATCH(
   if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: OFFICE_ONLY_ERROR }, { status: 403 });
 
   const { id } = await context.params;
 

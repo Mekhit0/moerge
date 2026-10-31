@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { getAuthenticatedSalonContext, requireRole, OFFICE_ONLY_ERROR } from "@/lib/supabase/server";
 import { changeVisitStatus, loadVisit } from "@/lib/visit-server";
 
 const money = z.number().finite().min(0).max(100000);
@@ -35,6 +35,7 @@ function paymentError(message: string): { status: number; error: string } {
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: OFFICE_ONLY_ERROR }, { status: 403 });
 
   const { id } = await context.params;
   const parsed = paySchema.safeParse(await request.json().catch(() => null));
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: OFFICE_ONLY_ERROR }, { status: 403 });
 
   const { id } = await context.params;
   const parsed = voidSchema.safeParse(await request.json().catch(() => null));

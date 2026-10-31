@@ -44,13 +44,15 @@ function useIsWide() {
  * one master across seven days. Tap a free slot to book or block it, tap a visit to act on it, drag a
  * visit with a mouse or use Move then tap a slot to reschedule. Only the visible days are loaded.
  */
-export default function CalendarView({ today, timezone, staff, services, salonHours, canManage, initialDate, initialView = "day", initialBooking }: {
+export default function CalendarView({ today, timezone, staff, services, salonHours, canManage, isMaster = false, initialDate, initialView = "day", initialBooking }: {
   today: string;
   timezone: string;
   staff: BookingStaff[];
   services: BookingService[];
   salonHours: Interval;
   canManage: boolean;
+  /** A signed-in master: `staff` holds only their own row; they mark visits and block their own time. */
+  isMaster?: boolean;
   initialDate: string;
   initialView?: View;
   initialBooking: (BookingDefaults & { clientId?: string }) | null;
@@ -226,7 +228,7 @@ export default function CalendarView({ today, timezone, staff, services, salonHo
 
   // Mouse drag to move (touch uses Move then tap, so scrolling stays smooth on tablets).
   function onVisitPointerDown(visit: CalendarVisit, event: React.PointerEvent) {
-    if (event.pointerType !== "mouse" || event.button !== 0 || !MOVABLE.includes(visit.status)) return;
+    if (!canManage || event.pointerType !== "mouse" || event.button !== 0 || !MOVABLE.includes(visit.status)) return;
     setDrag({ visit, startX: event.clientX, startY: event.clientY, dragging: false, target: null });
   }
 
@@ -258,6 +260,9 @@ export default function CalendarView({ today, timezone, staff, services, salonHo
     // moveTo and range are stable enough for one drag gesture.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drag?.visit.id, drag?.startX, drag?.startY]);
+
+  // Masters free only their own blocks; salon-wide blocks and other masters' time stay with the office.
+  const canEditBlock = (block: TimeOffBlock) => canManage || (isMaster && Boolean(block.staff_id) && block.staff_id === staff[0]?.id);
 
   async function removeBlock(block: TimeOffBlock) {
     setBlockToRemove(null);
@@ -296,17 +301,19 @@ export default function CalendarView({ today, timezone, staff, services, salonHo
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
           <Tabs label={t("ხედი", "View")} value={view} onChange={setView} items={[{ value: "day", label: t("დღე", "Day") }, { value: "week", label: t("კვირა", "Week") }]} />
-          <Button icon={<Plus className="h-5 w-5" />} onClick={() => setBooking({ date, staffId: needsSingle ? singleStaffId : focusStaff || undefined })}>{t("ჯავშანი", "Book")}</Button>
+          <Button icon={isMaster ? <Lock className="h-5 w-5" /> : <Plus className="h-5 w-5" />} onClick={() => setBooking({ date, staffId: needsSingle ? singleStaffId : focusStaff || undefined })}>
+            {isMaster ? t("დაბლოკვა", "Block time") : t("ჯავშანი", "Book")}
+          </Button>
         </div>
       </div>
 
-      <ChipRow>
+      {!isMaster && <ChipRow>
         {!needsSingle && <Chip selected={!focusStaff} onClick={() => setFocusStaff("")}>{t("ყველა", "Everyone")}</Chip>}
         {staff.map((member) => (
           <Chip key={member.id} dotColor={member.color ?? undefined} selected={needsSingle ? member.id === singleStaffId : focusStaff === member.id}
             onClick={() => setFocusStaff(member.id)}>{member.full_name}</Chip>
         ))}
-      </ChipRow>
+      </ChipRow>}
 
       {moving && (
         <div role="status" className="sticky top-16 z-20 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 lg:top-2">
@@ -367,8 +374,8 @@ export default function CalendarView({ today, timezone, staff, services, salonHo
                     <div key={`closed-${interval.start}`} className="pointer-events-none absolute inset-x-0 bg-stone-100/80" style={blockStyle(interval, range, pxPerMinute, 0)} />
                   ))}
                   {blocks.map(({ block, interval }) => (
-                    <button key={block.id} type="button" disabled={!canManage}
-                      onClick={(event) => { event.stopPropagation(); if (canManage) setBlockToRemove(block); }}
+                    <button key={block.id} type="button" disabled={!canEditBlock(block)}
+                      onClick={(event) => { event.stopPropagation(); if (canEditBlock(block)) setBlockToRemove(block); }}
                       className="absolute inset-x-1 z-[1] flex items-start gap-1 overflow-hidden rounded-lg border border-stone-300 px-2 py-1 text-left text-xs text-stone-600 [background:repeating-linear-gradient(135deg,#f5f5f4,#f5f5f4_6px,#e7e5e4_6px,#e7e5e4_12px)]"
                       style={blockStyle(interval, range, pxPerMinute)}>
                       <Lock className="mt-0.5 h-3 w-3 shrink-0" /><span className="truncate">{block.reason || t("დაბლოკილი", "Blocked")}</span>
@@ -426,11 +433,11 @@ export default function CalendarView({ today, timezone, staff, services, salonHo
         </div>
       )}
 
-      <VisitSheet visit={openVisit} timezone={timezone} canVoid={canManage} onClose={() => setOpenVisitId(null)}
+      <VisitSheet visit={openVisit} timezone={timezone} canVoid={canManage} office={canManage} onClose={() => setOpenVisitId(null)}
         onUpdate={(updated) => replaceVisit({ ...(openVisit as CalendarVisit), ...updated })}
-        onMove={(visit) => { setOpenVisitId(null); setMoving(visit as CalendarVisit); toast.show(t("შეეხეთ ახალ დროს კალენდარში.", "Tap the new time in the calendar."), { tone: "info" }); }} />
+        onMove={!canManage ? undefined : (visit) => { setOpenVisitId(null); setMoving(visit as CalendarVisit); toast.show(t("შეეხეთ ახალ დროს კალენდარში.", "Tap the new time in the calendar."), { tone: "info" }); }} />
 
-      <NewBookingSheet open={Boolean(booking)} defaults={booking ?? { date }} services={services} staff={staff} canBlock={canManage}
+      <NewBookingSheet open={Boolean(booking)} defaults={booking ?? { date }} services={services} staff={staff} canBlock={canManage || isMaster} canBook={canManage}
         onClose={() => setBooking(null)}
         onCreated={(visit) => {
           cache.current.clear();

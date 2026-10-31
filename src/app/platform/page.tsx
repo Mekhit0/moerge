@@ -8,7 +8,7 @@ export default async function PlatformPage() {
   if (!ownerId) notFound();
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?access=none");
   if (user.id !== ownerId) notFound();
   return <PlatformAdminManager/>;
 }

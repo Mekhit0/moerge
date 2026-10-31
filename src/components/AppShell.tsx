@@ -67,7 +67,7 @@ export default function AppShell({
     { href: "/appointments", label: t("კალენდარი", "Calendar"), icon: CalendarDays },
     { href: "/clients", label: t("კლიენტები", "Clients"), icon: Users },
     ...(canManageData ? [{ href: "/reports", label: t("შემოსავალი", "Income"), icon: Wallet }] : []),
-    { href: "/settings", label: t("პარამეტრები", "Settings"), icon: Settings },
+    ...(canManageData ? [{ href: "/settings", label: t("პარამეტრები", "Settings"), icon: Settings }] : []),
   ];
 
   const isItemActive = (href: string) => {

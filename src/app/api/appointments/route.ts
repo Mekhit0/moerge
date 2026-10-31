@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient, getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { createServiceClient, getAuthenticatedSalonContext, requireRole, OFFICE_ONLY_ERROR } from "@/lib/supabase/server";
 import { appointmentInputSchema, clientInputSchema } from "@/lib/validation";
 import { addCalendarDays } from "@/lib/scheduling";
 
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: OFFICE_ONLY_ERROR }, { status: 403 });
   let body: Record<string, unknown>;
   try { body = await request.json() as Record<string, unknown>; }
   catch { return NextResponse.json({ error: "Invalid JSON request body." }, { status: 400 }); }

@@ -91,8 +91,13 @@ export interface AuthenticatedSalonContext {
   salonSlug: string;
   salonName: string;
   role: "owner" | "admin" | "staff";
+  /** The staff row linked to this login. A master (role "staff") only sees visits of this row. */
+  staffId: string | null;
   settings: SalonSettings;
 }
+
+/** Shown when a master tries something only the salon office (owner or admin) may do. */
+export const OFFICE_ONLY_ERROR = "ამას სალონის ადმინისტრაცია აკეთებს. / Only the salon office can do this.";
 
 export function requireRole(
   ctx: AuthenticatedSalonContext,
@@ -157,7 +162,7 @@ export const getAuthenticatedSalonContext = cache(async function getAuthenticate
     .eq("is_active", true)
     .maybeSingle();
 
-  const [salonRes, settingsRes] = await Promise.all([
+  const [salonRes, settingsRes, staffRes] = await Promise.all([
     supabase
       .from("salons")
       .select("id, name, slug")
@@ -167,6 +172,12 @@ export const getAuthenticatedSalonContext = cache(async function getAuthenticate
       .from("salon_settings")
       .select(SAFE_SALON_SETTINGS_SELECT)
       .eq("salon_id", salonId)
+      .maybeSingle(),
+    supabase
+      .from("staff")
+      .select("id")
+      .eq("salon_id", salonId)
+      .eq("user_id", user.id)
       .maybeSingle(),
   ]);
 
@@ -216,6 +227,7 @@ export const getAuthenticatedSalonContext = cache(async function getAuthenticate
     salonSlug,
     salonName,
     role: (roleMembership?.role ?? "staff") as "owner" | "admin" | "staff",
+    staffId: staffRes.data?.id ?? null,
     settings,
   };
 });

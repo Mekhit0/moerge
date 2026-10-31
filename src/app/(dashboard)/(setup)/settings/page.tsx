@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) {
-    redirect("/login");
+    redirect("/login?access=none");
   }
 
   const hasEnvResendKey = Boolean(

@@ -59,12 +59,14 @@ function localMessage(message: string, lang: "ka" | "en") {
  * New booking from anywhere in the dashboard: client (search or new with name and phone),
  * service, master, day and a free time. Owners and admins can also block time here.
  */
-export function NewBookingSheet({ open, defaults, services, staff, canBlock, onClose, onCreated, onBlocked }: {
+export function NewBookingSheet({ open, defaults, services, staff, canBlock, canBook = true, onClose, onCreated, onBlocked }: {
   open: boolean;
   defaults: BookingDefaults;
   services: BookingService[];
   staff: BookingStaff[];
   canBlock: boolean;
+  /** False for masters: the sheet only blocks their own time. */
+  canBook?: boolean;
   onClose: () => void;
   onCreated: (visit: Visit) => void;
   onBlocked: (block: TimeOffBlock) => void;
@@ -93,7 +95,7 @@ export function NewBookingSheet({ open, defaults, services, staff, canBlock, onC
   // Reset to the tapped slot every time the sheet opens.
   useEffect(() => {
     if (!open) return;
-    setMode("book");
+    setMode(canBook ? "book" : "block");
     setClient(defaults.client ?? null);
     setQuery("");
     setResults(null);
@@ -101,7 +103,7 @@ export function NewBookingSheet({ open, defaults, services, staff, canBlock, onC
     setNewName("");
     setNewPhone("");
     setServiceId("");
-    setStaffId(defaults.staffId ?? "");
+    setStaffId(defaults.staffId ?? (canBook ? "" : staff[0]?.id ?? ""));
     setDate(defaults.date);
     setTime(defaults.time ?? "");
     setNotes("");
@@ -111,7 +113,7 @@ export function NewBookingSheet({ open, defaults, services, staff, canBlock, onC
     setBlockStart(start);
     setBlockEnd(minutesToTime(Math.min(toMinutes(start) + 60, 23 * 60 + 45)));
     setBlockReason("");
-  }, [open, defaults]);
+  }, [open, defaults, canBook, staff]);
 
   // Client search, debounced.
   useEffect(() => {
@@ -238,7 +240,7 @@ export function NewBookingSheet({ open, defaults, services, staff, canBlock, onC
     <Sheet open={open} onClose={onClose} title={mode === "book" ? t("ახალი ჯავშანი", "New booking") : t("დროის დაბლოკვა", "Block time")}
       description={formatLongDate(date, lang)} footer={footer}>
       <div className="space-y-6">
-        {canBlock && (
+        {canBlock && canBook && (
           <Tabs label={t("მოქმედება", "Action")} value={mode} onChange={(value) => { setMode(value); setError(null); }}
             items={[{ value: "book", label: t("ჯავშანი", "Booking") }, { value: "block", label: t("დაბლოკვა", "Block time") }]} />
         )}
@@ -352,7 +354,7 @@ export function NewBookingSheet({ open, defaults, services, staff, canBlock, onC
             <div>
               <h3 className="mb-2 text-sm font-semibold text-stone-700">{t("ვისთვის", "For")}</h3>
               <ChipRow>
-                <Chip selected={!staffId} onClick={() => setStaffId("")}>{t("მთელი სალონი", "Whole salon")}</Chip>
+                {canBook && <Chip selected={!staffId} onClick={() => setStaffId("")}>{t("მთელი სალონი", "Whole salon")}</Chip>}
                 {staff.map((member) => (
                   <Chip key={member.id} selected={staffId === member.id} dotColor={member.color ?? undefined} onClick={() => setStaffId(member.id)}>{member.full_name}</Chip>
                 ))}

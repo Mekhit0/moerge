@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient, getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { createServiceClient, getAuthenticatedSalonContext, requireRole, OFFICE_ONLY_ERROR } from "@/lib/supabase/server";
 import { appointmentInputSchema } from "@/lib/validation";
 import { addCalendarDays } from "@/lib/scheduling";
 
@@ -11,6 +11,7 @@ export async function PATCH(
   if (!ctx) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: OFFICE_ONLY_ERROR }, { status: 403 });
 
   const { id } = await context.params;
 

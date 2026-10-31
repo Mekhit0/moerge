@@ -26,7 +26,7 @@ function normalize(rows: AppointmentRow[] | null): DashboardAppointment[] {
 
 export default async function DashboardPage() {
   const ctx = await getAuthenticatedSalonContext();
-  if (!ctx) redirect("/login");
+  if (!ctx) redirect("/login?access=none");
 
   const timezone = ctx.settings.timezone || "Asia/Tbilisi";
   const today = getTodayInTimeZone(timezone);

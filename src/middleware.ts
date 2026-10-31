@@ -62,7 +62,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname === "/login" && user) {
+  // ?access=none: signed in but no longer on any salon team; the login page signs them out.
+  if (pathname === "/login" && user && !request.nextUrl.searchParams.has("access")) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     dashboardUrl.searchParams.delete("redirectTo");

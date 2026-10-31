@@ -12,7 +12,7 @@ export default async function DashboardLayout({
   const ctx = await getAuthenticatedSalonContext();
 
   if (!ctx) {
-    redirect("/login");
+    redirect("/login?access=none");
   }
   if (!ctx.settings.onboarding_completed_at) redirect("/onboarding");
   const { data: subscription } = await ctx.supabase

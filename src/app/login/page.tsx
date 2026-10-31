@@ -51,6 +51,14 @@ export default function LoginPage() {
     if (params.get("confirmed") === "true") {
       setInfoMessage(t("ელფოსტა დადასტურდა. შედით ანგარიშზე.", "Your email is confirmed. Please sign in."));
     }
+    if (params.get("access") === "none") {
+      const supabase = createBrowserSupabaseClient();
+      void supabase.auth.getUser().then(({ data }) => {
+        if (!data.user) return;
+        void supabase.auth.signOut();
+        setError(t("ამ ანგარიშს სალონზე წვდომა აღარ აქვს. დაუკავშირდით სალონის მფლობელს.", "This account no longer has access to a salon. Contact the salon owner."));
+      });
+    }
     if (params.get("reset") === "expired") {
       setMode("reset");
       setError(t("ბმულის ვადა გავიდა. მოითხოვეთ ახალი.", "That link has expired. Please request a new one."));

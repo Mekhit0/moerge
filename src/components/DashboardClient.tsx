@@ -83,10 +83,10 @@ export default function DashboardClient({
         <h1 className="mt-1 text-2xl font-bold text-stone-900 sm:text-3xl">{t(`გამარჯობა, ${firstName}`, `Hello, ${firstName}`)}</h1>
         <p className="mt-1 text-sm text-stone-500">{salonName}</p>
       </div>
-      <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+      {canManage && <div className="flex w-full flex-wrap gap-2 sm:w-auto">
         <ButtonLink href="/appointments?new=1" size="lg" className="flex-1 sm:flex-none" icon={<Plus className="h-5 w-5" />}>{t("ახალი ჯავშანი", "New booking")}</ButtonLink>
         <ButtonLink href="/clients?new=1" variant="secondary" size="lg" className="flex-1 sm:flex-none" icon={<UserPlus className="h-5 w-5 text-brand" />}>{t("ახალი კლიენტი", "New client")}</ButtonLink>
-      </div>
+      </div>}
     </header>
 
     {canManage && doneCount < setupSteps.length && (
@@ -133,12 +133,17 @@ export default function DashboardClient({
         hint={t("ჩაწერილი ფასებით", "From booked prices")}
         icon={<Wallet className="h-5 w-5" />}
       />}
-      <StatCard
+      {canManage ? <StatCard
         label={t("შეხსენებები", "Reminders")}
         value={String(scheduledReminders)}
         hint={t("გაიგზავნება თავად", "Sent automatically")}
         icon={<Bell className="h-5 w-5" />}
-      />
+      /> : <StatCard
+        label={t("დასრულებული", "Done")}
+        value={String(visits.filter((visit) => visit.status === "completed").length)}
+        hint={t("დღეს", "Today")}
+        icon={<Check className="h-5 w-5" />}
+      />}
     </section>
 
     <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
@@ -173,12 +178,12 @@ export default function DashboardClient({
                     : <StatusBadge status={visit.status} />}
                 </span>
               </button>
-              <QuickAction visit={visit} paid={paid} onOpen={(startWith) => setSheet({ id: visit.id, startWith })} />
+              <QuickAction visit={visit} paid={paid} office={canManage} onOpen={(startWith) => setSheet({ id: visit.id, startWith })} />
             </li>;
           })}
         </ul> : (
           <EmptyState icon={<CalendarDays />} title={t("დღეს ვიზიტები არ არის.", "No visits today.")}
-            action={<ButtonLink href="/appointments?new=1" icon={<Plus className="h-4 w-4" />}>{t("ახალი ჯავშანი", "New booking")}</ButtonLink>} />
+            action={canManage ? <ButtonLink href="/appointments?new=1" icon={<Plus className="h-4 w-4" />}>{t("ახალი ჯავშანი", "New booking")}</ButtonLink> : undefined} />
         )}
       </Card>
 
@@ -202,24 +207,32 @@ export default function DashboardClient({
           </ul> : <p className="py-4 text-sm text-stone-500">{t("მომავალი ვიზიტები ჯერ არ არის.", "No upcoming visits yet.")}</p>}
         </Card>
 
-        <BookingLinkCard bookingUrl={bookingUrl} />
+        {canManage && <BookingLinkCard bookingUrl={bookingUrl} />}
       </div>
     </section>
 
-    <VisitSheet visit={selected} timezone={timezone} canVoid={canManage} startWith={sheet?.startWith ?? "details"}
+    <VisitSheet visit={selected} timezone={timezone} canVoid={canManage} office={canManage} startWith={sheet?.startWith ?? "details"}
       onClose={() => setSheet(null)} onUpdate={updateVisit} />
   </div>;
 }
 
-/** One-tap next step on a row: Arrived for booked visits, Pay for arrived or unpaid done visits. */
-function QuickAction({ visit, paid, onOpen }: { visit: Visit; paid: boolean; onOpen: (startWith: "details" | "pay") => void }) {
+/**
+ * One-tap next step on a row: Arrived for booked visits, Pay for arrived or unpaid done visits.
+ * Masters do not take payment, so their arrived visits offer Done instead.
+ */
+function QuickAction({ visit, paid, office, onOpen }: { visit: Visit; paid: boolean; office: boolean; onOpen: (startWith: "details" | "pay") => void }) {
   const { t } = useLanguage();
+  if (!office && visit.status === "arrived") {
+    return <Button size="sm" className="min-h-11 shrink-0" aria-label={t("დასრულება", "Done")} icon={<Check className="h-4 w-4" />} onClick={() => onOpen("details")}>
+      <span className="hidden sm:inline">{t("დასრულება", "Done")}</span>
+    </Button>;
+  }
   if (visit.status === "scheduled") {
     return <Button size="sm" variant="secondary" className="min-h-11 shrink-0" aria-label={t("მოვიდა", "Arrived")} icon={<UserCheck className="h-4 w-4 text-brand" />} onClick={() => onOpen("details")}>
       <span className="hidden sm:inline">{t("მოვიდა", "Arrived")}</span>
     </Button>;
   }
-  if ((visit.status === "arrived" || visit.status === "completed") && !paid) {
+  if (office && (visit.status === "arrived" || visit.status === "completed") && !paid) {
     return <Button size="sm" className="min-h-11 shrink-0" aria-label={t("გადახდა", "Pay")} icon={<Wallet className="h-4 w-4" />} onClick={() => onOpen("pay")}>
       <span className="hidden sm:inline">{t("გადახდა", "Pay")}</span>
     </Button>;

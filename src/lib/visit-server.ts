@@ -1,5 +1,5 @@
 import "server-only";
-import type { AuthenticatedSalonContext } from "./supabase/server";
+import { createServiceClient, requireRole, type AuthenticatedSalonContext } from "./supabase/server";
 import { addCalendarDays } from "./scheduling";
 import { canChangeVisitStatus } from "./visit-flow";
 
@@ -75,7 +75,10 @@ export async function changeVisitStatus(ctx: AuthenticatedSalonContext, visit: V
   if (!updated) return { ok: false, status: 409, error: "ვიზიტი სხვამ შეცვალა. განაახლეთ გვერდი. / Someone else changed this visit. Refresh the page." };
 
   if (next === "completed" && nextExpectedDate) {
-    await ctx.supabase.from("clients")
+    // Masters may not edit clients, but finishing their own visit still sets the client's next date.
+    // The visit was loaded and updated under the master's own access above, so this is safe.
+    const writer = requireRole(ctx, ["owner", "admin"]) ? ctx.supabase : createServiceClient();
+    await writer.from("clients")
       .update({ last_completed_epilation_date: visit.treatment_date, next_expected_appointment_date: nextExpectedDate })
       .eq("id", visit.client_id).eq("salon_id", ctx.salonId);
   }

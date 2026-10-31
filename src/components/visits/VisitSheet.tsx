@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Phone, RotateCcw, UserCheck, UserX, Wallet, XCircle } from "lucide-react";
+import { CalendarClock, CheckCircle2, Phone, RotateCcw, UserCheck, UserX, Wallet, XCircle } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { formatLongDate } from "@/lib/dates";
 import { formatGel, type PaymentBreakdown } from "@/lib/visit-flow";
@@ -42,10 +42,12 @@ function localMessage(message: string, lang: "ka" | "en") {
  * done, paid: payment summary, undo payment (owner and admin)
  * no-show or canceled: restore
  */
-export function VisitSheet({ visit, timezone, canVoid, startWith = "details", onClose, onUpdate, onMove }: {
+export function VisitSheet({ visit, timezone, canVoid, office = true, startWith = "details", onClose, onUpdate, onMove }: {
   visit: Visit | null;
   timezone: string;
   canVoid: boolean;
+  /** Owner or admin. Masters (false) mark arrived, done and no-show only; payment, cancel and move stay with the office. */
+  office?: boolean;
   startWith?: View;
   onClose: () => void;
   onUpdate: (visit: Visit) => void;
@@ -151,7 +153,16 @@ export function VisitSheet({ visit, timezone, canVoid, startWith = "details", on
 
   let footer: React.ReactNode = null;
   if (view === "details") {
-    if (current.status === "scheduled") {
+    if (!office) {
+      if (current.status === "scheduled" || current.status === "arrived") {
+        footer = <div className={current.status === "scheduled" ? "grid grid-cols-2 gap-2" : ""}>
+          {current.status === "scheduled" && <Button variant="secondary" size="lg" loading={busy === "arrived"} icon={<UserCheck className="h-5 w-5" />} onClick={() => void changeStatus("arrived", { undoTo: "scheduled" })}>{t("მოვიდა", "Arrived")}</Button>}
+          <Button size="lg" block={current.status === "arrived"} loading={busy === "completed"} icon={<CheckCircle2 className="h-5 w-5" />} onClick={() => void changeStatus("completed", { undoTo: current.status })}>{t("დასრულება", "Done")}</Button>
+        </div>;
+      } else if (current.status === "no_show") {
+        footer = <Button variant="secondary" size="lg" block loading={busy === "scheduled"} icon={<RotateCcw className="h-5 w-5" />} onClick={() => void changeStatus("scheduled")}>{t("აღდგენა", "Restore visit")}</Button>;
+      }
+    } else if (current.status === "scheduled") {
       footer = <div className="grid grid-cols-2 gap-2">
         <Button variant="secondary" size="lg" icon={<Wallet className="h-5 w-5" />} onClick={() => setView("pay")}>{t("დასრულება", "Done")}</Button>
         <Button size="lg" loading={busy === "arrived"} icon={<UserCheck className="h-5 w-5" />} onClick={() => void changeStatus("arrived", { undoTo: "scheduled" })}>{t("მოვიდა", "Arrived")}</Button>
@@ -181,6 +192,10 @@ export function VisitSheet({ visit, timezone, canVoid, startWith = "details", on
             {current.booking_code && <div><dt className="text-stone-500">{t("ჯავშნის კოდი", "Booking code")}</dt><dd className="mt-0.5 font-semibold tracking-widest">{formatBookingCode(current.booking_code)}</dd></div>}
           </dl>
 
+          {!office && current.status === "completed" && !payment && (
+            <Alert tone="info">{t("გადახდას იღებს ადმინისტრატორი.", "The front desk takes the payment.")}</Alert>
+          )}
+
           {current.client?.phone && (
             <ButtonLink href={`tel:${current.client.phone}`} variant="secondary" block icon={<Phone className="h-4 w-4 text-brand" />}>{current.client.phone}</ButtonLink>
           )}
@@ -202,7 +217,7 @@ export function VisitSheet({ visit, timezone, canVoid, startWith = "details", on
           <div className="space-y-1 border-t border-stone-100 pt-3">
             {current.status === "scheduled" && <>
               <MenuButton icon={<UserX className="h-5 w-5" />} label={t("არ მოვიდა", "No-show")} busy={busy === "no_show"} onClick={() => void changeStatus("no_show", { undoTo: "scheduled" })} />
-              <MenuButton icon={<XCircle className="h-5 w-5" />} label={t("ვიზიტის გაუქმება", "Cancel visit")} danger onClick={() => setView("cancel")} />
+              {office && <MenuButton icon={<XCircle className="h-5 w-5" />} label={t("ვიზიტის გაუქმება", "Cancel visit")} danger onClick={() => setView("cancel")} />}
             </>}
             {current.status === "arrived" && <>
               <MenuButton icon={<RotateCcw className="h-5 w-5" />} label={t("ჯერ არ მოსულა", "Not here yet")} busy={busy === "scheduled"} onClick={() => void changeStatus("scheduled")} />
@@ -211,7 +226,7 @@ export function VisitSheet({ visit, timezone, canVoid, startWith = "details", on
             {current.status === "completed" && !payment && (
               <MenuButton icon={<RotateCcw className="h-5 w-5" />} label={t("დასრულების გაუქმება", "Not done yet")} busy={busy === "arrived"} onClick={() => void changeStatus("arrived")} />
             )}
-            {(current.status === "scheduled" || current.status === "arrived") && (onMove
+            {office && (current.status === "scheduled" || current.status === "arrived") && (onMove
               ? <MenuButton icon={<CalendarClock className="h-5 w-5" />} label={t("სხვა დროზე გადატანა", "Move to another time")} onClick={() => onMove(current)} />
               : <MenuButton icon={<CalendarClock className="h-5 w-5" />} label={t("გადატანა კალენდარში", "Move in calendar")} href={`/appointments?date=${current.treatment_date}`} />)}
           </div>
