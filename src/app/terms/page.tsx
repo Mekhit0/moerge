@@ -2,6 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/lib/contact";
+import { BILLING_CONFIG } from "@/lib/billing-plans";
 import {
   Sparkles,
   ArrowLeft,
@@ -194,8 +196,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "შეტყობინებების განრიგი დამოკიდებულია სერვისის recall პერიოდზე, ვიზიტამდე 24-საათიან და 2-საათიან შეხსენებებზე და კლიენტის არხის თანხმობაზე. საცდელ პერიოდში SMS არ იგზავნება.",
-                "Notification scheduling uses the service recall period, 24-hour and 2-hour appointment reminders, and the client's channel consent. SMS is not sent during the trial."
+                "შეტყობინებები იგზავნება ვიზიტამდე 24 და 2 საათით ადრე, ასევე სერვისის განმეორების დროს, მხოლოდ კლიენტის თანხმობით. სატესტო პერიოდში SMS არ იგზავნება, მხოლოდ ელფოსტა.",
+                "Reminders are sent 24 and 2 hours before a visit and when a service is due again, only with the client's consent. During the test period only email is sent, not SMS."
               )}
             </p>
             <p className="text-xs text-stone-500">
@@ -213,19 +215,19 @@ export default function TermsOfServicePage() {
                 5
               </div>
               <h2 className="text-lg font-bold text-stone-900">
-                {t("5. ტარიფები, გადახდები და გაუქმების პოლიტიკა", "5. Pricing, Billing & Cancellation")}
+                {t("5. სატესტო პერიოდი და გადახდა", "5. Test period and payment")}
               </h2>
             </div>
             <p>
               {t(
-                "ახალ სალონებს ეძლევათ 14-დღიანი საცდელი პერიოდი ბარათის გარეშე. პერიოდის დასრულების ან გადახდის ვადის გასვლისას ანგარიში მხოლოდ წასაკითხ რეჟიმზე გადადის. მონაცემები ინახება და ავტომატურად არ იშლება. გეგმისა და SMS საფასურები ნაჩვენებია ბილინგის გვერდზე. ბარათით რეალური გადახდა ჯერ არ არის ჩართული.",
-                "New salons receive a 14-day trial without a card. When the trial or payment grace period ends, the account becomes read-only. Data is retained and is not automatically deleted. Plan and SMS prices appear on the billing page. Live card payments are not enabled yet."
+                `ახალ სალონებს ეძლევათ ${BILLING_CONFIG.trialDays}-დღიანი უფასო სატესტო პერიოდი ბარათის გარეშე, ${BILLING_CONFIG.trialStaffLimit}-მდე სპეციალისტით. პერიოდის დასრულებისას ანგარიში სანახავ რეჟიმზე გადადის. მონაცემები ინახება და ავტომატურად არ იშლება.`,
+                `New salons get a free ${BILLING_CONFIG.trialDays}-day test period without a card, with up to ${BILLING_CONFIG.trialStaffLimit} specialists. When it ends, the account becomes view-only. Data is kept and is not deleted automatically.`
               )}
             </p>
             <p>
               {t(
-                "ბილინგის გვერდზე ხელმისაწვდომია პერიოდის ბოლოს გაუქმების მოქმედება. რეალური გადახდის პროვაიდერი ჯერ არ არის ჩართული; გადახდისა და თანხის დაბრუნების პირობები განისაზღვრება პროვაიდერის ჩართვამდე.",
-                "The billing page provides a cancel-at-period-end action. A live payment provider is not enabled yet; payment and refund terms will be established before it is activated."
+                "სატესტო პერიოდში გადახდა არ ხდება. ფასიანი გეგმები და გადახდის პირობები გამოქვეყნდება მათ ჩართვამდე, ხოლო სალონებს წინასწარ ვაცნობებთ.",
+                "No payment is taken during the test period. Paid plans and payment terms will be published before they start, and salons will be told in advance."
               )}
             </p>
           </section>
@@ -261,8 +263,8 @@ export default function TermsOfServicePage() {
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
                 {t(
-                  "კითხვების შემთხვევაში მოგვწერეთ: merabikhizanishvili@gmail.com",
-                  "If you have questions, write to us: merabikhizanishvili@gmail.com"
+                  `კითხვების შემთხვევაში მოგვწერეთ: ${SUPPORT_EMAIL}`,
+                  `If you have questions, write to us: ${SUPPORT_EMAIL}`
                 )}
               </p>
             </div>

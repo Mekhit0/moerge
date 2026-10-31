@@ -1,5 +1,10 @@
 export const BILLING_CONFIG = {
-  trialDays: 14,
+  // Pilot month: salons use moarge free, so pricing, checkout and plan pages stay hidden.
+  // Trial length and the trial staff cap are also enforced in the database
+  // (migration 20261031120000_pilot_trial_limits.sql); change both together.
+  billingEnabled: false,
+  trialDays: 30,
+  trialStaffLimit: 10,
   planInvoiceGraceDays: 7,
   usageInvoiceGraceDays: 7,
   dataRetentionDays: 30,

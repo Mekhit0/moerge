@@ -17,6 +17,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
+import { BILLING_CONFIG } from "@/lib/billing-plans";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 import MoargeLogo from "./MoargeLogo";
 import FeedbackButton from "./FeedbackButton";
 
@@ -223,7 +225,12 @@ export default function AppShell({
         )}
 
         <main className="flex-1 p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8 max-w-7xl w-full mx-auto">
-          {readOnly && <div role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{t("საცდელი პერიოდი ან გადახდის ვადა დასრულდა. ანგარიში მხოლოდ წასაკითხია. მონაცემები შენარჩუნებულია.", "The trial or payment grace period has ended. This account is read-only. Your data is retained.")} <Link className="ml-2 underline" href="/billing">{t("გადახდის ნახვა", "View billing")}</Link></div>}
+          {readOnly && <div role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            {t("სატესტო პერიოდი დასრულდა. ანგარიში მხოლოდ სანახავადაა, მონაცემები შენახულია.", "The test period has ended. The account is view-only and your data is kept.")}{" "}
+            {BILLING_CONFIG.billingEnabled
+              ? <Link className="ml-1 underline" href="/billing">{t("გადახდის ნახვა", "View billing")}</Link>
+              : <a className="ml-1 underline" href={`mailto:${SUPPORT_EMAIL}`}>{t("დაგვიკავშირდით", "Contact us")}</a>}
+          </div>}
           {children}
         </main>
         <FeedbackButton />

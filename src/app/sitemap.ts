@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { getAppUrl } from "@/lib/app-url";
+import { BILLING_CONFIG } from "@/lib/billing-plans";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getAppUrl();
@@ -18,12 +19,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/pricing`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
+    ...(BILLING_CONFIG.billingEnabled
+      ? [{ url: `${baseUrl}/pricing`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 }]
+      : []),
     {
       url: `${baseUrl}/login`,
       lastModified: now,

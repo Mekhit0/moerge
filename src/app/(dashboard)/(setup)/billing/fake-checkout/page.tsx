@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { createServiceClient, getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
+import { BILLING_CONFIG } from "@/lib/billing-plans";
 
 export default async function FakeCheckoutPage({ searchParams }: { searchParams: Promise<{ invoice?: string }> }) {
+  if (!BILLING_CONFIG.billingEnabled) redirect("/dashboard");
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx || !requireRole(ctx, ["owner", "admin"])) redirect("/dashboard");
   const { invoice: invoiceId } = await searchParams;

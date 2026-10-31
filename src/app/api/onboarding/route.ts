@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   if ((appointmentCount ?? 0) > 0) return NextResponse.json({ error: "ჯავშნების არსებობის გამო საწყისი გამართვა ვეღარ შეიცვლება. / Setup cannot be changed after bookings exist." }, { status: 409 });
 
   const value = parsed.data;
-  if (value.staff.length > BILLING_CONFIG.plans.business.staffIncluded) return NextResponse.json({ error: "საცდელ გეგმაში მაქსიმუმ 7 სპეციალისტია. / The trial plan includes up to 7 specialists." }, { status: 422 });
+  if (value.staff.length > BILLING_CONFIG.trialStaffLimit) return NextResponse.json({ error: `საცდელ პერიოდში მაქსიმუმ ${BILLING_CONFIG.trialStaffLimit} სპეციალისტია. / The trial includes up to ${BILLING_CONFIG.trialStaffLimit} specialists.` }, { status: 422 });
   const { error: salonError } = await admin.from("salons").update({ name: value.salonName }).eq("id", ctx.salonId);
   if (salonError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
 

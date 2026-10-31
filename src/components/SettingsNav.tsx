@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, CalendarOff, Clock, CreditCard, History, Scissors, Store, Users } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { BILLING_CONFIG } from "@/lib/billing-plans";
 
 export default function SettingsNav({ canManageData }: { canManageData: boolean }) {
   const { t } = useLanguage();
@@ -17,7 +18,7 @@ export default function SettingsNav({ canManageData }: { canManageData: boolean 
     { href: "/settings/time-off", label: t("დასვენების დღეები", "Days off"), icon: CalendarOff },
     { href: "/settings/notifications", label: t("შეხსენებები", "Reminders"), icon: Bell },
     { href: "/email-history", label: t("გაგზავნილი შეხსენებები", "Sent reminders"), icon: History },
-    ...(canManageData ? [{ href: "/billing", label: t("გადახდა", "Billing"), icon: CreditCard }] : []),
+    ...(canManageData && BILLING_CONFIG.billingEnabled ? [{ href: "/billing", label: t("გადახდა", "Billing"), icon: CreditCard }] : []),
   ];
 
   return (

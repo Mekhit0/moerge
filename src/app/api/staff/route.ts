@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
   const admin = createServiceClient();
   const [{ data: subscription }, { count: activeCount }] = await Promise.all([admin.from("subscriptions").select("plan_code,status,trial_ends_at").eq("salon_id", ctx.salonId).maybeSingle(), admin.from("staff").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true)]);
   const plan = (subscription?.plan_code ?? "business") as PaidPlan;
-  const allowed = subscription?.status === "trialing" ? BILLING_CONFIG.plans.business.staffIncluded : BILLING_CONFIG.plans[plan].staffLimit;
-  if ((activeCount ?? 0) >= allowed) return NextResponse.json({ error: `This subscription allows up to ${allowed} active staff.` }, { status: 422 });
+  const allowed = subscription?.status === "trialing" ? BILLING_CONFIG.trialStaffLimit : BILLING_CONFIG.plans[plan].staffLimit;
+  if ((activeCount ?? 0) >= allowed) return NextResponse.json({ error: `მაქსიმუმ ${allowed} აქტიური სპეციალისტია შესაძლებელი. / This subscription allows up to ${allowed} active staff.` }, { status: 422 });
   const { data, error } = await ctx.supabase.from("staff").insert({ salon_id: ctx.salonId, full_name: body.full_name.trim(), color: typeof body.color === "string" ? body.color : "#e11d48", sort_order: Number(body.sort_order) || 0 }).select("*").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   const { error: assignmentError } = serviceIds.length
@@ -63,8 +63,8 @@ export async function PATCH(request: NextRequest) {
     const { data: existing } = await admin.from("staff").select("is_active").eq("id", body.id).eq("salon_id", ctx.salonId).maybeSingle();
     if (existing && !existing.is_active) {
       const [{ data: subscription }, { count }] = await Promise.all([admin.from("subscriptions").select("plan_code,status").eq("salon_id", ctx.salonId).maybeSingle(), admin.from("staff").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true)]);
-      const plan = (subscription?.plan_code ?? "business") as PaidPlan; const cap = subscription?.status === "trialing" ? BILLING_CONFIG.plans.business.staffIncluded : BILLING_CONFIG.plans[plan].staffLimit;
-      if ((count ?? 0) >= cap) return NextResponse.json({ error: `This subscription allows up to ${cap} active staff.` }, { status: 422 });
+      const plan = (subscription?.plan_code ?? "business") as PaidPlan; const cap = subscription?.status === "trialing" ? BILLING_CONFIG.trialStaffLimit : BILLING_CONFIG.plans[plan].staffLimit;
+      if ((count ?? 0) >= cap) return NextResponse.json({ error: `მაქსიმუმ ${cap} აქტიური სპეციალისტია შესაძლებელი. / This subscription allows up to ${cap} active staff.` }, { status: 422 });
     }
   }
   const { data, error } = await ctx.supabase.from("staff").update(allowed).eq("id", body.id).eq("salon_id", ctx.salonId).select("*").maybeSingle();

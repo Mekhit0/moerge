@@ -7,7 +7,10 @@ import { getAppUrl } from "@/lib/app-url";
 import { createServiceClient, getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 
 const plans = ["business", "multi_branch"] as const;
+const BILLING_DISABLED = { error: "Billing is not available during the pilot." };
+
 export async function GET() {
+  if (!BILLING_CONFIG.billingEnabled) return NextResponse.json(BILLING_DISABLED, { status: 404 });
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -28,6 +31,7 @@ export async function GET() {
     paymentsEnabled: process.env.PAYMENT_PROVIDER === "fake" });
 }
 export async function POST(request: NextRequest) {
+  if (!BILLING_CONFIG.billingEnabled) return NextResponse.json(BILLING_DISABLED, { status: 404 });
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

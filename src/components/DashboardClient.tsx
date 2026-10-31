@@ -110,7 +110,7 @@ export default function DashboardClient({
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-rose-50">
           <div className="h-full rounded-full bg-rose-600 transition-all" style={{ width: `${(doneCount / setupSteps.length) * 100}%` }} />
         </div>
-        <ol className="mt-4 grid gap-2 sm:grid-cols-2">
+        <ol className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {setupSteps.map((step) => <li key={step.href}>
             {step.done ? (
               <div className="flex min-h-12 items-center gap-3 rounded-xl bg-emerald-50 px-4 text-sm text-emerald-800">
@@ -126,7 +126,7 @@ export default function DashboardClient({
       </section>
     )}
 
-    <section className={`grid gap-3 ${canManage ? "sm:grid-cols-3" : "sm:grid-cols-2"}`} aria-label={t("დღის მიმოხილვა", "Today at a glance")}>
+    <section className={`grid grid-cols-1 gap-3 ${canManage ? "sm:grid-cols-3" : "sm:grid-cols-2"}`} aria-label={t("დღის მიმოხილვა", "Today at a glance")}>
       <StatCard
         label={t("დღევანდელი ვიზიტები", "Visits today")}
         value={String(active.length)}
@@ -147,7 +147,7 @@ export default function DashboardClient({
       />
     </section>
 
-    <section className="grid gap-5 lg:grid-cols-3">
+    <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
       <div className="rounded-2xl border border-stone-200 bg-white p-5 lg:col-span-2">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-stone-900">{t("დღის განრიგი", "Today's schedule")}</h2>

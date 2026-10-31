@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 import {
   Sparkles,
   ArrowLeft,
@@ -304,8 +305,8 @@ export default function PrivacyPolicyPage() {
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
                 {t(
-                  "კითხვების ან მოთხოვნების შემთხვევაში დაგვიკავშირდით: merabikhizanishvili@gmail.com",
-                  "For privacy questions or requests, contact us: merabikhizanishvili@gmail.com"
+                  `კითხვების ან მოთხოვნების შემთხვევაში დაგვიკავშირდით: ${SUPPORT_EMAIL}`,
+                  `For privacy questions or requests, contact us: ${SUPPORT_EMAIL}`
                 )}
               </p>
             </div>

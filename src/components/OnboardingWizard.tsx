@@ -27,7 +27,7 @@ const weekdays = [
   ["ხუთშაბათი", "Thursday"], ["პარასკევი", "Friday"], ["შაბათი", "Saturday"], ["კვირა", "Sunday"],
 ];
 
-const MAX_TRIAL_STAFF = BILLING_CONFIG.plans.business.staffIncluded;
+const MAX_TRIAL_STAFF = BILLING_CONFIG.trialStaffLimit;
 
 export default function OnboardingWizard({ initialName, initialPhone = "", initialAddress = "", slug }: {
   initialName: string; initialPhone?: string; initialAddress?: string; slug: string;
