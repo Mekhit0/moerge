@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { COMPANY_LEGAL_NAME, SUPPORT_EMAIL } from "@/lib/contact";
+import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, SUPPORT_EMAIL } from "@/lib/contact";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
 import {
   Sparkles,
@@ -113,6 +113,12 @@ export default function TermsOfServicePage() {
               {t(
                 "moarge არის ღრუბლოვანი პროგრამული უზრუნველყოფა სილამაზისა და ესთეტიკური სალონებისთვის. პლატფორმა მოიცავს ონლაინ ჯავშნებს, სპეციალისტების განრიგებს, კლიენტების ისტორიას და თანხმობაზე დაფუძნებულ შეტყობინებებს.",
                 "moarge is cloud software for beauty and aesthetic salons. It provides online booking, staff schedules, client history, and consent-based notifications."
+              )}
+            </p>
+            <p>
+              {t(
+                `MOARGE-ს მართავს და ამ წესებით მომსახურებას უწევს ${COMPANY_LEGAL_NAME_KA}, საქართველოში რეგისტრირებული ინდივიდუალური მეწარმე. კონტაქტი: ${SUPPORT_EMAIL}.`,
+                `MOARGE is operated and provided under these terms by ${COMPANY_LEGAL_NAME_EN}, an individual entrepreneur registered in Georgia. Contact: ${SUPPORT_EMAIL}.`
               )}
             </p>
             <ul className="list-disc pl-6 space-y-2 text-stone-600 text-xs sm:text-sm">
@@ -284,7 +290,7 @@ export default function TermsOfServicePage() {
           <div className="flex items-center gap-2">
             <span className="font-black text-stone-900">MOARGE</span>
             <span>•</span>
-            <span>© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. {t(`MOARGE-ს მართავს კომპანია ${COMPANY_LEGAL_NAME}.`, `MOARGE is operated by ${COMPANY_LEGAL_NAME}.`)}</span>
+            <span>© {new Date().getFullYear()} {t(COMPANY_LEGAL_NAME_KA, COMPANY_LEGAL_NAME_EN)}. {t(`MOARGE-ს მართავს ${COMPANY_LEGAL_NAME_KA}.`, `MOARGE is operated by ${COMPANY_LEGAL_NAME_EN}.`)}</span>
           </div>
           <div className="flex items-center gap-4 font-semibold">
             <Link href="/" className="hover:text-rose-600">

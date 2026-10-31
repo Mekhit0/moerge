@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { COMPANY_LEGAL_NAME, SUPPORT_EMAIL } from "@/lib/contact";
+import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, SUPPORT_EMAIL } from "@/lib/contact";
 import {
   Sparkles,
   ArrowLeft,
@@ -103,6 +103,12 @@ export default function PrivacyPolicyPage() {
                 {t("1. რა მონაცემებს ვაგროვებთ", "1. Personal Data We Collect")}
               </h2>
             </div>
+            <p>
+              {t(
+                `MOARGE-ს მართავს ${COMPANY_LEGAL_NAME_KA}, საქართველოში რეგისტრირებული ინდივიდუალური მეწარმე. მონაცემებთან დაკავშირებული კითხვებისა და მოთხოვნებისთვის მოგვწერეთ: ${SUPPORT_EMAIL}.`,
+                `MOARGE is operated by ${COMPANY_LEGAL_NAME_EN}, an individual entrepreneur registered in Georgia. For questions or requests about your data, write to ${SUPPORT_EMAIL}.`
+              )}
+            </p>
             <p>
               {t(
                 "moarge ამუშავებს მხოლოდ იმ მონაცემებს, რომლებიც აუცილებელია სალონის ფუნქციონირებისა და ჯავშნის სერვისის განსახორციელებლად:",
@@ -326,7 +332,7 @@ export default function PrivacyPolicyPage() {
           <div className="flex items-center gap-2">
             <span className="font-black text-stone-900">MOARGE</span>
             <span>•</span>
-            <span>© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. {t(`MOARGE-ს მართავს კომპანია ${COMPANY_LEGAL_NAME}.`, `MOARGE is operated by ${COMPANY_LEGAL_NAME}.`)}</span>
+            <span>© {new Date().getFullYear()} {t(COMPANY_LEGAL_NAME_KA, COMPANY_LEGAL_NAME_EN)}. {t(`MOARGE-ს მართავს ${COMPANY_LEGAL_NAME_KA}.`, `MOARGE is operated by ${COMPANY_LEGAL_NAME_EN}.`)}</span>
           </div>
           <div className="flex items-center gap-4 font-semibold">
             <Link href="/" className="hover:text-rose-600">

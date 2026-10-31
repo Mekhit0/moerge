@@ -27,7 +27,7 @@ import {
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
-import { COMPANY_LEGAL_NAME, SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL } from "@/lib/contact";
+import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL } from "@/lib/contact";
 
 const SIGNUP_HREF = "/login?mode=signup";
 const DEMO_BOOKING_HREF = "/book";
@@ -499,8 +499,8 @@ export default function MoargeLandingPage() {
           </div>
 
           <div className="mt-12 flex flex-col gap-2 border-t border-rose-100 pt-6 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</p>
-            <p>{t(`MOARGE-ს მართავს კომპანია ${COMPANY_LEGAL_NAME}`, `MOARGE is operated by ${COMPANY_LEGAL_NAME}`)}</p>
+            <p>© {new Date().getFullYear()} {t(COMPANY_LEGAL_NAME_KA, COMPANY_LEGAL_NAME_EN)}. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</p>
+            <p>{t(`MOARGE-ს მართავს ${COMPANY_LEGAL_NAME_KA}`, `MOARGE is operated by ${COMPANY_LEGAL_NAME_EN}`)}</p>
           </div>
         </div>
       </footer>

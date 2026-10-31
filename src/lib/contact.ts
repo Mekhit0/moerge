@@ -2,5 +2,6 @@
 export const SUPPORT_EMAIL = "merabikhizanishvili@gmail.com";
 export const SUPPORT_PHONE_DISPLAY = "+995 598 73 47 77";
 export const SUPPORT_PHONE_TEL = "+995598734777";
-// Registered company that operates MOARGE, as named in its legal documents.
-export const COMPANY_LEGAL_NAME = "Winst";
+// Business that operates MOARGE: individual entrepreneur (ინდივიდუალური მეწარმე) Winst, registered in Georgia.
+export const COMPANY_LEGAL_NAME_KA = "ი/მ ვინსტი";
+export const COMPANY_LEGAL_NAME_EN = "IE Winst";
