@@ -150,7 +150,7 @@ export default function LoginPage() {
       : t("მიუთითეთ ელფოსტა და გამოგიგზავნით ბმულს ახალი პაროლისთვის.", "Enter your email and we'll send you a link to set a new password.");
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#fdf8f6]">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-ivory">
       {/* Brand panel: computers only, so phones see the form first */}
       <aside className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-stone-900 via-rose-950 to-stone-950 text-white p-14 flex-col justify-between relative overflow-hidden">
         <div className="absolute top-1/4 right-0 w-96 h-96 bg-rose-600/20 rounded-full blur-3xl pointer-events-none" />

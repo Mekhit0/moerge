@@ -1531,7 +1531,7 @@ export default function SettingsManager({
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 bg-[#fdf8f6]">
+            <div className="flex-1 overflow-y-auto p-4 bg-ivory">
               {previewFormat === "html" ? (
                 <iframe
                   title="Live Email"

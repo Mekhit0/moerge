@@ -65,7 +65,7 @@ function UnsubscribeContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf8f6] flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-ivory flex flex-col items-center justify-center p-6">
       <div className="mb-4">
         <LanguageSwitcher />
       </div>
@@ -157,7 +157,7 @@ export default function UnsubscribePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#fdf8f6] text-stone-500 text-sm">
+        <div className="min-h-screen flex items-center justify-center bg-ivory text-stone-500 text-sm">
           იტვირთება... / Loading preferences...
         </div>
       }

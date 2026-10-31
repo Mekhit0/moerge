@@ -201,7 +201,7 @@ function ManageBookingContent() {
   const { t } = useLanguage();
   const token = useSearchParams().get("token") ?? "";
 
-  return <div className="min-h-screen bg-[#fdf8f6] text-stone-900">
+  return <div className="min-h-screen bg-ivory text-stone-900">
     <header className="flex items-center justify-between gap-3 px-4 py-4 sm:px-8">
       <Link href="/" aria-label="moarge"><MoargeLogo variant="full" size="sm" /></Link>
       <LanguageSwitcher />

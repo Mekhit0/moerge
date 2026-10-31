@@ -163,7 +163,7 @@ export default function MoargeLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fdf8f6] text-stone-900 flex flex-col selection:bg-rose-200 selection:text-rose-950">
+    <div className="min-h-screen bg-ivory text-stone-900 flex flex-col selection:bg-rose-200 selection:text-rose-950">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Header */}
@@ -325,7 +325,7 @@ export default function MoargeLandingPage() {
               {steps.map((step, index) => {
                 const Icon = step.icon;
                 return (
-                  <li key={step.title} className="relative bg-[#fdf8f6] rounded-3xl border border-rose-100 p-6 sm:p-8">
+                  <li key={step.title} className="relative bg-ivory rounded-3xl border border-rose-100 p-6 sm:p-8">
                     <span className="absolute top-4 right-6 text-5xl font-black text-rose-100 pointer-events-none">{index + 1}</span>
                     <span className="inline-flex w-12 h-12 items-center justify-center rounded-2xl bg-white text-rose-600 border border-rose-100">
                       <Icon className="w-6 h-6" />
@@ -397,7 +397,7 @@ export default function MoargeLandingPage() {
               {faqs.map((faq, index) => {
                 const isOpen = openFaq === index;
                 return (
-                  <div key={faq.q} className="rounded-2xl border border-rose-100 bg-[#fdf8f6] overflow-hidden">
+                  <div key={faq.q} className="rounded-2xl border border-rose-100 bg-ivory overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setOpenFaq(isOpen ? null : index)}
@@ -435,7 +435,7 @@ export default function MoargeLandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#fdf8f6] border-t border-rose-100">
+      <footer className="bg-ivory border-t border-rose-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-8">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-sm space-y-4">

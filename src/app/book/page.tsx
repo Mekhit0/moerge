@@ -23,6 +23,8 @@ import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
 import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 import { formatBookingCode } from "@/lib/booking-code";
+import { formatLongDate, tbilisiDate as georgiaDate, tbilisiNowMinutes as georgiaNowMinutes, timeToMinutes as toMinutes } from "@/lib/dates";
+import { DayChips, TimeChips } from "@/components/ui";
 
 interface PublicSalonInfo {
   found: boolean;
@@ -74,43 +76,6 @@ const DEMO_SALON: PublicSalonInfo = {
   custom_services: DEFAULT_CUSTOM_SERVICES,
 };
 const DEMO_BOOKED_TIMES = ["11:00:00", "15:00:00"];
-
-/** YYYY-MM-DD in Tbilisi, `daysAhead` days from today. */
-function georgiaDate(daysAhead = 0) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Tbilisi", year: "numeric", month: "2-digit", day: "2-digit",
-  }).formatToParts(new Date());
-  const part = (type: string) => Number(parts.find((item) => item.type === type)?.value);
-  const date = new Date(Date.UTC(part("year"), part("month") - 1, part("day") + daysAhead));
-  return date.toISOString().slice(0, 10);
-}
-
-function georgiaNowMinutes() {
-  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Tbilisi", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
-  const get = (type: string) => Number(parts.find((item) => item.type === type)?.value);
-  return get("hour") * 60 + get("minute");
-}
-
-const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
-
-// Many browsers have no Georgian date names in Intl, so they are spelled out here.
-const KA_WEEKDAYS = ["კვირა", "ორშაბათი", "სამშაბათი", "ოთხშაბათი", "ხუთშაბათი", "პარასკევი", "შაბათი"];
-const KA_WEEKDAYS_SHORT = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
-const KA_MONTHS = ["იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი", "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"];
-const EN_WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const EN_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-function dateParts(value: string) {
-  const date = new Date(`${value}T12:00:00Z`);
-  return { weekday: date.getUTCDay(), day: date.getUTCDate(), month: date.getUTCMonth() };
-}
-
-function formatLongDate(value: string, lang: "ka" | "en") {
-  const { weekday, day, month } = dateParts(value);
-  return lang === "ka"
-    ? `${KA_WEEKDAYS[weekday]}, ${day} ${KA_MONTHS[month]}`
-    : `${EN_WEEKDAYS[weekday]}, ${day} ${EN_MONTHS[month]}`;
-}
 
 /** Calendar file for the booking. Georgia has no daylight saving time, so Tbilisi is always UTC+4. */
 function calendarFileUrl(title: string, date: string, time: string, durationMinutes: number, location?: string) {
@@ -215,26 +180,8 @@ function PublicBookingFormContent() {
       .map((slot) => slot.slot_time.slice(0, 5)))).sort(),
   [isDemo, demoSlots, staffSlots, selectedStaffId]);
 
-  const slotGroups = [
-    { label: t("დილა", "Morning"), times: timeSlots.filter((time) => toMinutes(time) < 12 * 60) },
-    { label: t("დღე", "Afternoon"), times: timeSlots.filter((time) => toMinutes(time) >= 12 * 60 && toMinutes(time) < 17 * 60) },
-    { label: t("საღამო", "Evening"), times: timeSlots.filter((time) => toMinutes(time) >= 17 * 60) },
-  ].filter((group) => group.times.length > 0);
-
-  const days = useMemo(() => Array.from({ length: 14 }, (_, index) => {
-    const value = georgiaDate(index);
-    const parts = dateParts(value);
-    return {
-      value,
-      weekday: index === 0
-        ? t("დღეს", "Today")
-        : index === 1
-          ? t("ხვალ", "Tmrw")
-          : lang === "ka" ? KA_WEEKDAYS_SHORT[parts.weekday] : EN_WEEKDAYS[parts.weekday].slice(0, 3),
-      day: parts.day,
-      month: lang === "ka" ? KA_MONTHS[parts.month].slice(0, 3) : EN_MONTHS[parts.month].slice(0, 3),
-    };
-  }), [lang, t]);
+  const DAY_CHIP_COUNT = 14;
+  const dateInChipRange = treatmentDate >= georgiaDate() && treatmentDate < georgiaDate(DAY_CHIP_COUNT);
 
   const longDate = (value: string) => formatLongDate(value, lang);
 
@@ -340,7 +287,7 @@ function PublicBookingFormContent() {
   const inputClass = "mt-1.5 w-full min-h-12 rounded-xl border border-stone-200 bg-white px-4 text-base text-stone-900 placeholder:text-stone-400 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30";
 
   return (
-    <div className="min-h-screen bg-[#fdf8f6] text-stone-900">
+    <div className="min-h-screen bg-ivory text-stone-900">
       <header className="sticky top-0 z-20 border-b border-rose-100/80 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/" aria-label="moarge" className="shrink-0"><MoargeLogo variant="icon" size="sm" /></Link>
@@ -490,20 +437,8 @@ function PublicBookingFormContent() {
                       <input type="date" min={georgiaDate()} max={georgiaDate(90)} value={treatmentDate} onChange={(event) => event.target.value && chooseDate(event.target.value)} className="sr-only" />
                     </label>
                   </div>
-                  <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-                    {days.map((day) => {
-                      const selected = day.value === treatmentDate;
-                      return (
-                        <button key={day.value} type="button" onClick={() => chooseDate(day.value)} aria-pressed={selected}
-                          className={`flex w-16 shrink-0 flex-col items-center rounded-2xl border py-2.5 transition ${selected ? "border-rose-600 bg-rose-600 text-white shadow-md shadow-rose-600/20" : "border-stone-200 bg-white text-stone-700 hover:border-rose-300"}`}>
-                          <span className={`text-[11px] font-semibold capitalize ${selected ? "text-rose-100" : "text-stone-500"}`}>{day.weekday}</span>
-                          <span className="text-xl font-bold leading-tight">{day.day}</span>
-                          <span className={`text-[11px] ${selected ? "text-rose-100" : "text-stone-400"}`}>{day.month}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {!days.some((day) => day.value === treatmentDate) && <p className="mt-2 text-sm font-semibold capitalize text-stone-700">{longDate(treatmentDate)}</p>}
+                  <DayChips value={treatmentDate} onChange={chooseDate} days={DAY_CHIP_COUNT} />
+                  {!dateInChipRange && <p className="mt-2 text-sm font-semibold text-stone-700">{longDate(treatmentDate)}</p>}
                 </div>
 
                 <div className="min-h-40">
@@ -519,24 +454,10 @@ function PublicBookingFormContent() {
                     <div className="grid grid-cols-4 gap-2">{Array.from({ length: 8 }, (_, index) => <div key={index} className="h-12 animate-pulse rounded-xl bg-white" />)}</div>
                   ) : !isDemo && staffForService.length === 0 ? (
                     <p className="rounded-2xl bg-white p-4 text-sm text-stone-600">{t("ამ სერვისზე სპეციალისტი ჯერ არ არის მიბმული. დაუკავშირდით სალონს.", "No specialist offers this service yet. Please contact the salon.")}</p>
-                  ) : slotGroups.length === 0 ? (
+                  ) : timeSlots.length === 0 ? (
                     <p className="rounded-2xl bg-white p-4 text-sm text-stone-600">{t("ამ დღეს თავისუფალი დრო აღარ არის. აირჩიეთ სხვა დღე.", "No free times on this day. Please choose another day.")}</p>
                   ) : (
-                    <div className="space-y-4">
-                      {slotGroups.map((group) => (
-                        <div key={group.label}>
-                          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-400">{group.label}</p>
-                          <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                            {group.times.map((time) => (
-                              <button key={time} type="button" onClick={() => chooseTime(time)} aria-pressed={treatmentTime === time}
-                                className={`min-h-12 rounded-xl border text-sm font-semibold transition active:scale-95 ${treatmentTime === time ? "border-rose-600 bg-rose-600 text-white" : "border-stone-200 bg-white text-stone-800 hover:border-rose-300 hover:bg-rose-50"}`}>
-                                {time}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <TimeChips times={timeSlots} value={treatmentTime} onChange={chooseTime} />
                   )}
                 </div>
               </section>
@@ -606,7 +527,7 @@ function PublicBookingFormContent() {
 
 export default function PublicBookingPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#fdf8f6] text-sm text-stone-500">იტვირთება... / Loading...</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-ivory text-sm text-stone-500">იტვირთება... / Loading...</div>}>
       <PublicBookingFormContent />
     </Suspense>
   );

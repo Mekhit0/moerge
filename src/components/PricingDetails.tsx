@@ -63,7 +63,7 @@ export default function PricingDetails() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#fdf8f6] text-stone-900">
+    <main className="min-h-screen bg-ivory text-stone-900">
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="moarge home"><MoargeLogo size="md" variant="full" /></Link>

@@ -16,7 +16,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-[#fdf8f6] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-ivory flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-3xl border border-rose-100 shadow-xl p-8 text-center space-y-6">
         <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center mx-auto">
           <AlertTriangle className="w-8 h-8" />

@@ -23,7 +23,7 @@ export default function TermsOfServicePage() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-[#fdf8f6] text-stone-900 flex flex-col">
+    <div className="min-h-screen bg-ivory text-stone-900 flex flex-col">
       {/* Top Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-rose-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">

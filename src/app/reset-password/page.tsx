@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
     "w-full min-h-12 pl-11 pr-12 rounded-xl border border-stone-200 bg-stone-50/50 text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition";
 
   return (
-    <div className="min-h-screen bg-[#fdf8f6] flex flex-col">
+    <div className="min-h-screen bg-ivory flex flex-col">
       <div className="flex items-center justify-between gap-3 px-4 sm:px-8 py-4">
         <Link href="/"><MoargeLogo size="sm" variant="full" /></Link>
         <LanguageSwitcher />

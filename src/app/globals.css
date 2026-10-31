@@ -1,12 +1,25 @@
 @import "tailwindcss";
 
+/*
+ * MOARGE color tokens. These are the existing brand colors given names, so every screen uses
+ * the same values: ivory background, rose brand, stone text. Tailwind generates classes such as
+ * bg-ivory, bg-brand, text-brand-strong, ring-brand from these.
+ */
+@theme {
+  --color-ivory: #fdf8f6;
+  --color-brand: #e11d48;        /* rose-600 */
+  --color-brand-strong: #be123c; /* rose-700 */
+  --color-brand-soft: #fff1f2;   /* rose-50 */
+  --color-brand-line: #ffe4e6;   /* rose-100 */
+}
+
 :root {
-  --bg-ivory: #fdf8f6;
-  --accent-rose: #e11d48;
+  --bg-ivory: var(--color-ivory);
+  --accent-rose: var(--color-brand);
 }
 
 body {
-  background-color: var(--bg-ivory);
+  background-color: var(--color-ivory);
   color: #1c1917;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -22,6 +35,31 @@ body {
   animation: step-in 220ms ease-out both;
 }
 
+/* Sheets slide up on phones and in from the right on larger screens. */
+@keyframes sheet-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes sheet-left {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sheet-panel[open] { animation: sheet-up 200ms ease-out both; }
+@media (min-width: 768px) {
+  .sheet-panel[open] { animation-name: sheet-left; }
+}
+.dialog-panel[open] { animation: step-in 180ms ease-out both; }
+.sheet-panel::backdrop,
+.dialog-panel::backdrop {
+  background: rgb(12 10 9 / 0.4);
+  animation: fade-in 200ms ease-out both;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }
@@ -30,5 +68,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .step-in { animation: none; }
+  .step-in,
+  .sheet-panel[open],
+  .dialog-panel[open],
+  .sheet-panel::backdrop,
+  .dialog-panel::backdrop { animation: none; }
 }

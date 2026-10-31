@@ -92,7 +92,7 @@ export default function AppShell({
         : { tone: "emerald", text: t("ავტომატური შეხსენებები ჩართულია", "Automatic reminders are on") };
 
   return (
-    <div className="min-h-screen flex bg-[#fdf8f6] text-stone-900">
+    <div className="min-h-screen flex bg-ivory text-stone-900">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-stone-200 z-30">
         <div className="p-5 border-b border-stone-100">

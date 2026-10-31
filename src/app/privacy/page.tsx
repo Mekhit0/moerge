@@ -21,7 +21,7 @@ export default function PrivacyPolicyPage() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-[#fdf8f6] text-stone-900 flex flex-col">
+    <div className="min-h-screen bg-ivory text-stone-900 flex flex-col">
       {/* Top Header */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-rose-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
@@ -116,7 +116,7 @@ export default function PrivacyPolicyPage() {
               )}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-2xl bg-[#fdf8f6] border border-rose-100">
+              <div className="p-4 rounded-2xl bg-ivory border border-rose-100">
                 <h4 className="font-bold text-stone-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <UserCheck className="w-4 h-4 text-rose-600" />
                   {t("სალონის ანგარიშის მონაცემები", "Salon Account Data")}
