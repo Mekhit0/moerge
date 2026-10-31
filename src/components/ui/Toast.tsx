@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "./cn";
@@ -34,6 +35,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const nextId = useRef(1);
+  // Where toasts are rendered: the page, or the open sheet or dialog. A modal <dialog> sits above
+  // everything and makes the rest of the page non-interactive, so a toast outside it could not be
+  // seen or tapped (Undo would not work). Following the topmost open dialog avoids both problems.
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const update = () => {
+      const open = Array.from(document.querySelectorAll<HTMLDialogElement>("dialog[open]"));
+      setHost(open.length ? open[open.length - 1] : null);
+    };
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["open"] });
+    return () => observer.disconnect();
+  }, []);
 
   const dismiss = useCallback((id: number) => setToasts((current) => current.filter((toast) => toast.id !== id)), []);
 
@@ -49,11 +67,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     error: (message) => show(message, { tone: "error", durationMs: 7000 }),
   }), [show]);
 
-  return (
-    <ToastContext.Provider value={api}>
-      {children}
-      {/* Above the phone bottom bar; centered on phones, bottom-right on desktop. */}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex flex-col items-center gap-2 px-4 lg:inset-x-auto lg:bottom-6 lg:right-6 lg:items-end">
+  // Top center, so a toast never covers the main button of a sheet or the phone tab bar.
+  const region = (
+      <div aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 top-[max(1rem,env(safe-area-inset-top))] z-50 flex flex-col items-center gap-2 px-4">
         {toasts.map((toast) => {
           const Icon = ICONS[toast.tone];
           return (
@@ -73,6 +90,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           );
         })}
       </div>
+  );
+
+  return (
+    <ToastContext.Provider value={api}>
+      {children}
+      {mounted && createPortal(region, host ?? document.body)}
     </ToastContext.Provider>
   );
 }

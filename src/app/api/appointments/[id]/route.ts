@@ -57,6 +57,15 @@ export async function PATCH(
     );
   }
 
+  // A paid visit stays done until its payment is undone (same rule as the visit status endpoint).
+  if (existingAppt.status === "completed" && parsed.data.status !== "completed") {
+    const { count: activePayments } = await ctx.supabase.from("visit_payments").select("id", { count: "exact", head: true })
+      .eq("salon_id", ctx.salonId).eq("appointment_id", id).is("voided_at", null);
+    if ((activePayments ?? 0) > 0) {
+      return NextResponse.json({ error: "ვიზიტი უკვე გადახდილია. ჯერ გააუქმეთ გადახდა. / This visit is paid. Undo the payment first." }, { status: 409 });
+    }
+  }
+
   const wantedService = parsed.data.service_id ?? existingAppt.service_id;
   const { data: salonServices } = await ctx.supabase.from("services").select("id,legacy_id,name_ka,name_en,price_gel,duration_minutes,recall_days").eq("salon_id", ctx.salonId);
   const matchedService = salonServices?.find((service) => service.id === wantedService || service.legacy_id === wantedService || service.legacy_id === parsed.data.treatment_type);
