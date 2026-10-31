@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { SUPPORT_EMAIL } from "@/lib/contact";
+import { COMPANY_LEGAL_NAME, SUPPORT_EMAIL } from "@/lib/contact";
 import {
   Sparkles,
   ArrowLeft,
@@ -326,7 +326,7 @@ export default function PrivacyPolicyPage() {
           <div className="flex items-center gap-2">
             <span className="font-black text-stone-900">MOARGE</span>
             <span>•</span>
-            <span>© {new Date().getFullYear()} moarge Ecosystem. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</span>
+            <span>© {new Date().getFullYear()} {COMPANY_LEGAL_NAME}. {t(`MOARGE-ს მართავს კომპანია ${COMPANY_LEGAL_NAME}.`, `MOARGE is operated by ${COMPANY_LEGAL_NAME}.`)}</span>
           </div>
           <div className="flex items-center gap-4 font-semibold">
             <Link href="/" className="hover:text-rose-600">
