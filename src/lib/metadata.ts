@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getAppUrl } from "./app-url";
 
 export const siteViewport: Viewport = {
   width: "device-width",
@@ -8,7 +9,7 @@ export const siteViewport: Viewport = {
 };
 
 export const siteMetadata: Metadata = {
-  metadataBase: new URL("https://moarge.vercel.app"),
+  metadataBase: new URL(getAppUrl()),
   title: {
     default: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
     template: "%s | moarge",
@@ -50,7 +51,7 @@ export const siteMetadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ka_GE",
-    url: "https://moarge.vercel.app",
+    url: getAppUrl(),
     siteName: "moarge",
     title: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
     description:

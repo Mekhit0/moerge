@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient, getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
+import { appUrl } from "@/lib/app-url";
 
 const schema = z.object({
   salonName: z.string().trim().min(2).max(120),
@@ -128,8 +129,7 @@ export async function POST(request: NextRequest) {
   );
   if (hoursError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin).replace(/\/$/, "");
-  const bookingUrl = `${appUrl}/book?salon=${encodeURIComponent(ctx.salonSlug)}`;
+  const bookingUrl = appUrl(`/book?salon=${encodeURIComponent(ctx.salonSlug)}`);
   const { error: completeError } = await admin.from("salon_settings")
     .update({ onboarding_completed_at: new Date().toISOString(), booking_url: bookingUrl })
     .eq("salon_id", ctx.salonId);

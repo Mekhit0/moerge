@@ -4,6 +4,7 @@ import {
 } from "@/lib/supabase/server";
 import { isPublicBookingDateAllowed, publicBookingInputSchema } from "@/lib/validation";
 import { consumeServerRateLimit } from "@/lib/server-rate-limit";
+import { appUrl } from "@/lib/app-url";
 
 function getTrustedClientIp(request: NextRequest): string {
   const xRealIp = request.headers.get("x-real-ip");
@@ -248,7 +249,7 @@ export async function POST(request: NextRequest) {
     booking: {
       ...(typeof data === "object" && data !== null ? data : {}),
       manage_url: resObj.manage_token
-        ? `${(process.env.NEXT_PUBLIC_APP_URL || "https://moarge.ge").replace(/\/$/, "")}/manage-booking?token=${encodeURIComponent(resObj.manage_token)}`
+        ? appUrl(`/manage-booking?token=${encodeURIComponent(resObj.manage_token)}`)
         : null,
     },
     confirmation_queued: true,

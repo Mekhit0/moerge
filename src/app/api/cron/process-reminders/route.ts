@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getAppUrl } from "@/lib/app-url";
 import {
   createNotificationProvider,
   FakeNotificationProvider,
@@ -38,7 +39,7 @@ async function processQueue(request: NextRequest) {
   const { data, error } = await supabase.rpc("claim_due_notifications", { p_limit: 25 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://moarge.ge").replace(/\/$/, "");
+  const appBaseUrl = getAppUrl();
   const jobs = (data ?? []) as Array<NotificationJob & { unsubscribe_token: string }>;
   const results = [];
   for (const row of jobs) {

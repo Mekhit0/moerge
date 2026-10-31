@@ -41,7 +41,7 @@ The optional `supabase/seed.sql` contains synthetic local salon and client recor
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL | Browser and server |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Session-scoped Supabase access | Browser and server |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Privileged server routes and database rate limiting | Server only |
-| `NEXT_PUBLIC_APP_URL` | Yes in deployed environments | Canonical links and email URLs | Browser and server |
+| `NEXT_PUBLIC_APP_URL` | Yes | Canonical site URL (for example `https://www.moarge.com`) for SEO metadata, sitemap, booking links, email links and signup confirmation. The build and server fail if it is missing | Browser and server |
 | `RESEND_API_KEY` | Yes for live email | Platform email delivery | Server only |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Optional | Server/client error reporting | Server / public DSN |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Optional for releases | Sentry source map upload | Build only |

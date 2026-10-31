@@ -35,6 +35,7 @@ import {
   Bell,
   Sliders,
 } from "lucide-react";
+import { appUrl } from "@/lib/app-url";
 import {
   CustomBookingService,
   DEFAULT_CUSTOM_SERVICES,
@@ -215,10 +216,7 @@ export default function SettingsManager({
   // Calculate live booking URL based on current slug
   const effectiveBookingUrl = useMemo(() => {
     const slug = salonSlug.trim() || initialSettings.salon_slug || "salon";
-    if (typeof window !== "undefined") {
-      return `${window.location.origin}/book?salon=${slug}`;
-    }
-    return `https://moarge.vercel.app/book?salon=${slug}`;
+    return appUrl(`/book?salon=${encodeURIComponent(slug)}`);
   }, [salonSlug, initialSettings.salon_slug]);
 
   function handleCopyBookingUrl() {
@@ -249,7 +247,7 @@ export default function SettingsManager({
       subjectTemplate: emailSubject,
       bodyTemplate: emailBodyTemplate,
       brandColor,
-      unsubscribeUrl: "https://moarge.vercel.app/unsubscribe?token=demo-token",
+      unsubscribeUrl: appUrl("/unsubscribe?token=demo-token"),
     });
   }, [lang, salonName, effectiveBookingUrl, emailSubject, emailBodyTemplate, brandColor]);
 

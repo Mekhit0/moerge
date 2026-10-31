@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
+import { getAppUrl } from "@/lib/app-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://moarge.vercel.app";
+  const baseUrl = getAppUrl();
   const now = new Date();
 
   return [

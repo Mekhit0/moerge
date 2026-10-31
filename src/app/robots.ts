@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { appUrl } from "@/lib/app-url";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: ["/", "/book", "/pricing", "/login", "/terms", "/privacy"],
       disallow: ["/api/", "/dashboard/", "/appointments/", "/clients/", "/settings/", "/email-history/"],
     },
-    sitemap: "https://moarge.vercel.app/sitemap.xml",
+    sitemap: appUrl("/sitemap.xml"),
   };
 }

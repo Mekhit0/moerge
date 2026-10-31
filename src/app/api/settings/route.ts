@@ -5,6 +5,7 @@ import {
   requireRole,
 } from "@/lib/supabase/server";
 import { salonSettingsSchema } from "@/lib/validation";
+import { appUrl } from "@/lib/app-url";
 
 export async function GET(request: NextRequest) {
   const ctx = await getAuthenticatedSalonContext();
@@ -15,15 +16,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const host =
-    request.headers.get("x-forwarded-host") || request.headers.get("host");
-  const proto =
-    request.headers.get("x-forwarded-proto") ||
-    (host?.includes("localhost") ? "http" : "https");
-  const baseUrl = host
-    ? `${proto}://${host}`
-    : process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app";
-  const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${ctx.salonSlug}`;
+  const autoBookingUrl = appUrl(`/book?salon=${encodeURIComponent(ctx.salonSlug)}`);
 
   const hasEnvKey = Boolean(
     process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")
@@ -70,14 +63,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const host =
-    request.headers.get("x-forwarded-host") || request.headers.get("host");
-  const proto =
-    request.headers.get("x-forwarded-proto") ||
-    (host?.includes("localhost") ? "http" : "https");
-  const baseUrl = host
-    ? `${proto}://${host}`
-    : process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app";
   let effectiveSlug = ctx.salonSlug;
   if (parsed.data.salon_slug) {
     const requestedSlug = parsed.data.salon_slug.toLowerCase().trim();
@@ -108,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const autoBookingUrl = `${baseUrl.replace(/\/$/, "")}/book?salon=${effectiveSlug}`;
+  const autoBookingUrl = appUrl(`/book?salon=${encodeURIComponent(effectiveSlug)}`);
   // Update non-sensitive columns with user-scoped authenticated client
   const { data: updatedSettings, error } = await ctx.supabase
     .from("salon_settings")

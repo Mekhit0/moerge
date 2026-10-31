@@ -32,16 +32,16 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
     it("generates correct robots.txt and sitemap.xml routes", () => {
       const robotsRules = robots();
       expect(robotsRules.rules).toBeDefined();
-      expect(robotsRules.sitemap).toBe("https://moarge.vercel.app/sitemap.xml");
+      expect(robotsRules.sitemap).toBe("https://www.moarge.test/sitemap.xml");
 
       const sitemapEntries = sitemap();
       expect(sitemapEntries.length).toBeGreaterThanOrEqual(5);
       const urls = sitemapEntries.map((e) => e.url);
-      expect(urls).toContain("https://moarge.vercel.app");
-      expect(urls).toContain("https://moarge.vercel.app/book");
-      expect(urls).toContain("https://moarge.vercel.app/login");
-      expect(urls).toContain("https://moarge.vercel.app/terms");
-      expect(urls).toContain("https://moarge.vercel.app/privacy");
+      expect(urls).toContain("https://www.moarge.test");
+      expect(urls).toContain("https://www.moarge.test/book");
+      expect(urls).toContain("https://www.moarge.test/login");
+      expect(urls).toContain("https://www.moarge.test/terms");
+      expect(urls).toContain("https://www.moarge.test/privacy");
     });
   });
 

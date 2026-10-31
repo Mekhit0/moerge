@@ -3,6 +3,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { BILLING_CONFIG, getBillableExtraBranches, type PaidPlan } from "@/lib/billing-plans";
 import { getPaymentProvider } from "@/lib/payment-provider";
+import { getAppUrl } from "@/lib/app-url";
 import { createServiceClient, getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 
 const plans = ["business", "multi_branch"] as const;
@@ -45,7 +46,7 @@ z.object({ action: z.literal("set_sms_cap"), amountGel: z.number().min(0).max(50
     const { data: invoice } = await db.from("invoices").select("id,total_gel,status").eq("id", parsed.data.invoiceId).eq("salon_id", ctx.salonId).single();
     if (!invoice || invoice.status !== "open") return NextResponse.json({ error: "Open invoice not found." }, { status: 404 });
     try {
-      const checkout = await getPaymentProvider().createCheckout({ invoiceId: invoice.id, amountGel: Number(invoice.total_gel), currency: "GEL", baseUrl: new URL(request.url).origin });
+      const checkout = await getPaymentProvider().createCheckout({ invoiceId: invoice.id, amountGel: Number(invoice.total_gel), currency: "GEL", baseUrl: getAppUrl() });
       await db.from("payments").upsert({ salon_id: ctx.salonId, invoice_id: invoice.id, provider: "fake", provider_payment_id: checkout.providerPaymentId, status: "pending", amount_gel: invoice.total_gel, idempotency_key: invoice.id }, { onConflict: "salon_id,idempotency_key" });
       return NextResponse.json({ checkoutUrl: checkout.checkoutUrl });
     } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Payment provider unavailable." }, { status: 503 }); }
@@ -72,7 +73,7 @@ z.object({ action: z.literal("set_sms_cap"), amountGel: z.number().min(0).max(50
   if (lineError) return NextResponse.json({ error: "Could not add invoice line." }, { status: 500 });
   try {
     const provider = getPaymentProvider();
-    const checkout = await provider.createCheckout({ invoiceId: invoice.id, amountGel: total, currency: "GEL", baseUrl: new URL(request.url).origin });
+    const checkout = await provider.createCheckout({ invoiceId: invoice.id, amountGel: total, currency: "GEL", baseUrl: getAppUrl() });
     await db.from("payments").insert({ salon_id: ctx.salonId, invoice_id: invoice.id, provider: "fake", provider_payment_id: checkout.providerPaymentId, status: "pending", amount_gel: total, idempotency_key: invoice.id });
     return NextResponse.json({ invoiceId: invoice.id, checkoutUrl: checkout.checkoutUrl });
   } catch (err) {

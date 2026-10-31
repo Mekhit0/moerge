@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { renderReminderEmail } from "./email-template";
 import { calculateRetryPlan, classifyEmailError } from "./scheduling";
+import { getAppUrl } from "./app-url";
 
 export interface ClaimedReminderJob {
   reminder_id: string;
@@ -135,11 +136,7 @@ export async function processClaimedReminder(
     now?: Date;
   } = {}
 ): Promise<SingleReminderProcessResult & { subject: string }> {
-  const appBaseUrl = (
-    options.appBaseUrl ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
+  const appBaseUrl = (options.appBaseUrl ?? getAppUrl()).replace(/\/$/, "");
 
   const unsubscribeUrl = `${appBaseUrl}/unsubscribe?token=${encodeURIComponent(
     job.unsubscribe_token

@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { SalonSettings } from "../types";
+import { appUrl } from "../app-url";
 
 export const SAFE_SALON_SETTINGS_SELECT =
   "id, salon_id, salon_name, sender_display_name, verified_sender_email, timezone, reminder_interval_days, email_subject, email_body_template, booking_url, brand_color, auto_reminders_enabled, dry_run_mode, test_recipient_email, booking_title, booking_subtitle, salon_address, salon_phone, working_hours_start, working_hours_end, slot_interval_minutes, booking_cancel_deadline_hours, send_booking_confirmation_email, onboarding_completed_at, deposit_required, deposit_amount_gel, deposit_percentage, created_at, updated_at";
@@ -173,10 +174,7 @@ export const getAuthenticatedSalonContext = cache(async function getAuthenticate
   const salonSlug = salonRow?.slug ?? "my-salon";
   const salonName = salonRow?.name ?? "My Salon";
 
-  const appUrl = (
-    process.env.NEXT_PUBLIC_APP_URL || "https://moarge.vercel.app"
-  ).replace(/\/$/, "");
-  const autoBookingUrl = `${appUrl}/book?salon=${salonSlug}`;
+  const autoBookingUrl = appUrl(`/book?salon=${encodeURIComponent(salonSlug)}`);
 
   const rawSettings = settingsRes.data as (Record<string, unknown> | null);
   const settings: SalonSettings = rawSettings

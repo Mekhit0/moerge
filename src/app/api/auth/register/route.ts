@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPublicServerSupabaseClient, createServiceClient } from "@/lib/supabase/server";
 import { isValidEmailAddress } from "@/lib/validation";
 import { consumeServerRateLimit } from "@/lib/server-rate-limit";
+import { appUrl } from "@/lib/app-url";
 
 function getClientIp(request: NextRequest): string {
   const xRealIp = request.headers.get("x-real-ip");
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       email,
       password,
       options: {
-        emailRedirectTo: new URL("/auth/callback?next=%2Fonboarding", request.url).toString(),
+        emailRedirectTo: appUrl("/auth/callback?next=%2Fonboarding"),
         data: { full_name: fullName, salon_name: salonName },
       },
     });
