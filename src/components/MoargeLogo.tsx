@@ -137,9 +137,9 @@ export default function MoargeLogo({
       {variant === "full" && (
         <div className="flex flex-col leading-none">
           <span
-            className={`font-black tracking-tight ${textClass} ${textColor} font-sans`}
+            className={`font-black tracking-[0.06em] ${textClass} ${textColor} font-sans`}
           >
-            moarge
+            MOARGE
           </span>
           {showSubtitle && (
             <span

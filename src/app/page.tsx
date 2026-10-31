@@ -171,7 +171,7 @@ export default function MoargeLandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="moarge">
             <MoargeLogo size="md" variant="icon" />
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-stone-900">moarge</span>
+            <span className="text-xl sm:text-2xl font-black tracking-[0.06em] text-stone-900">MOARGE</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-stone-600" aria-label={t("გვერდის ნავიგაცია", "Page navigation")}>
@@ -272,7 +272,7 @@ export default function MoargeLandingPage() {
               <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-rose-50/80 to-emerald-50/40 border border-rose-200">
                 <div className="flex items-center gap-2 text-stone-900 font-bold">
                   <MoargeLogo size="sm" variant="icon" />
-                  moarge
+                  MOARGE
                 </div>
                 <ul className="mt-5 space-y-3 text-sm sm:text-base text-stone-700">
                   {[

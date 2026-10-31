@@ -99,7 +99,7 @@ export default function AppShell({
           <div className="flex items-center gap-3 min-w-0">
             <MoargeLogo variant="icon" size="md" />
             <div className="min-w-0">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600">moarge</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600">MOARGE</div>
               <p className="text-sm font-semibold text-stone-900 truncate" title={salonName}>
                 {salonName}
               </p>

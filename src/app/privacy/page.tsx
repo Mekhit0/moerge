@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-black tracking-tight text-stone-900 leading-none">
-                  moarge
+                  MOARGE
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
                   SECURITY & PRIVACY
@@ -324,7 +324,7 @@ export default function PrivacyPolicyPage() {
       <footer className="bg-white border-t border-rose-100 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
           <div className="flex items-center gap-2">
-            <span className="font-black text-stone-900">moarge</span>
+            <span className="font-black text-stone-900">MOARGE</span>
             <span>•</span>
             <span>© {new Date().getFullYear()} moarge Ecosystem. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</span>
           </div>
