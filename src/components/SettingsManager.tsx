@@ -354,12 +354,12 @@ export default function SettingsManager({
           message:
             data.mode === "live_resend"
               ? t(
-                  `წერილმა წარმატებით მიაღწია Resend-ს (${data.recipient})! Provider ID: ${data.providerMessageId || "OK"}`,
-                  `Email successfully delivered to Resend for ${data.recipient}!`
+                  `სატესტო წერილი გაიგზავნა: ${data.recipient}`,
+                  `Test email sent to ${data.recipient}`
                 )
               : t(
-                  `სატესტო სიმულაცია შესრულდა (${data.recipient}). რეალური გაგზავნისთვის ჩართეთ Live რეჟიმი.`,
-                  `Dry-run simulation completed for ${data.recipient}.`
+                  `სატესტო რეჟიმი ჩართულია, ამიტომ წერილი რეალურად არ გაიგზავნა (${data.recipient}).`,
+                  `Test mode is on, so no email was actually sent (${data.recipient}).`
                 ),
         });
       }
@@ -498,7 +498,7 @@ export default function SettingsManager({
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition shadow-2xs"
           >
             <ExternalLink className="w-3.5 h-3.5 text-rose-600" />
-            <span>{t("ჯავშნის გვერდი (/book)", "View Booking Page (/book)")}</span>
+            <span>{t("ჯავშნის გვერდის ნახვა", "Open booking page")}</span>
           </a>
 
           <button
@@ -515,7 +515,7 @@ export default function SettingsManager({
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-stone-500" />
-                <span>{t("ბმული", "Copy Link")}</span>
+                <span>{t("ბმულის კოპირება", "Copy link")}</span>
               </>
             )}
           </button>
@@ -561,26 +561,8 @@ export default function SettingsManager({
           }`}
         >
           <LayoutTemplate className="w-4 h-4 text-rose-500" />
-          <span>{t("1. სალონის პროფილი", "1. Salon Profile")}</span>
+          <span>{t("სალონის ინფორმაცია", "Salon details")}</span>
         </button>
-
-        <Link href="/settings/services" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
-          <Scissors className="w-4 h-4 text-rose-500" />
-          <span>{t("სერვისები და ფასები", "Services & Pricing")}</span>
-        </Link>
-        <Link href="/settings/staff" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
-          <Users className="w-4 h-4 text-rose-500" /><span>{t("სპეციალისტები", "Staff")}</span>
-        </Link>
-
-        <Link href="/settings/schedules" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
-          <Calendar className="w-4 h-4 text-rose-500" /><span>{t("განრიგი", "Schedules")}</span>
-        </Link>
-        <Link href="/settings/time-off" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
-          <Clock className="w-4 h-4 text-rose-500" /><span>{t("დასვენების დრო", "Time off")}</span>
-        </Link>
-        <Link href="/settings/notifications" className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white text-stone-600 hover:bg-stone-100 border border-stone-200 whitespace-nowrap">
-          <Mail className="w-4 h-4 text-rose-500" /><span>{t("შეტყობინებების შაბლონები", "Notification templates")}</span>
-        </Link>
 
         <button
           type="button"
@@ -592,7 +574,7 @@ export default function SettingsManager({
           }`}
         >
           <Mail className="w-4 h-4 text-rose-500" />
-          <span>{t("4. შეხსენებები და ელ-ფოსტა", "4. Reminders & Email")}</span>
+          <span>{t("შეხსენების წერილის ტექსტი", "Reminder email text")}</span>
         </button>
       </div>
 
@@ -628,7 +610,7 @@ export default function SettingsManager({
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5 flex items-center justify-between">
-                <span>{t("სალონის უნიკალური ბმული (Slug) *", "Custom Booking Slug *")}</span>
+                <span>{t("ჯავშნის ბმულის ბოლო ნაწილი *", "End of your booking link *")}</span>
                 <span className="text-[11px] font-normal text-rose-600 lowercase">
                   /book?salon={salonSlug || "your-salon"}
                 </span>
@@ -766,7 +748,7 @@ export default function SettingsManager({
                 className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-rose-200 hover:border-rose-300 bg-rose-50/70 hover:bg-rose-100 text-rose-800 text-xs font-bold transition cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-rose-600" />
-                <span>{t("მზა შაბლონები (Presets)", "Service Presets")}</span>
+                <span>{t("მზა სერვისები", "Ready-made services")}</span>
               </button>
 
               <button
@@ -1089,7 +1071,7 @@ export default function SettingsManager({
                             }`}
                           >
                             {srv.enabled
-                              ? t("ჩანს /book-ზე", "Visible on /book")
+                              ? t("ჩანს ჯავშნის გვერდზე", "Shown on booking page")
                               : t("დამალულია", "Hidden")}
                           </span>
                         </label>
@@ -1200,12 +1182,12 @@ export default function SettingsManager({
           {/* Booking Page Content */}
           <div className="space-y-4 pt-2">
             <h4 className="text-sm font-bold text-stone-900">
-              {t("ჯავშნის გვერდის ტექსტები (/book)", "Public Booking Page Content (/book)")}
+              {t("ჯავშნის გვერდის ტექსტები", "Booking page text")}
             </h4>
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
-                {t("მთავარი სათაური (Headline)", "Booking Page Headline")}
+                {t("მთავარი სათაური", "Main heading")}
               </label>
               <input
                 type="text"
@@ -1571,18 +1553,11 @@ export default function SettingsManager({
       )}
 
       {/* GLOBAL FLOATING / STICKY SAVE BAR */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 py-3.5 px-4 sm:px-8 shadow-lg">
+      <div className="fixed bottom-16 left-0 right-0 lg:bottom-0 lg:left-64 z-20 bg-white/95 backdrop-blur-md border-t border-stone-200 py-3.5 px-4 sm:px-8 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-semibold text-stone-700 hidden sm:inline">
-              {t("moarge Settings Cloud", "moarge Settings Cloud")}
-            </span>
-            <span className="text-stone-400 hidden sm:inline">•</span>
-            <span className="text-stone-500 font-mono text-[11px]">
-              /book?salon={salonSlug || "salon"}
-            </span>
-          </div>
+          <p className="hidden text-sm text-stone-500 sm:block">
+            {t("ცვლილებები შეინახება ღილაკზე დაჭერის შემდეგ.", "Changes are saved when you press the button.")}
+          </p>
 
           <div className="flex items-center gap-3">
             <button

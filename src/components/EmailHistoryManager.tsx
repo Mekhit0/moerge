@@ -283,8 +283,8 @@ export default function EmailHistoryManager({
           </h2>
           <p className="mt-1 text-sm text-stone-500 max-w-2xl">
             {t(
-              `სისტემა სრულად ავტომატურად უგზავნის კლიენტებს შეხსენებებს პროცედურის ვადის მოახლოებამდე 1 დღით ადრე. აქ შეგიძლიათ თვალი ადევნოთ ავტომატური გაგზავნის ისტორიას, Resend-ის სტატუსებს და მიწოდების ჟურნალს (${timezone}).`,
-              `The system automatically dispatches reminder emails to clients 1 day prior to their procedure due date. Track background deliveries, provider statuses, and audit logs here (${timezone}).`
+              `კლიენტები შეხსენებას ავტომატურად იღებენ. აქ ჩანს, რომელი შეხსენება გაიგზავნა და რომელი ელოდება გაგზავნას (${timezone}).`,
+              `Clients get reminders automatically. Here you can see which reminders were sent and which are waiting (${timezone}).`
             )}
           </p>
         </div>
@@ -301,8 +301,8 @@ export default function EmailHistoryManager({
         >
           <Send className="w-3.5 h-3.5 text-stone-500" />
           {runningDue
-            ? t("მუშავდება...", "Running Worker...")
-            : t("ხელით გაშვება (სატესტოდ)", "Run Worker Manually (Test)")}
+            ? t("მოწმდება...", "Checking...")
+            : t("ახლავე შემოწმება", "Check now")}
         </button>
       </div>
 
@@ -314,15 +314,12 @@ export default function EmailHistoryManager({
           </div>
           <div>
             <div className="font-bold text-stone-900 flex items-center gap-2">
-              <span>{t("100% ავტომატური ფონური სისტემა აქტიურია", "100% Automated Background Service Active")}</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                CRON WORKER
-              </span>
+              <span>{t("შეხსენებები იგზავნება ავტომატურად", "Reminders are sent automatically")}</span>
             </div>
             <p className="text-stone-600 text-xs mt-0.5 leading-relaxed">
               {t(
-                "შეხსენებები იგზავნება ფონურ რეჟიმში. პერსონალის მხრიდან ხელით ჩარევა ან გაგზავნის ღილაკზე დაჭერა საჭირო არ არის — კლიენტებს შეხსენების მეილი ავტომატურად მისდით.",
-                "Reminders are dispatched automatically in the background. No manual intervention or clicking is needed — your clients receive reminders seamlessly."
+                "თქვენ არაფრის გაკეთება არ გჭირდებათ. კლიენტები შეხსენებას თავად მიიღებენ.",
+                "You do not need to do anything. Clients receive reminders on their own."
               )}
             </p>
           </div>
@@ -335,13 +332,13 @@ export default function EmailHistoryManager({
           <span>
             <strong>
               {t(
-                "ჩართულია სატესტო (Dry-Run) რეჟიმი:",
-                "Development / Dry-Run Mode Active:"
+                "სატესტო რეჟიმი ჩართულია:",
+                "Test mode is on:"
               )}
             </strong>{" "}
             {t(
-              "შეხსენებების გაგზავნა სიმულირდება და იწერება ჟურნალში რეალურ კლიენტებთან წერილის გაგზავნის გარეშე. რეალური გაგზავნის ჩართვა შეგიძლიათ ",
-              "Processing due or retried reminders simulates email dispatch and logs full audit records without emailing real clients. You can toggle Live Mode in "
+              "შეხსენებები კლიენტებს რეალურად არ ეგზავნებათ. ნამდვილი გაგზავნის ჩართვა შეგიძლიათ ",
+              "Reminders are not really sent to clients. You can turn on real sending in "
             )}
             <a href="/settings" className="underline font-semibold">
               {t("პარამეტრებში", "Settings")}
@@ -660,14 +657,14 @@ export default function EmailHistoryManager({
       <div className="bg-white rounded-3xl border border-rose-100 p-6 shadow-sm">
         <h3 className="text-base font-bold text-stone-900">
           {t(
-            `უცვლელი აუდიტის ჟურნალი და Webhook მოვლენები (${initialLogs.length})`,
-            `Immutable Provider & Webhook Event Log (${initialLogs.length})`
+            `გაგზავნის დეტალური ისტორია (${initialLogs.length})`,
+            `Detailed sending history (${initialLogs.length})`
           )}
         </h3>
         <p className="text-xs text-stone-500 mt-0.5">
           {t(
-            "ცალ-ცალკე აღრიცხავს დაგეგმვას, Resend API-ს მიერ მიღებას, სატესტო სიმულაციას და რეალურ მიწოდებას/უარყოფას.",
-            "Separately tracks scheduling, Resend API acceptance, dry-run simulations, and webhook delivery/bounce events."
+            "ყოველი წერილის სტატუსი: დაგეგმილი, გაგზავნილი, მიწოდებული ან ვერ მიწოდებული.",
+            "Status of every email: planned, sent, delivered or not delivered."
           )}
         </p>
 

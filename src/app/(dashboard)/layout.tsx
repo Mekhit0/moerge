@@ -2,6 +2,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import AppShell from "@/components/AppShell";
+import { appUrl } from "@/lib/app-url";
 
 export default async function DashboardLayout({
   children,
@@ -24,7 +25,7 @@ export default async function DashboardLayout({
   return (
     <AppShell
       salonName={ctx.settings?.salon_name || ctx.salonName || "My Salon"}
-      timezone={ctx.settings?.timezone || "Asia/Tbilisi"}
+      bookingUrl={appUrl(`/book?salon=${encodeURIComponent(ctx.salonSlug)}`)}
       autoRemindersEnabled={Boolean(ctx.settings?.auto_reminders_enabled ?? true)}
       dryRunMode={Boolean(ctx.settings?.dry_run_mode ?? false)}
       emailDeliveryConfigured={Boolean(process.env.RESEND_API_KEY?.trim() && process.env.RESEND_FROM_DOMAIN?.trim())}

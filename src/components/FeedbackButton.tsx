@@ -22,7 +22,7 @@ export default function FeedbackButton() {
     finally { setBusy(false); }
   }
   return <>
-    <button type="button" onClick={() => { setOpen(true); setMessage(""); }} className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-rose-700 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-rose-800" aria-label={t("უკუკავშირის გაგზავნა", "Send feedback")}><MessageSquare className="h-4 w-4"/><span>{t("უკუკავშირი", "Feedback")}</span></button>
+    <button type="button" onClick={() => { setOpen(true); setMessage(""); }} className="fixed bottom-20 right-4 lg:bottom-5 lg:right-5 z-40 inline-flex items-center gap-2 rounded-full bg-rose-700 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-rose-800" aria-label={t("უკუკავშირის გაგზავნა", "Send feedback")}><MessageSquare className="h-4 w-4"/><span>{t("უკუკავშირი", "Feedback")}</span></button>
     {open && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
       <form onSubmit={(event) => void submit(event)} className="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl">
         <div className="flex items-center justify-between"><h2 className="text-lg font-bold">{t("უკუკავშირი", "Feedback")}</h2><button type="button" onClick={() => setOpen(false)} aria-label={t("დახურვა", "Close")}><X className="h-5 w-5"/></button></div>

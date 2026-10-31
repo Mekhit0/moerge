@@ -230,8 +230,8 @@ export default function ClientsManager({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {canManageData && <>
-            <button type="button" onClick={() => window.location.assign("/api/clients/export")} className="inline-flex items-center gap-2 rounded-xl border border-stone-200 px-3 py-2.5 text-xs font-semibold"><Download className="h-4 w-4" />{t("CSV ექსპორტი", "Export CSV")}</button>
-            <label className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border border-stone-200 px-3 py-2.5 text-xs font-semibold ${importing ? "opacity-50" : ""}`}><Upload className="h-4 w-4" />{importing ? t("იმპორტი...", "Importing...") : t("CSV იმპორტი", "Import CSV")}<input type="file" accept=".csv,text/csv" className="sr-only" disabled={importing} onChange={(event) => { void importCsv(event.target.files?.[0]); event.currentTarget.value = ""; }} /></label>
+            <button type="button" onClick={() => window.location.assign("/api/clients/export")} className="inline-flex items-center gap-2 rounded-xl border border-stone-200 px-3 py-2.5 text-xs font-semibold"><Download className="h-4 w-4" />{t("ჩამოტვირთვა Excel-ისთვის", "Download for Excel")}</button>
+            <label className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border border-stone-200 px-3 py-2.5 text-xs font-semibold ${importing ? "opacity-50" : ""}`}><Upload className="h-4 w-4" />{importing ? t("იმპორტი...", "Importing...") : t("ფაილიდან ატვირთვა (CSV)", "Upload from file (CSV)")}<input type="file" accept=".csv,text/csv" className="sr-only" disabled={importing} onChange={(event) => { void importCsv(event.target.files?.[0]); event.currentTarget.value = ""; }} /></label>
           </>}
           <button type="button" onClick={openNewClientModal} className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-600/20 transition">
             <Plus className="h-4 w-4" />{t("ახალი კლიენტის დამატება", "Add New Client")}

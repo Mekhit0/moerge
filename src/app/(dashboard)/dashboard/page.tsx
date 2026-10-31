@@ -1,54 +1,64 @@
 import { redirect } from "next/navigation";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 import DashboardClient from "@/components/DashboardClient";
-import type { DashboardAppointment, DashboardReminder } from "@/components/DashboardClient";
-import { getTodayInTimeZone } from "@/lib/scheduling";
+import type { DashboardAppointment } from "@/components/DashboardClient";
+import { addCalendarDays, getTodayInTimeZone } from "@/lib/scheduling";
+import { appUrl } from "@/lib/app-url";
 
 export const dynamic = "force-dynamic";
+
+const APPOINTMENT_FIELDS =
+  "id,client:clients(id,full_name,phone),staff:staff(id,full_name,color),treatment_type,service_name,treatment_date,treatment_time,starts_at,status,price_gel";
+
+type AppointmentRow = Record<string, unknown> & { client?: unknown; staff?: unknown };
+
+function normalize(rows: AppointmentRow[] | null): DashboardAppointment[] {
+  return (rows ?? []).map((row) => ({
+    ...row,
+    client: Array.isArray(row.client) ? row.client[0] : row.client,
+    staff: Array.isArray(row.staff) ? row.staff[0] : row.staff,
+  })) as unknown as DashboardAppointment[];
+}
 
 export default async function DashboardPage() {
   const ctx = await getAuthenticatedSalonContext();
   if (!ctx) redirect("/login");
 
-  const today = getTodayInTimeZone(ctx.settings.timezone || "Asia/Tbilisi");
-  const [appointmentCount, appointmentsResult, reminderCount, remindersResult, activeClientCountResult] = await Promise.all([
-    ctx.supabase.from("appointments").select("id", { count: "exact", head: true })
-      .eq("salon_id", ctx.salonId).eq("status", "scheduled").gte("treatment_date", today),
-    ctx.supabase.from("appointments")
-      .select("id,client:clients(id,full_name),staff:staff(id,full_name),treatment_type,service_name,treatment_date,treatment_time,status")
-      .eq("salon_id", ctx.salonId).eq("status", "scheduled").gte("treatment_date", today)
-      .order("treatment_date", { ascending: true }).order("treatment_time", { ascending: true }).limit(6),
-    ctx.supabase.from("reminders").select("id", { count: "exact", head: true })
-      .eq("salon_id", ctx.salonId).eq("status", "scheduled")
-      .gte("scheduled_for_date", today),
-    ctx.supabase.from("reminders")
-      .select("id,scheduled_for_date,status,client:clients(full_name,email)")
-      .eq("salon_id", ctx.salonId).eq("status", "scheduled")
-      .gte("scheduled_for_date", today)
-      .order("scheduled_for_date", { ascending: true }).limit(6),
-    ctx.supabase.from("clients").select("id", { count: "exact", head: true })
-      .eq("salon_id", ctx.salonId).or("is_archived.is.null,is_archived.eq.false"),
-  ]);
+  const timezone = ctx.settings.timezone || "Asia/Tbilisi";
+  const today = getTodayInTimeZone(timezone);
+  const canManage = requireRole(ctx, ["owner", "admin"]);
+  const head = { count: "exact" as const, head: true };
 
-  const appointments = (appointmentsResult.data ?? []).map((row) => ({
-    ...row,
-    client: Array.isArray(row.client) ? row.client[0] : row.client,
-    staff: Array.isArray(row.staff) ? row.staff[0] : row.staff,
-  })) as unknown as DashboardAppointment[];
-  const reminders = (remindersResult.data ?? []).map((row) => ({
-    ...row,
-    client: Array.isArray(row.client) ? row.client[0] : row.client,
-  })) as unknown as DashboardReminder[];
+  const [todayResult, upcomingResult, reminderCount, serviceCount, staffCount, hoursCount, appointmentTotal] = await Promise.all([
+    ctx.supabase.from("appointments").select(APPOINTMENT_FIELDS)
+      .eq("salon_id", ctx.salonId).eq("treatment_date", today)
+      .order("starts_at", { ascending: true }).limit(200),
+    ctx.supabase.from("appointments").select(APPOINTMENT_FIELDS)
+      .eq("salon_id", ctx.salonId).eq("status", "scheduled")
+      .gte("treatment_date", addCalendarDays(today, 1))
+      .order("starts_at", { ascending: true }).limit(5),
+    ctx.supabase.from("reminders").select("id", head)
+      .eq("salon_id", ctx.salonId).eq("status", "scheduled").gte("scheduled_for_date", today),
+    ctx.supabase.from("services").select("id", head).eq("salon_id", ctx.salonId).eq("is_active", true),
+    ctx.supabase.from("staff").select("id", head).eq("salon_id", ctx.salonId).eq("is_active", true),
+    ctx.supabase.from("staff_working_hours").select("id", head).eq("salon_id", ctx.salonId),
+    ctx.supabase.from("appointments").select("id", head).eq("salon_id", ctx.salonId),
+  ]);
 
   return <DashboardClient
     salonName={ctx.settings?.salon_name || ctx.salonName}
-    timezone={ctx.settings.timezone || "Asia/Tbilisi"}
-    stats={{
-      activeClients: activeClientCountResult.count ?? 0,
-      upcomingAppointments: appointmentCount.count ?? 0,
-      upcomingReminders: reminderCount.count ?? 0,
+    staffName={ctx.user.fullName}
+    timezone={timezone}
+    bookingUrl={appUrl(`/book?salon=${encodeURIComponent(ctx.salonSlug)}`)}
+    canManage={canManage}
+    todayAppointments={normalize(todayResult.data as AppointmentRow[] | null)}
+    upcomingAppointments={normalize(upcomingResult.data as AppointmentRow[] | null)}
+    scheduledReminders={reminderCount.count ?? 0}
+    setup={{
+      services: (serviceCount.count ?? 0) > 0,
+      staff: (staffCount.count ?? 0) > 0,
+      workingHours: (hoursCount.count ?? 0) > 0,
+      firstBooking: (appointmentTotal.count ?? 0) > 0,
     }}
-    upcomingReminders={reminders}
-    upcomingAppointments={appointments}
   />;
 }
