@@ -261,8 +261,8 @@ export default function TermsOfServicePage() {
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
                 {t(
-                  "ჩვენი იურიდიული და მხარდაჭერის გუნდი მზადაა დაგეხმაროთ: legal@moarge.com",
-                  "Our legal & support team is here to assist: legal@moarge.com"
+                  "კითხვების შემთხვევაში მოგვწერეთ: merabikhizanishvili@gmail.com",
+                  "If you have questions, write to us: merabikhizanishvili@gmail.com"
                 )}
               </p>
             </div>

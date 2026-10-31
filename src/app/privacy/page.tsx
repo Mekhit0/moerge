@@ -304,8 +304,8 @@ export default function PrivacyPolicyPage() {
               </h3>
               <p className="text-xs text-stone-600 mt-0.5">
                 {t(
-                  "კითხვების ან მოთხოვნების შემთხვევაში დაგვიკავშირდით: privacy@moarge.com",
-                  "For privacy inquiries, contact our data protection team: privacy@moarge.com"
+                  "კითხვების ან მოთხოვნების შემთხვევაში დაგვიკავშირდით: merabikhizanishvili@gmail.com",
+                  "For privacy questions or requests, contact us: merabikhizanishvili@gmail.com"
                 )}
               </p>
             </div>
