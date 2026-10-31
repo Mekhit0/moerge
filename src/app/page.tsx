@@ -1055,13 +1055,13 @@ export default function MoargeLandingPage() {
             <ul className="space-y-2 text-stone-600">
               <li>თბილისი, საქართველო</li>
               <li>
-                <a href="mailto:info@moarge.ge" className="hover:text-rose-600 transition">
-                  info@moarge.ge
+                <a href="mailto:info@moarge.com" className="hover:text-rose-600 transition">
+                  info@moarge.com
                 </a>
               </li>
               <li>
-                <a href="mailto:legal@moarge.ge" className="hover:text-rose-600 transition">
-                  legal@moarge.ge
+                <a href="mailto:legal@moarge.com" className="hover:text-rose-600 transition">
+                  legal@moarge.com
                 </a>
               </li>
               <li className="text-[11px] text-stone-400 pt-1">

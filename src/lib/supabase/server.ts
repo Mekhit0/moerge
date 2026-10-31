@@ -206,7 +206,7 @@ export const getAuthenticatedSalonContext = cache(async function getAuthenticate
     supabase,
     user: {
       id: user.id,
-      email: user.email ?? "owner@moarge.ge",
+      email: user.email ?? "",
       fullName:
         (user.user_metadata?.full_name as string | undefined) ??
         user.email?.split("@")[0] ??

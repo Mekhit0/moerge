@@ -32,4 +32,4 @@ Phase 0 security controls are implemented in the current source and migrations. 
 
 ## Working style
 
-Work phase by phase from `CODEX_PROMPTS.md`. At the end of each phase stop, summarize what changed, what you could not verify, and what the owner must do manually. Do not start the next phase until told.
+Work phase by phase from `docs/ROADMAP.md`. At the end of each phase stop, summarize what changed, what you could not verify, and what the owner must do manually. Do not start the next phase until told.
