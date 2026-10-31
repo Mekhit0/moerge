@@ -42,13 +42,15 @@ function localMessage(message: string, lang: "ka" | "en") {
  * done, paid: payment summary, undo payment (owner and admin)
  * no-show or canceled: restore
  */
-export function VisitSheet({ visit, timezone, canVoid, startWith = "details", onClose, onUpdate }: {
+export function VisitSheet({ visit, timezone, canVoid, startWith = "details", onClose, onUpdate, onMove }: {
   visit: Visit | null;
   timezone: string;
   canVoid: boolean;
   startWith?: View;
   onClose: () => void;
   onUpdate: (visit: Visit) => void;
+  /** When given (on the calendar), "Move" picks a new time right there instead of opening the calendar. */
+  onMove?: (visit: Visit) => void;
 }) {
   const { lang, t } = useLanguage();
   const toast = useToast();
@@ -209,9 +211,9 @@ export function VisitSheet({ visit, timezone, canVoid, startWith = "details", on
             {current.status === "completed" && !payment && (
               <MenuButton icon={<RotateCcw className="h-5 w-5" />} label={t("დასრულების გაუქმება", "Not done yet")} busy={busy === "arrived"} onClick={() => void changeStatus("arrived")} />
             )}
-            {current.status === "scheduled" && (
-              <MenuButton icon={<CalendarClock className="h-5 w-5" />} label={t("გადატანა კალენდარში", "Move in calendar")} href="/appointments" />
-            )}
+            {(current.status === "scheduled" || current.status === "arrived") && (onMove
+              ? <MenuButton icon={<CalendarClock className="h-5 w-5" />} label={t("სხვა დროზე გადატანა", "Move to another time")} onClick={() => onMove(current)} />
+              : <MenuButton icon={<CalendarClock className="h-5 w-5" />} label={t("გადატანა კალენდარში", "Move in calendar")} href={`/appointments?date=${current.treatment_date}`} />)}
           </div>
         </div>
       )}

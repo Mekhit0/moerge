@@ -16,7 +16,13 @@ export async function POST(request: NextRequest) {
   if (!requireRole(ctx, canManage)) return NextResponse.json({ error: "Owner or admin role required." }, { status: 403 });
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || typeof body.starts_at !== "string" || typeof body.ends_at !== "string" || !Number.isFinite(Date.parse(body.starts_at)) || !Number.isFinite(Date.parse(body.ends_at)) || Date.parse(body.ends_at) <= Date.parse(body.starts_at)) return NextResponse.json({ error: "Choose a valid time-off range." }, { status: 400 });
-  const { data, error } = await ctx.supabase.from("time_off").insert({ salon_id: ctx.salonId, staff_id: typeof body.staff_id === "string" ? body.staff_id : null, starts_at: body.starts_at, ends_at: body.ends_at, reason: typeof body.reason === "string" ? body.reason.slice(0, 300) : null }).select("*").single();
+  const staffId = typeof body.staff_id === "string" && body.staff_id ? body.staff_id : null;
+  if (staffId) {
+    // The master must belong to this salon; never trust an id sent by the browser.
+    const { data: member } = await ctx.supabase.from("staff").select("id").eq("id", staffId).eq("salon_id", ctx.salonId).maybeSingle();
+    if (!member) return NextResponse.json({ error: "სპეციალისტი ვერ მოიძებნა. / Specialist not found." }, { status: 404 });
+  }
+  const { data, error } = await ctx.supabase.from("time_off").insert({ salon_id: ctx.salonId, staff_id: staffId, starts_at: body.starts_at, ends_at: body.ends_at, reason: typeof body.reason === "string" ? body.reason.slice(0, 300) : null }).select("*").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ time_off: data }, { status: 201 });
 }

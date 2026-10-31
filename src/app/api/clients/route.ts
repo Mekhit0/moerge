@@ -26,11 +26,17 @@ export async function GET(request: NextRequest) {
   }
 
   if (search) {
-    const safeSearch = search.replace(/[%_]/g, "");
-    query = query.or(
-      `full_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%`
-    );
+    // Characters with meaning in the filter syntax are removed so a search cannot change the query.
+    const safeSearch = search.replace(/[%_,()*\\"]/g, "").slice(0, 80);
+    const digits = safeSearch.replace(/\D/g, "");
+    const terms = [`full_name.ilike.%${safeSearch}%`, `email.ilike.%${safeSearch}%`, `phone.ilike.%${safeSearch}%`];
+    // "555 11 22" should find "+995555112233": compare digits against the normalized phone too.
+    if (digits.length >= 3) terms.push(`normalized_phone.ilike.%${digits}%`);
+    if (safeSearch) query = query.or(terms.join(","));
   }
+
+  const limit = Number(searchParams.get("limit"));
+  if (Number.isInteger(limit) && limit > 0 && limit <= 200) query = query.limit(limit);
 
   const { data, error } = await query;
   if (error) {
