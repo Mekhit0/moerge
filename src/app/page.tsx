@@ -8,10 +8,10 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronDown,
-  FileText,
+  Mail,
   Gift,
   Globe,
-  Lock,
+  Phone,
   MessageCircle,
   NotebookPen,
   QrCode,
@@ -27,7 +27,7 @@ import {
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
-import { SUPPORT_EMAIL } from "@/lib/contact";
+import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL } from "@/lib/contact";
 
 const SIGNUP_HREF = "/login?mode=signup";
 const DEMO_BOOKING_HREF = "/book";
@@ -435,33 +435,72 @@ export default function MoargeLandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-rose-100 py-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 text-sm text-stone-600">
-          <div className="space-y-3 lg:col-span-2">
-            <MoargeLogo size="md" variant="full" />
-            <p className="text-stone-500 max-w-sm">
-              {t(
-                "ონლაინ ჯავშნები, კალენდარი და კლიენტების ბაზა საქართველოს სალონებისთვის.",
-                "Online booking, a calendar and a client list for salons in Georgia."
-              )}
-            </p>
-            <p className="text-xs text-stone-400">© {new Date().getFullYear()} moarge</p>
+      <footer className="bg-[#fdf8f6] border-t border-rose-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-8">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-sm space-y-4">
+              <MoargeLogo size="md" variant="full" />
+              <p className="text-base text-stone-600 leading-relaxed">
+                {t(
+                  "ონლაინ ჯავშნები, კალენდარი და კლიენტების ბაზა საქართველოს სალონებისთვის.",
+                  "Online booking, a calendar and a client list for salons in Georgia."
+                )}
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+                <a href={`tel:${SUPPORT_PHONE_TEL}`} className="group inline-flex min-h-12 items-center gap-3 rounded-2xl border border-rose-100 bg-white px-4 text-sm font-semibold text-stone-800 shadow-xs transition hover:border-rose-300 hover:shadow-sm">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition group-hover:bg-rose-600 group-hover:text-white"><Phone className="h-4 w-4" /></span>
+                  {SUPPORT_PHONE_DISPLAY}
+                </a>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="group inline-flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-rose-100 bg-white px-4 text-sm font-semibold text-stone-800 shadow-xs transition hover:border-rose-300 hover:shadow-sm">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition group-hover:bg-rose-600 group-hover:text-white"><Mail className="h-4 w-4" /></span>
+                  <span className="truncate">{SUPPORT_EMAIL}</span>
+                </a>
+              </div>
+            </div>
+
+            <nav aria-label={t("ფუტერის ბმულები", "Footer links")} className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:gap-14">
+              {[
+                {
+                  title: t("სალონებისთვის", "For salons"),
+                  links: [
+                    { href: SIGNUP_HREF, label: t("რეგისტრაცია", "Sign up") },
+                    { href: "/login", label: t("შესვლა", "Sign in") },
+                    { href: "#pilot", label: t("სატესტო თვე", "Test month") },
+                    { href: "#faq", label: t("კითხვები", "FAQ") },
+                  ],
+                },
+                {
+                  title: t("კლიენტებისთვის", "For clients"),
+                  links: [
+                    { href: "/manage-booking", label: t("ჩემი ჯავშანი", "My booking") },
+                    { href: DEMO_BOOKING_HREF, label: t("ჯავშნის მაგალითი", "Booking example") },
+                  ],
+                },
+                {
+                  title: t("დოკუმენტები", "Legal"),
+                  links: [
+                    { href: "/terms", label: t("წესები და პირობები", "Terms") },
+                    { href: "/privacy", label: t("კონფიდენციალურობა", "Privacy") },
+                  ],
+                },
+              ].map((column) => (
+                <div key={column.title}>
+                  <p className="text-xs font-bold uppercase tracking-wider text-stone-400">{column.title}</p>
+                  <ul className="mt-4 space-y-3 text-sm">
+                    {column.links.map((link) => (
+                      <li key={link.href}>
+                        <Link href={link.href} className="text-stone-700 transition hover:text-rose-600">{link.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </nav>
           </div>
-          <div className="space-y-2">
-            <p className="font-bold text-stone-900">{t("ბმულები", "Links")}</p>
-            <ul className="space-y-2">
-              <li><Link href={SIGNUP_HREF} className="hover:text-rose-600">{t("რეგისტრაცია", "Sign up")}</Link></li>
-              <li><Link href="/login" className="hover:text-rose-600">{t("შესვლა", "Sign in")}</Link></li>
-              <li><Link href={DEMO_BOOKING_HREF} className="hover:text-rose-600">{t("ჯავშნის გვერდის მაგალითი", "Booking page example")}</Link></li>
-              <li><Link href="/manage-booking" className="hover:text-rose-600">{t("ჩემი ჯავშანი (კლიენტებისთვის)", "My booking (for clients)")}</Link></li>
-              <li><Link href="/terms" className="hover:text-rose-600 inline-flex items-center gap-1"><FileText className="w-3.5 h-3.5 text-stone-400" />{t("წესები და პირობები", "Terms")}</Link></li>
-              <li><Link href="/privacy" className="hover:text-rose-600 inline-flex items-center gap-1"><Lock className="w-3.5 h-3.5 text-stone-400" />{t("კონფიდენციალურობა", "Privacy")}</Link></li>
-            </ul>
-          </div>
-          <div className="space-y-2">
-            <p className="font-bold text-stone-900">{t("კონტაქტი", "Contact")}</p>
-            <p>{t("თბილისი, საქართველო", "Tbilisi, Georgia")}</p>
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-rose-600 break-all">{SUPPORT_EMAIL}</a>
+
+          <div className="mt-12 flex flex-col gap-2 border-t border-rose-100 pt-6 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between">
+            <p>© {new Date().getFullYear()} moarge. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</p>
+            <p>{t("შექმნილია საქართველოს სალონებისთვის", "Made for salons in Georgia")}</p>
           </div>
         </div>
       </footer>
