@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, SUPPORT_EMAIL } from "@/lib/contact";
+import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, COMPANY_SHORT_NAME, SUPPORT_EMAIL } from "@/lib/contact";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
 import {
   Sparkles,
@@ -290,7 +290,7 @@ export default function TermsOfServicePage() {
           <div className="flex items-center gap-2">
             <span className="font-black text-stone-900">MOARGE</span>
             <span>•</span>
-            <span>© {new Date().getFullYear()} {t(COMPANY_LEGAL_NAME_KA, COMPANY_LEGAL_NAME_EN)}. {t(`MOARGE-ს მართავს ${COMPANY_LEGAL_NAME_KA}.`, `MOARGE is operated by ${COMPANY_LEGAL_NAME_EN}.`)}</span>
+            <span>© {new Date().getFullYear()} {COMPANY_SHORT_NAME}. Managed by {COMPANY_SHORT_NAME}.</span>
           </div>
           <div className="flex items-center gap-4 font-semibold">
             <Link href="/" className="hover:text-rose-600">
