@@ -28,7 +28,13 @@ clients book without creating an account, and support over phone or Viber in Geo
 
 - Replace the hardcoded `moarge.vercel.app` (metadata, sitemap, robots, settings preview) and the `moarge.ge` fallbacks with one URL helper that reads `NEXT_PUBLIC_APP_URL`. Fail loudly if it is missing.
 - Owner tasks: set the env var in Vercel, set the Site URL and Redirect URLs in Supabase Auth, update the Turnstile hostname and the Resend domain and webhook.
-- Decide which email domain to use (`@moarge.ge` addresses are on the site, but only moarge.com was bought).
+- Contact addresses use `@moarge.com` (moarge.ge is not owned).
+
+## Pilot (decided 2026-10-31)
+
+- One month with 5 salons, each with up to 10 staff. The owner is recruiting them.
+- Reminders: SMS first (clients read SMS more than Viber or WhatsApp).
+- Hosting: free tiers during the pilot. Move to paid plans before the first paying salon.
 
 ## Phase 2: Simple dashboard (biggest selling point)
 
