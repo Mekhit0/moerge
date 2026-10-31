@@ -93,6 +93,18 @@ export const clientInputSchema = z.object({
   preferred_language: z.enum(["ka", "en"]).optional().default("ka"),
 });
 
+/** Reply addresses new salons start with; client replies sent there are lost. */
+export function isPlaceholderReplyEmail(email: string | null | undefined): boolean {
+  const value = email?.trim().toLowerCase() ?? "";
+  return value === "" || value === "onboarding@resend.dev" || value.endsWith("@example.com");
+}
+
+/** Six-digit code a client uses with their phone number to find their booking. */
+export const bookingLookupSchema = z.object({
+  code: z.string().transform((v) => v.replace(/\D/g, "")).refine((v) => /^[0-9]{6}$/.test(v), "Enter the 6-digit booking code."),
+  phone: z.string().trim().min(5).max(40).refine((v) => normalizeGeorgianPhone(v) !== null, "Enter a Georgian mobile number such as +995 5XX XX XX XX."),
+});
+
 export function normalizeGeorgianPhone(phone: string): string | null {
   let digits = phone.replace(/\D/g, "");
   if (digits.length === 9 && digits.startsWith("5")) digits = `995${digits}`;
@@ -294,15 +306,12 @@ export const salonSettingsSchema = z
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["deposit_required"], message: "Choose either a fixed deposit or a percentage deposit." });
     }
     if (data.auto_reminders_enabled) {
-      if (
-        !data.verified_sender_email ||
-        data.verified_sender_email.endsWith("@example.com")
-      ) {
+      if (isPlaceholderReplyEmail(data.verified_sender_email)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["verified_sender_email"],
           message:
-            "Cannot enable automatic reminders with a placeholder @example.com sender address. Use onboarding@resend.dev or your verified domain email.",
+            "მიუთითეთ ელფოსტა, სადაც კლიენტების პასუხები მოვა. / Enter the email where client replies should arrive.",
         });
       }
     }

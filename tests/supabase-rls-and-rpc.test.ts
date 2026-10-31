@@ -59,6 +59,8 @@ describe.skipIf(!hasSupabaseCredentials)("Supabase Row Level Security (RLS), Mul
       ["get_salon_date_availability", { p_salon_slug: "demo", p_date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), p_salon_id: null, p_exclude_appointment_id: null }],
       ["get_public_salon_booking_info", { p_slug: "demo" }],
       ["get_available_slots", { p_salon_id: "00000000-0000-0000-0000-000000000000", p_service_id: "00000000-0000-0000-0000-000000000000", p_date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), p_staff_id: null, p_exclude_appointment_id: null }],
+      ["find_booking_by_code", { p_code: "123456", p_phone: "+995555000000" }],
+      ["public_booking_guard", { p_salon_id: "00000000-0000-0000-0000-000000000000", p_phone: "+995555000000" }],
     ] as const;
     for (const [name, params] of revokedCalls) {
       const { data, error } = await anonClient.rpc(name, params);

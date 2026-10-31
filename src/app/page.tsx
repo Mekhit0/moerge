@@ -453,6 +453,7 @@ export default function MoargeLandingPage() {
               <li><Link href={SIGNUP_HREF} className="hover:text-rose-600">{t("რეგისტრაცია", "Sign up")}</Link></li>
               <li><Link href="/login" className="hover:text-rose-600">{t("შესვლა", "Sign in")}</Link></li>
               <li><Link href={DEMO_BOOKING_HREF} className="hover:text-rose-600">{t("ჯავშნის გვერდის მაგალითი", "Booking page example")}</Link></li>
+              <li><Link href="/manage-booking" className="hover:text-rose-600">{t("ჩემი ჯავშანი (კლიენტებისთვის)", "My booking (for clients)")}</Link></li>
               <li><Link href="/terms" className="hover:text-rose-600 inline-flex items-center gap-1"><FileText className="w-3.5 h-3.5 text-stone-400" />{t("წესები და პირობები", "Terms")}</Link></li>
               <li><Link href="/privacy" className="hover:text-rose-600 inline-flex items-center gap-1"><Lock className="w-3.5 h-3.5 text-stone-400" />{t("კონფიდენციალურობა", "Privacy")}</Link></li>
             </ul>

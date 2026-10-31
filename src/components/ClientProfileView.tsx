@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Mail,
@@ -25,6 +26,7 @@ interface ClientProfileViewProps {
   emailLogs: EmailLog[];
   totalSpent: number;
   lastVisit: string | null;
+  canManage: boolean;
 }
 
 export default function ClientProfileView({
@@ -33,11 +35,38 @@ export default function ClientProfileView({
   emailLogs,
   totalSpent,
   lastVisit,
+  canManage,
 }: ClientProfileViewProps) {
   const { lang, t } = useLanguage();
+  const router = useRouter();
   const [tagsText, setTagsText] = useState((client.tags ?? []).join(", "));
   const [savingTags, setSavingTags] = useState(false);
   const [tagMessage, setTagMessage] = useState("");
+  const [blocked, setBlocked] = useState(Boolean(client.is_blocked));
+  const [confirmBlock, setConfirmBlock] = useState(false);
+  const [cancelUpcoming, setCancelUpcoming] = useState(true);
+  const [blockBusy, setBlockBusy] = useState(false);
+  const [blockMessage, setBlockMessage] = useState("");
+
+  async function setBlockedState(next: boolean) {
+    setBlockBusy(true);
+    setBlockMessage("");
+    try {
+      const response = await fetch(`/api/clients/${client.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next ? { is_blocked: true, cancel_upcoming: cancelUpcoming } : { is_blocked: false }),
+      });
+      const result = await response.json();
+      if (!response.ok) { setBlockMessage(result.error ?? t("ცვლილება ვერ შეინახა.", "Could not save the change.")); return; }
+      setBlocked(next);
+      setConfirmBlock(false);
+      setBlockMessage(next
+        ? t(`ნომერი დაიბლოკა. გაუქმდა ${result.canceled ?? 0} მომავალი ჯავშანი.`, `Number blocked. ${result.canceled ?? 0} upcoming bookings were canceled.`)
+        : t("ბლოკი მოიხსნა. კლიენტს ისევ შეუძლია ონლაინ ჯავშანი.", "Unblocked. The client can book online again."));
+      router.refresh();
+    } catch { setBlockMessage(t("ქსელური შეცდომა.", "Network error.")); }
+    finally { setBlockBusy(false); }
+  }
 
   async function saveTags() {
     setSavingTags(true);
@@ -88,6 +117,11 @@ export default function ClientProfileView({
                   {t("არქივი", "Archived")}
                 </span>
               )}
+              {blocked && (
+                <span className="px-2.5 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-bold">
+                  {t("დაბლოკილია", "Blocked")}
+                </span>
+              )}
               <span
                 className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                   client.email_consent && !client.unsubscribed_at
@@ -134,6 +168,43 @@ export default function ClientProfileView({
               <button type="button" disabled={savingTags} onClick={saveTags} className="rounded-xl border border-stone-200 px-3 py-2 text-xs font-semibold disabled:opacity-50">{savingTags ? t("ინახება", "Saving") : t("თეგების შენახვა", "Save tags")}</button>
             </div>
             {tagMessage && <p aria-live="polite" className="mt-1 text-xs text-stone-500">{tagMessage}</p>}
+            {canManage && client.phone && (
+              <div className="mt-4 max-w-xl rounded-2xl border border-stone-200 p-4">
+                <p className="text-sm font-semibold text-stone-800">{t("ონლაინ ჯავშანი ამ ნომრით", "Online booking for this number")}</p>
+                {blocked ? (
+                  <>
+                    <p className="mt-1 text-xs text-stone-500">{t("ეს ნომერი დაბლოკილია და ონლაინ ვერ დაჯავშნის. თქვენ მაინც შეგიძლიათ ჩაწეროთ პანელიდან.", "This number is blocked from booking online. You can still book them from the dashboard.")}</p>
+                    <button type="button" disabled={blockBusy} onClick={() => void setBlockedState(false)} className="mt-3 min-h-11 rounded-xl border border-stone-200 px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50">
+                      {t("ბლოკის მოხსნა", "Unblock")}
+                    </button>
+                  </>
+                ) : confirmBlock ? (
+                  <div className="mt-2 space-y-3">
+                    <p className="text-xs text-stone-600">{t("დაბლოკვის შემდეგ ეს ნომერი ონლაინ ვეღარ დაჯავშნის.", "After blocking, this number can no longer book online.")}</p>
+                    <label className="flex items-start gap-2 text-sm text-stone-700">
+                      <input type="checkbox" checked={cancelUpcoming} onChange={(event) => setCancelUpcoming(event.target.checked)} className="mt-1 accent-rose-600" />
+                      {t("გაუქმდეს ამ კლიენტის ყველა მომავალი ჯავშანი", "Also cancel all of this client's upcoming bookings")}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" disabled={blockBusy} onClick={() => void setBlockedState(true)} className="min-h-11 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                        {t("დაბლოკვა", "Block")}
+                      </button>
+                      <button type="button" onClick={() => setConfirmBlock(false)} className="min-h-11 rounded-xl border border-stone-200 px-4 text-sm font-semibold text-stone-700">
+                        {t("გაუქმება", "Cancel")}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="mt-1 text-xs text-stone-500">{t("თუ ეს ნომერი ყალბ ჯავშნებს აკეთებს, დაბლოკეთ.", "If this number makes fake bookings, block it.")}</p>
+                    <button type="button" onClick={() => setConfirmBlock(true)} className="mt-3 min-h-11 rounded-xl border border-red-200 px-4 text-sm font-semibold text-red-700 hover:bg-red-50">
+                      {t("ნომრის დაბლოკვა", "Block this number")}
+                    </button>
+                  </>
+                )}
+                {blockMessage && <p role="status" className="mt-2 text-xs text-stone-600">{blockMessage}</p>}
+              </div>
+            )}
             <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
               <div className="rounded-xl bg-stone-50 p-3"><div className="text-stone-500">{t("ბოლო ვიზიტი", "Last visit")}</div><strong>{lastVisit ?? "—"}</strong></div>
               <div className="rounded-xl bg-stone-50 p-3"><div className="text-stone-500">{t("დასრულებული ვიზიტები", "Completed visits")}</div><strong>{appointments.filter((appointment) => appointment.status === "completed").length}</strong></div>

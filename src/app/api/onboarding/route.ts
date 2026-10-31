@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServiceClient, getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
 import { appUrl } from "@/lib/app-url";
+import { isPlaceholderReplyEmail } from "@/lib/validation";
 
 const schema = z.object({
   salonName: z.string().trim().min(2).max(120),
@@ -77,6 +78,11 @@ export async function POST(request: NextRequest) {
     working_hours_start: value.openTime,
     working_hours_end: value.closeTime,
     slot_interval_minutes: value.slotIntervalMinutes,
+    // Client replies to reminder emails go to this address. New salons start with a placeholder,
+    // so default it to the owner's sign-up email unless they already chose one.
+    ...(isPlaceholderReplyEmail(ctx.settings.verified_sender_email) && ctx.user.email
+      ? { verified_sender_email: ctx.user.email }
+      : {}),
   }).eq("salon_id", ctx.salonId);
   if (settingsError) return NextResponse.json({ error: SETUP_ERROR }, { status: 500 });
 

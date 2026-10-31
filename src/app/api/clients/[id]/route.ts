@@ -84,6 +84,30 @@ export async function PATCH(
     return NextResponse.json({ client: updated });
   }
 
+  // Block or unblock online booking for this client's phone number. Blocking can also cancel
+  // the client's upcoming bookings, which cleans up after someone filling the calendar.
+  if (typeof body.is_blocked === "boolean" && Object.keys(body).every((key) => key === "is_blocked" || key === "cancel_upcoming")) {
+    if (!requireRole(ctx, ["owner", "admin"])) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const { data: updated, error } = await ctx.supabase.from("clients")
+      .update({ is_blocked: body.is_blocked, blocked_at: body.is_blocked ? new Date().toISOString() : null })
+      .eq("id", id).eq("salon_id", ctx.salonId).select("*").single();
+    if (error) return NextResponse.json({ error: "Could not update the client." }, { status: 500 });
+
+    let canceled = 0;
+    if (body.is_blocked && body.cancel_upcoming === true) {
+      const { data: canceledRows, error: cancelError } = await ctx.supabase.from("appointments")
+        .update({ status: "canceled" })
+        .eq("salon_id", ctx.salonId).eq("client_id", id).eq("status", "scheduled")
+        .gt("starts_at", new Date().toISOString())
+        .select("id");
+      if (cancelError) return NextResponse.json({ error: "The client is blocked, but upcoming bookings could not be canceled." }, { status: 500 });
+      canceled = canceledRows?.length ?? 0;
+    }
+    return NextResponse.json({ client: updated, canceled });
+  }
+
   // Handle archive / restore toggle if requested
   if (typeof body.is_archived === "boolean" && Object.keys(body).length === 1) {
     if (!requireRole(ctx, ["owner", "admin"])) {

@@ -4,7 +4,9 @@ moarge is a booking and client-management app for beauty salons in Georgia. The 
 
 ## Current features
 
-- Public booking with relational services, staff selection or any available staff, date limits, Turnstile protection, database-backed rate limits, and optional email.
+- Public booking with relational services, staff selection or any available staff, date limits, and optional email.
+- Every appointment gets a 6-digit booking code. Clients find their booking at `/manage-booking` with the code plus their phone number, then cancel or move it to a free slot before the salon's deadline.
+- Public booking abuse controls: a hidden honeypot field, database-backed limits per IP (20 per hour) and per phone (5 per day), at most 2 upcoming online bookings per phone per salon, owner-controlled phone blocking (optionally canceling that client's upcoming bookings), and Cloudflare Turnstile when its keys are configured.
 - Staff schedules, breaks, time off, and service assignments drive public availability and dashboard booking. A database exclusion constraint prevents overlapping active appointments for one staff member or resource.
 - Day and week staff calendars with quick booking, drag rescheduling, time blocks, and arrived, no-show, and canceled statuses.
 - Salon appointment and client records, including client consent and archive controls.
@@ -14,7 +16,7 @@ moarge is a booking and client-management app for beauty salons in Georgia. The 
 - Dashboard feedback can be submitted from any signed-in salon workspace and is rate limited on the server.
 - Consent-based notifications with salon templates in Georgian and English: booking confirmation, 24-hour and 2-hour reminders, cancel/reschedule confirmation, service-specific recall, and no-show follow-up.
 - A retryable, idempotent notification outbox with per-channel consent, delivery log, email unsubscribe, SMS unsubscribe, and client self-service cancellation/rescheduling.
-- New salons receive a 14-day trial. Public bookings and reminder delivery are disabled after the trial expires unless the salon is active.
+- Pilot mode (`BILLING_CONFIG.billingEnabled = false`): new salons receive a free 30-day trial with up to 10 specialists, and pricing, checkout and billing pages are hidden. Public bookings and reminder delivery are disabled after the trial expires unless the salon is active.
 
 Resource administration and subscription payments are not implemented. uBill is the SMS provider; configure its credentials and an authorized brand to enable live SMS. See the [uBill API guide](https://ubill.ge/en/api-docs) for account and brand setup.
 
@@ -53,8 +55,8 @@ The optional `supabase/seed.sql` contains synthetic local salon and client recor
 | `RESEND_WEBHOOK_SECRET` | Yes for webhook processing | Resend webhook signature validation | Server only |
 | `CRON_SECRET` | Yes for reminder processing | Bearer authentication for the cron endpoint | Server only |
 | `PLATFORM_OWNER_USER_ID` | Yes to enable the owner dashboard | Supabase Auth user UUID allowed to access `/platform` and the platform overview API | Server only |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | No | Optional Turnstile widget; booking also uses the database-backed limiter and hidden honeypot field | Browser |
-| `TURNSTILE_SECRET_KEY` | No | Optional Turnstile verification | Server only |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Recommended | Cloudflare Turnstile (free) bot check on the public booking form. Set together with the secret | Browser |
+| `TURNSTILE_SECRET_KEY` | Recommended | Server-side Turnstile verification. When missing, booking still works with the other limits and production logs an error | Server only |
 | `EMAIL_DRY_RUN` | No | Simulate email delivery in development | Server only |
 | `EMAIL_TEST_RECIPIENT` | No | Redirect non-production test email | Server only |
 | `TEST_STAFF_EMAIL` | No | Supabase integration tests | Test environment only |

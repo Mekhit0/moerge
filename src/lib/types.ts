@@ -130,6 +130,7 @@ export interface Client {
   preferred_language: "ka" | "en";
   unsubscribe_token: string;
   is_archived: boolean;
+  is_blocked?: boolean;
   archived_at: string | null;
   last_completed_epilation_date: string | null;
   next_expected_appointment_date: string | null;

@@ -1335,16 +1335,22 @@ export default function SettingsManager({
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
-                {t("გამგზავნის ელ-ფოსტა", "Sender Email Address")}
+                {t("სად მოვიდეს კლიენტების პასუხები", "Where client replies arrive")}
               </label>
               <input
                 type="email"
                 required
                 value={verifiedSenderEmail}
                 onChange={(e) => setVerifiedSenderEmail(e.target.value)}
-                placeholder="reminders@yourdomain.ge"
+                placeholder="salon@gmail.com"
                 className="w-full px-4 py-3 rounded-2xl border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
+              <p className="mt-1.5 text-xs text-stone-500">
+                {t(
+                  "წერილები იგზავნება moarge-დან. თუ კლიენტი პასუხს დაწერს, ის ამ მისამართზე მოვა.",
+                  "Emails are sent by moarge. If a client replies, the reply arrives at this address."
+                )}
+              </p>
             </div>
           </div>
 

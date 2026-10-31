@@ -25,6 +25,8 @@ import {
   useLanguage,
 } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
+import { formatBookingCode } from "@/lib/booking-code";
 
 interface PublicSalonInfo {
   found: boolean;
@@ -68,6 +70,7 @@ interface BookingResult {
   treatment_type: TreatmentType;
   confirmation_email_sent?: boolean;
   manage_url?: string | null;
+  booking_code?: string | null;
 }
 
 function georgiaDate(daysAhead = 0) {
@@ -119,6 +122,10 @@ function PublicBookingFormContent() {
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [websiteTrap, setWebsiteTrap] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Turnstile tokens are single-use; bumping the key renders a fresh check after each attempt.
+  const [turnstileKey, setTurnstileKey] = useState(0);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -290,7 +297,7 @@ function PublicBookingFormContent() {
       notes.trim(),
     ]
       .filter(Boolean)
-      .join(" — ");
+      .join(" · ");
 
     try {
       const res = await fetch("/api/public/book", {
@@ -307,6 +314,7 @@ function PublicBookingFormContent() {
           service_id: activeService?.id || null,
           staff_id: selectedStaffId,
           website: websiteTrap,
+          turnstile_token: turnstileToken,
           notes: composedNotes.slice(0, 1000) || null,
           email_consent: emailConsent,
           sms_consent: smsConsent,
@@ -344,6 +352,8 @@ function PublicBookingFormContent() {
       );
     } finally {
       setSubmitting(false);
+      setTurnstileToken(null);
+      setTurnstileKey((key) => key + 1);
     }
   }
 
@@ -380,8 +390,16 @@ function PublicBookingFormContent() {
               <p className="mt-1 text-stone-600">{bookingConfirmation.treatment_date} · {bookingConfirmation.treatment_time.slice(0, 5)} · {activeService?.duration_minutes} {t("წუთი", "min")}</p>
               <p className="mt-1 font-semibold text-rose-700">{activeService?.price_gel === 0 ? t("უფასო", "Free") : `${activeService?.price_gel} ₾`}</p>
             </div>
-            {bookingConfirmation.manage_url && <Link href={bookingConfirmation.manage_url} className="mt-4 inline-block text-sm font-medium text-rose-700 underline">{t("ჯავშნის მართვა", "Manage appointment")}</Link>}
-            <div><button type="button" onClick={() => { setBookingConfirmation(null); setStep(1); setError(null); }} className="mt-6 rounded-xl border border-stone-300 px-5 py-3 text-sm font-semibold">{t("ახალი ჯავშანი", "Book another")}</button></div>
+            {bookingConfirmation.booking_code && <div className="mx-auto mt-5 max-w-md rounded-2xl border-2 border-dashed border-rose-200 bg-rose-50/50 p-5">
+              <p className="text-sm font-semibold text-stone-700">{t("თქვენი ჯავშნის კოდი", "Your booking code")}</p>
+              <p className="mt-1 text-4xl font-black tracking-[0.2em] text-rose-700">{formatBookingCode(bookingConfirmation.booking_code)}</p>
+              <p className="mt-2 text-sm text-stone-600">{t("შეინახეთ კოდი ან გადაიღეთ ეკრანი. კოდით და ტელეფონის ნომრით შეგიძლიათ ჯავშნის ნახვა, გადატანა ან გაუქმება.", "Save this code or take a screenshot. With the code and your phone number you can view, move or cancel the booking.")}</p>
+              <button type="button" onClick={() => { void navigator.clipboard?.writeText(bookingConfirmation.booking_code ?? "").then(() => setCodeCopied(true)).catch(() => setCodeCopied(false)); }} className="mt-3 min-h-11 rounded-xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700">
+                {codeCopied ? t("დაკოპირდა", "Copied") : t("კოდის კოპირება", "Copy code")}
+              </button>
+            </div>}
+            {bookingConfirmation.manage_url && <Link href={bookingConfirmation.manage_url} className="mt-4 inline-block text-sm font-medium text-rose-700 underline">{t("ჯავშნის ნახვა და შეცვლა", "View or change booking")}</Link>}
+            <div><button type="button" onClick={() => { setBookingConfirmation(null); setCodeCopied(false); setStep(1); setError(null); }} className="mt-6 rounded-xl border border-stone-300 px-5 py-3 text-sm font-semibold">{t("ახალი ჯავშანი", "Book another")}</button></div>
           </section>
         ) : (
           <>
@@ -431,7 +449,8 @@ function PublicBookingFormContent() {
               <details className="mt-4 rounded-xl border border-stone-200 p-4"><summary className="cursor-pointer text-sm font-medium">{t("დამატებითი შენიშვნა (არასავალდებულო)", "Add a note (optional)")}</summary><textarea rows={3} maxLength={700} value={notes} onChange={(event) => setNotes(event.target.value)} className="mt-3 w-full rounded-xl border border-stone-300 p-3 text-sm" placeholder={t("დამატებითი ინფორმაცია სალონისთვის", "Anything the salon should know")} /></details>
               <input type="text" name="website" value={websiteTrap} onChange={(event) => setWebsiteTrap(event.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[10000px] h-px w-px overflow-hidden" />
               <div className="mt-4 space-y-3"><label className="flex items-start gap-3 text-xs leading-relaxed text-stone-600"><input type="checkbox" checked={emailConsent} onChange={(event) => setEmailConsent(event.target.checked)} className="mt-0.5 accent-rose-600" /><span>{t("მსურს ელფოსტით მივიღო ვიზიტის შემდეგი შეხსენება.", "I agree to receive a follow-up reminder by email.")}</span></label><label className="flex items-start gap-3 text-xs leading-relaxed text-stone-600"><input type="checkbox" checked={smsConsent} onChange={(event) => setSmsConsent(event.target.checked)} className="mt-0.5 accent-rose-600" /><span>{t("მსურს SMS შეტყობინებები ჯავშნისა და შეხსენებების შესახებ.", "I agree to receive booking and reminder SMS messages.")}</span></label></div>
-              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setStep(2)} className="rounded-xl border border-stone-300 px-4 py-3 text-sm font-semibold">{t("უკან", "Back")}</button><button type="submit" disabled={submitting || !smartAvailability.isAvailable || !activeService} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3.5 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? t("იგზავნება...", "Submitting...") : t("ჯავშნის დადასტურება", "Confirm booking")}<ArrowRight className="h-4 w-4" /></button></div>
+              {!isDemo && <TurnstileWidget key={turnstileKey} onToken={setTurnstileToken} language={lang} />}
+              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setStep(2)} className="rounded-xl border border-stone-300 px-4 py-3 text-sm font-semibold">{t("უკან", "Back")}</button><button type="submit" disabled={submitting || !smartAvailability.isAvailable || !activeService || (!isDemo && Boolean(TURNSTILE_SITE_KEY) && !turnstileToken)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3.5 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50">{submitting ? t("იგზავნება...", "Submitting...") : t("ჯავშნის დადასტურება", "Confirm booking")}<ArrowRight className="h-4 w-4" /></button></div>
               <p className="mt-4 flex items-center justify-center gap-2 text-xs text-stone-500"><ShieldCheck className="h-4 w-4 text-emerald-600" />{t("თქვენი მონაცემები დაცულია და ჯავშნისთვის გამოიყენება.", "Your details are used only to manage this booking.")}</p>
             </form>}
           </>

@@ -1,6 +1,6 @@
 import React from "react";
 import { notFound, redirect } from "next/navigation";
-import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
+import { getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 import { Appointment, Client, EmailLog } from "@/lib/types";
 import ClientProfileView from "@/components/ClientProfileView";
 
@@ -20,7 +20,7 @@ export default async function ClientProfilePage({
 
   const { data: clientData } = await ctx.supabase
     .from("clients")
-    .select("id,full_name,email,phone,notes,tags,email_consent,unsubscribed_at,sms_consent,is_archived,last_completed_epilation_date,next_expected_appointment_date,created_at")
+    .select("id,full_name,email,phone,notes,tags,email_consent,unsubscribed_at,sms_consent,is_archived,is_blocked,last_completed_epilation_date,next_expected_appointment_date,created_at")
     .eq("id", id)
     .eq("salon_id", ctx.salonId)
     .maybeSingle();
@@ -60,6 +60,7 @@ export default async function ClientProfilePage({
       emailLogs={emailLogs}
       totalSpent={totalSpent}
       lastVisit={lastVisit}
+      canManage={requireRole(ctx, ["owner", "admin"])}
     />
   );
 }

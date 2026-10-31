@@ -5,25 +5,9 @@ import {
 import { isPublicBookingDateAllowed, publicBookingInputSchema } from "@/lib/validation";
 import { consumeServerRateLimit } from "@/lib/server-rate-limit";
 import { appUrl } from "@/lib/app-url";
-
-function getTrustedClientIp(request: NextRequest): string {
-  const xRealIp = request.headers.get("x-real-ip");
-  if (xRealIp && xRealIp.trim().length > 0) return xRealIp.trim();
-
-  const reqIp = (request as unknown as { ip?: string }).ip;
-  if (reqIp && reqIp.trim().length > 0) return reqIp.trim();
-
-  const cfIp = request.headers.get("cf-connecting-ip");
-  if (cfIp && cfIp.trim().length > 0) return cfIp.trim();
-
-  const xForwardedFor = request.headers.get("x-forwarded-for");
-  if (xForwardedFor) {
-    const firstIp = xForwardedFor.split(",")[0]?.trim();
-    if (firstIp) return firstIp;
-  }
-
-  return "127.0.0.1";
-}
+import { getTrustedClientIp } from "@/lib/client-ip";
+import { verifyTurnstile } from "@/lib/turnstile";
+import { PUBLIC_BOOKING_LIMITS, publicBookingGuardError } from "@/lib/booking-guard";
 
 export async function GET(request: NextRequest) {
   const clientIp = getTrustedClientIp(request);
@@ -203,15 +187,39 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Server configuration error" }, { status: 500 });
   }
+  const turnstileToken = typeof (body as Record<string, unknown>).turnstile_token === "string"
+    ? (body as Record<string, string>).turnstile_token
+    : null;
+  const botCheck = await verifyTurnstile(turnstileToken, clientIp);
+  if (!botCheck.ok) {
+    return NextResponse.json({
+      error: botCheck.reason === "unavailable"
+        ? "უსაფრთხოების შემოწმება ვერ მოხერხდა. სცადეთ თავიდან. / The security check is unavailable. Please try again."
+        : "დაადასტურეთ, რომ რობოტი არ ხართ. / Please confirm you are not a robot.",
+    }, { status: 400 });
+  }
+
   try {
-    if (!(await consumeServerRateLimit(serviceClient, `booking:${clientIp}`, 8, 3600))) {
-      return NextResponse.json({ error: "Too many booking requests. Please retry shortly." }, { status: 429 });
+    const [ipAllowed, phoneAllowed] = await Promise.all([
+      consumeServerRateLimit(serviceClient, `booking:${clientIp}`, PUBLIC_BOOKING_LIMITS.perIpPerHour, 3600),
+      consumeServerRateLimit(serviceClient, `booking-phone:${parsed.data.phone}`, PUBLIC_BOOKING_LIMITS.perPhonePerDay, 86400),
+    ]);
+    if (!ipAllowed || !phoneAllowed) {
+      return NextResponse.json({ error: "ძალიან ბევრი ჯავშნის მცდელობა. სცადეთ მოგვიანებით. / Too many booking requests. Please try again later." }, { status: 429 });
     }
   } catch {
     return NextResponse.json({ error: "Rate limiter unavailable." }, { status: 500 });
   }
   const { data: salon } = await serviceClient.from("salons").select("id,name").eq("slug", parsed.data.salon_slug).maybeSingle();
   if (!salon) return NextResponse.json({ error: "Salon not found or booking is unavailable." }, { status: 404 });
+
+  const { data: guard, error: guardError } = await serviceClient.rpc("public_booking_guard", {
+    p_salon_id: salon.id,
+    p_phone: parsed.data.phone,
+  });
+  if (guardError || !guard) return NextResponse.json({ error: "Booking check is unavailable. Please try again." }, { status: 500 });
+  const guardMessage = publicBookingGuardError(guard as { blocked: boolean; upcoming: number });
+  if (guardMessage) return NextResponse.json({ error: guardMessage }, { status: 403 });
   const { data: service } = await serviceClient.from("services").select("id")
     .eq("salon_id", salon.id).eq("id", parsed.data.service_id).eq("is_active", true).eq("is_online_bookable", true).maybeSingle();
   if (!service) return NextResponse.json({ error: "Selected service is unavailable." }, { status: 400 });
@@ -245,9 +253,15 @@ export async function POST(request: NextRequest) {
   }
   if (!resObj?.success) return NextResponse.json({ error: resObj?.error ?? "Unable to create booking." }, { status: 400 });
 
+  // The booking code is set by a database trigger when the appointment is inserted.
+  const { data: created } = resObj.appointment_id
+    ? await serviceClient.from("appointments").select("booking_code").eq("id", resObj.appointment_id).eq("salon_id", salon.id).maybeSingle()
+    : { data: null };
+
   return NextResponse.json({
     booking: {
       ...(typeof data === "object" && data !== null ? data : {}),
+      booking_code: created?.booking_code ?? null,
       manage_url: resObj.manage_token
         ? appUrl(`/manage-booking?token=${encodeURIComponent(resObj.manage_token)}`)
         : null,
