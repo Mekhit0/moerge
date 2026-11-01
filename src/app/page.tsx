@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  BarChart3,
   BellRing,
   CalendarDays,
   CheckCircle2,
@@ -22,10 +23,14 @@ import {
   Sparkles,
   UserPlus,
   Users,
+  UsersRound,
+  Wallet,
   X,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
+import ProductTour from "@/components/tour/ProductTour";
+import Reveal from "@/components/tour/Reveal";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
 import { COMPANY_SHORT_NAME, SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL } from "@/lib/contact";
 
@@ -38,54 +43,31 @@ export default function MoargeLandingPage() {
   const trialDays = BILLING_CONFIG.trialDays;
   const staffLimit = BILLING_CONFIG.trialStaffLimit;
 
-  const features = [
+  // Grouped by who it helps. Only what is built and working today.
+  const featureGroups = [
     {
-      icon: Globe,
-      title: t("ონლაინ ჯავშნის გვერდი", "Online booking page"),
-      text: t(
-        "კლიენტი თავად ირჩევს სერვისს, სპეციალისტს და თავისუფალ დროს. ჯავშანი მუშაობს დღე და ღამე, დარეკვის გარეშე.",
-        "Clients pick a service, a specialist and a free time on their own. Booking works day and night, without phone calls."
-      ),
+      title: t("კლიენტებისთვის", "For your clients"),
+      items: [
+        { icon: Globe, title: t("ონლაინ ჩაწერა 24/7", "Online booking, day and night"), text: t("კლიენტი ბმულიდან ირჩევს სერვისს, სპეციალისტს და თავისუფალ დროს. აპლიკაცია და რეგისტრაცია არ სჭირდება.", "From your link the client picks a service, a specialist and a free time. No app, no account.") },
+        { icon: BellRing, title: t("შეხსენება ელ-ფოსტით", "Email reminders"), text: t("დადასტურება ჩაწერისთანავე, შეხსენება ერთი დღით და ორი საათით ადრე. SMS მალე დაემატება.", "A confirmation right away, reminders a day and two hours before. SMS is coming soon.") },
+        { icon: RefreshCcw, title: t("გადატანა დარეკვის გარეშე", "Changes without a call"), text: t("ჯავშნის კოდით კლიენტი თავად გადაიტანს ან გააუქმებს ვიზიტს.", "With the booking code, clients move or cancel the visit themselves.") },
+      ],
     },
     {
-      icon: CalendarDays,
-      title: t("კალენდარი სპეციალისტების მიხედვით", "Calendar by specialist"),
-      text: t(
-        "დღის და კვირის ხედი. ყველა სპეციალისტის განრიგი ერთ ეკრანზე, ჯავშნის გადატანა ერთი მოძრაობით.",
-        "Day and week views. Every specialist's schedule on one screen, and moving a booking takes one drag."
-      ),
+      title: t("რეცეფციისთვის", "For the front desk"),
+      items: [
+        { icon: CalendarDays, title: t("კალენდარი პლანშეტზე", "A calendar made for the tablet"), text: t("ყველა სპეციალისტი ერთ ეკრანზე. გადატანა, შესვენების დაბლოკვა და ორმაგი ჯავშნისგან დაცვა.", "Every specialist on one screen. Moving visits, blocking breaks, and no double bookings.") },
+        { icon: Wallet, title: t("ვიზიტი და გადახდა", "Visits and payments"), text: t("მოვიდა, დასრულდა, გადახდა: ნაღდი, ბარათი, ფასდაკლება და თიფი. დღის შემოსავალი თავად ითვლება.", "Arrived, done, paid: cash, card, discount and tip. The day's income adds up by itself.") },
+        { icon: Users, title: t("კლიენტების ბაზა", "A client base that remembers"), text: t("ისტორია, ალერგიები, ფერის ფორმულები და ავტომატური სიები: დაბრუნების დროა, VIP, საფრთხეშია.", "History, allergies, colour formulas and automatic lists: due back, VIP, at risk.") },
+      ],
     },
     {
-      icon: Users,
-      title: t("კლიენტების ბაზა", "Client list"),
-      text: t(
-        "ტელეფონი, შენიშვნები და ვიზიტების ისტორია ყველა კლიენტზე. კლიენტების ატვირთვა შესაძლებელია ფაილიდანაც.",
-        "Phone, notes and visit history for every client. You can also upload clients from a file."
-      ),
-    },
-    {
-      icon: BellRing,
-      title: t("ავტომატური შეხსენებები", "Automatic reminders"),
-      text: t(
-        "კლიენტი ვიზიტამდე შეხსენებას ელფოსტით იღებს. SMS შეხსენებები მალე დაემატება.",
-        "Clients get a reminder by email before the visit. SMS reminders are coming soon."
-      ),
-    },
-    {
-      icon: ShieldCheck,
-      title: t("ორმაგი ჯავშნისგან დაცვა", "No double bookings"),
-      text: t(
-        "სისტემა ითვალისწინებს სერვისის ხანგრძლივობას და სპეციალისტის გრაფიკს. ერთ დროზე ორი ჯავშანი არ ჩაიწერება.",
-        "The system knows each service's length and each specialist's hours. Two bookings can't land on the same time."
-      ),
-    },
-    {
-      icon: RefreshCcw,
-      title: t("გაუქმება და გადატანა", "Cancel and reschedule"),
-      text: t(
-        "კლიენტს შეუძლია ჯავშნის გაუქმება ან გადატანა ბმულიდან, ისე რომ სალონში დარეკვა არ დასჭირდეს.",
-        "Clients can cancel or move their booking from a link, without calling the salon."
-      ),
+      title: t("მფლობელისთვის", "For the owner"),
+      items: [
+        { icon: UsersRound, title: t("გუნდი და როლები", "Team and roles"), text: t("სპეციალისტები ბმულით შედიან და ხედავენ მხოლოდ თავის ვიზიტებს. თქვენ ხედავთ ყველაფერს.", "Specialists join by link and see only their own visits. You see everything.") },
+        { icon: BarChart3, title: t("შემოსავალი და საკომისიო", "Earnings and commission"), text: t("გადახდილი, საშუალო ჩეკი, დატვირთვა, თითოეულის საკომისიო და გასაცემი. Excel-ში ერთი ღილაკით.", "Paid, average check, how busy, each specialist's commission and payout. To Excel in one click.") },
+        { icon: ShieldCheck, title: t("უსაფრთხო და ცალკე", "Safe and separate"), text: t("თითოეული სალონის მონაცემები ცალკეა. კლიენტს შეტყობინება მხოლოდ მისი თანხმობით ეგზავნება.", "Each salon's data is kept apart. Clients get messages only if they agreed.") },
+      ],
     },
   ];
 
@@ -97,8 +79,8 @@ export default function MoargeLandingPage() {
     },
     {
       icon: Scissors,
-      title: t("დაამატეთ სერვისები და სპეციალისტები", "Add services and staff"),
-      text: t("მიუთითეთ ფასები, ხანგრძლივობა და სამუშაო საათები. მზა სერვისებიდანაც შეგიძლიათ აირჩიოთ.", "Enter prices, lengths and working hours. You can also pick from ready-made services."),
+      title: t("დაამატეთ სერვისები და გუნდი", "Add services and your team"),
+      text: t("მიუთითეთ ფასები, ხანგრძლივობა და სამუშაო საათები, შემდეგ მოიწვიეთ სპეციალისტები ბმულით.", "Enter prices, lengths and working hours, then invite your specialists with a link."),
     },
     {
       icon: QrCode,
@@ -134,6 +116,20 @@ export default function MoargeLandingPage() {
       a: t(
         "არა. ჯავშნის ბმული ტელეფონის ბრაუზერში იხსნება. კლიენტი უთითებს სახელს და ტელეფონს და ირჩევს დროს.",
         "No. The booking link opens in the phone's browser. The client enters a name and phone number and picks a time."
+      ),
+    },
+    {
+      q: t("სპეციალისტები ერთმანეთის კლიენტებს ხედავენ?", "Can specialists see each other's clients?"),
+      a: t(
+        "არა. სპეციალისტი ხედავს მხოლოდ თავის ვიზიტებს, იმ კლიენტების ტელეფონს და თავის შემოსავალს. მფლობელი და ადმინისტრატორი ხედავენ მთელ სალონს.",
+        "No. A specialist sees only their own visits, those clients' phone numbers and their own earnings. The owner and admins see the whole salon."
+      ),
+    },
+    {
+      q: t("შეხსენებები SMS-ით მოდის?", "Do reminders come by SMS?"),
+      a: t(
+        "ახლა შეხსენებები ელ-ფოსტით იგზავნება, თუ კლიენტმა ელ-ფოსტა მიუთითა და დათანხმდა. SMS შეხსენებებზე ვმუშაობთ და მალე დაემატება.",
+        "Right now reminders go by email when the client gave an email and agreed. We are working on SMS reminders and they are coming soon."
       ),
     },
     {
@@ -211,8 +207,8 @@ export default function MoargeLandingPage() {
               </h1>
               <p className="text-base sm:text-lg text-stone-600 leading-relaxed max-w-xl">
                 {t(
-                  "moarge აძლევს თქვენს სალონს ონლაინ ჯავშნის გვერდს, მარტივ კალენდარს და კლიენტების ბაზას. კლიენტები თავად ეწერებიან, თქვენ კი ყველაფერს ერთ ეკრანზე ხედავთ.",
-                  "moarge gives your salon an online booking page, a simple calendar and a client list. Clients book themselves, and you see everything on one screen."
+                  "ონლაინ ჩაწერა, კალენდარი, კლიენტების ბაზა, გადახდები და შემოსავალი ერთ ადგილას. კლიენტები თავად ეწერებიან, შეხსენება თავად იგზავნება, თქვენ კი ყველაფერს ერთ ეკრანზე ხედავთ.",
+                  "Online booking, a calendar, your client base, payments and earnings in one place. Clients book themselves, reminders go out on their own, and you see everything on one screen."
                 )}
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -239,7 +235,7 @@ export default function MoargeLandingPage() {
               </ul>
             </div>
 
-            <TodayPreview />
+            <ProductTour />
           </div>
         </section>
 
@@ -261,6 +257,7 @@ export default function MoargeLandingPage() {
                     t("ერთ დროზე ორი კლიენტი იწერება", "Two clients get booked at the same time"),
                     t("კლიენტს ავიწყდება ვიზიტი და არ მოდის", "Clients forget and don't show up"),
                     t("ძნელია იპოვო, ვინ როდის იყო და რა გაიკეთა", "Hard to find who came when and for what"),
+                    t("თვის ბოლოს შემოსავალს და საკომისიოს ხელით ითვლით", "Month-end income and commission counted by hand"),
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2.5">
                       <X className="w-4 h-4 mt-1 text-red-500 shrink-0" />
@@ -280,6 +277,7 @@ export default function MoargeLandingPage() {
                     t("სისტემა გადაფარვას არ დაუშვებს", "The system blocks overlapping bookings"),
                     t("კლიენტი ვიზიტამდე შეხსენებას იღებს", "Clients get a reminder before the visit"),
                     t("ყველა კლიენტის ისტორია ერთ ადგილას", "Every client's history in one place"),
+                    t("შემოსავალი და გასაცემი თავად ითვლება", "Income and payouts add up by themselves"),
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2.5">
                       <CheckCircle2 className="w-4 h-4 mt-1 text-emerald-600 shrink-0" />
@@ -298,19 +296,34 @@ export default function MoargeLandingPage() {
             <h2 className="text-center text-2xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
               {t("რას აკეთებს moarge", "What moarge does")}
             </h2>
-            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <article key={feature.title} className="bg-white rounded-3xl border border-rose-100 p-6">
-                    <span className="inline-flex w-11 h-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                      <Icon className="w-5 h-5" />
-                    </span>
-                    <h3 className="mt-4 text-lg font-bold text-stone-900">{feature.title}</h3>
-                    <p className="mt-2 text-sm sm:text-base text-stone-600 leading-relaxed">{feature.text}</p>
-                  </article>
-                );
-              })}
+            <p className="mx-auto mt-3 max-w-2xl text-center text-base text-stone-600">
+              {t("ერთი პროგრამა მთელი სალონისთვის: კლიენტიდან მფლობელამდე.", "One program for the whole salon, from the client to the owner.")}
+            </p>
+            <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-6">
+              {featureGroups.map((group, groupIndex) => (
+                <Reveal key={group.title} delay={groupIndex * 120} className="space-y-4">
+                  <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-rose-700">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs text-white">{groupIndex + 1}</span>
+                    {group.title}
+                  </h3>
+                  {group.items.map((feature) => {
+                    const Icon = feature.icon;
+                    return (
+                      <article key={feature.title} className="group rounded-3xl border border-rose-100 bg-white p-5 transition duration-300 hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-lg hover:shadow-rose-950/5">
+                        <div className="flex items-start gap-4">
+                          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 transition group-hover:bg-rose-600 group-hover:text-white">
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <div>
+                            <h4 className="text-base font-bold text-stone-900">{feature.title}</h4>
+                            <p className="mt-1 text-sm leading-relaxed text-stone-600">{feature.text}</p>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </Reveal>
+              ))}
             </div>
           </div>
         </section>
@@ -325,14 +338,14 @@ export default function MoargeLandingPage() {
               {steps.map((step, index) => {
                 const Icon = step.icon;
                 return (
-                  <li key={step.title} className="relative bg-ivory rounded-3xl border border-rose-100 p-6 sm:p-8">
+                  <Reveal as="li" key={step.title} delay={index * 120} className="relative bg-ivory rounded-3xl border border-rose-100 p-6 sm:p-8">
                     <span className="absolute top-4 right-6 text-5xl font-black text-rose-100 pointer-events-none">{index + 1}</span>
                     <span className="inline-flex w-12 h-12 items-center justify-center rounded-2xl bg-white text-rose-600 border border-rose-100">
                       <Icon className="w-6 h-6" />
                     </span>
                     <h3 className="mt-5 text-lg font-bold text-stone-900">{step.title}</h3>
                     <p className="mt-2 text-sm sm:text-base text-stone-600 leading-relaxed">{step.text}</p>
-                  </li>
+                  </Reveal>
                 );
               })}
             </ol>
@@ -504,61 +517,6 @@ export default function MoargeLandingPage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-/** Static picture of the "Today" screen, built from the same pieces as the real dashboard. */
-function TodayPreview() {
-  const { t } = useLanguage();
-  const visits = [
-    { time: "10:00", name: t("ნინო ბ.", "Nino B."), service: t("მანიკური", "Manicure"), staff: t("ანა", "Ana"), color: "#e11d48", status: t("დასრულდა", "Done"), tone: "bg-emerald-50 text-emerald-700", faded: true },
-    { time: "11:30", name: t("მარიამ კ.", "Mariam K."), service: t("თმის შეღებვა", "Hair colour"), staff: t("თამარი", "Tamar"), color: "#7c3aed", status: t("დაგეგმილი", "Booked"), tone: "bg-rose-50 text-rose-700", next: true },
-    { time: "13:00", name: t("ეკა ჯ.", "Eka J."), service: t("სახის წმენდა", "Facial"), staff: t("ანა", "Ana"), color: "#e11d48", status: t("დაგეგმილი", "Booked"), tone: "bg-rose-50 text-rose-700" },
-    { time: "15:30", name: t("სალომე დ.", "Salome D."), service: t("ლაზერული ეპილაცია", "Laser hair removal"), staff: t("ლიკა", "Lika"), color: "#0284c7", status: t("დაგეგმილი", "Booked"), tone: "bg-rose-50 text-rose-700" },
-  ];
-
-  return (
-    <div aria-hidden="true" className="bg-white rounded-3xl border border-rose-100 shadow-2xl shadow-rose-950/10 p-5 sm:p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium text-rose-600">{t("დღეს", "Today")}</p>
-          <p className="text-lg font-bold text-stone-900">{t("დღის განრიგი", "Today's schedule")}</p>
-        </div>
-        <span className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-semibold text-white">
-          + {t("ახალი ჯავშანი", "New booking")}
-        </span>
-      </div>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <div className="rounded-2xl border border-stone-200 p-3">
-          <p className="text-xs text-stone-500">{t("დღევანდელი ვიზიტები", "Visits today")}</p>
-          <p className="text-xl font-bold text-stone-900">4</p>
-        </div>
-        <div className="rounded-2xl border border-stone-200 p-3">
-          <p className="text-xs text-stone-500">{t("სავარაუდო შემოსავალი", "Expected income")}</p>
-          <p className="text-xl font-bold text-stone-900">310 ₾</p>
-        </div>
-      </div>
-      <ul className="mt-4 space-y-2">
-        {visits.map((visit) => (
-          <li
-            key={visit.time}
-            className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${visit.next ? "border-rose-300 bg-rose-50/60" : "border-stone-100"} ${visit.faded ? "opacity-60" : ""}`}
-            style={{ borderLeftWidth: 4, borderLeftColor: visit.color }}
-          >
-            <div className="w-12 shrink-0 text-center">
-              <p className="font-bold text-stone-900">{visit.time}</p>
-              {visit.next && <p className="text-[10px] font-semibold text-rose-600">{t("შემდეგი", "Next")}</p>}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-stone-900">{visit.name}</p>
-              <p className="truncate text-xs text-stone-500">{visit.service} · {visit.staff}</p>
-            </div>
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${visit.tone}`}>{visit.status}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-3 text-center text-[11px] text-stone-400">{t("მაგალითი", "Example")}</p>
     </div>
   );
 }
