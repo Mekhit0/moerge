@@ -9,6 +9,11 @@ import {
   type NotificationJob,
 } from "@/lib/notifications";
 
+// Vercel's free plan allows up to 60 seconds; stop claiming new work well before that.
+export const maxDuration = 60;
+const BATCH_SIZE = 25;
+const TIME_BUDGET_MS = 40_000;
+
 function timingSafeMatch(a: string, b: string): boolean {
   const left = Buffer.from(a);
   const right = Buffer.from(b);
@@ -29,38 +34,51 @@ async function processQueue(request: NextRequest) {
   let supabase;
   try {
     supabase = createServiceClient();
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Server configuration error." }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Server configuration error." }, { status: 500 });
   }
 
-  const { error: billingError } = await supabase.rpc("process_billing_cycle");
-  if (billingError) return NextResponse.json({ error: billingError.message }, { status: 500 });
+  // Supabase's scheduler calls every 10 minutes for messages; billing stays on Vercel's daily run.
+  const body = await request.json().catch(() => null) as { source?: string } | null;
+  const frequentRun = body?.source === "supabase_pg_cron";
+  if (!frequentRun) {
+    const { error: billingError } = await supabase.rpc("process_billing_cycle");
+    if (billingError) return NextResponse.json({ error: "Billing cycle failed." }, { status: 500 });
+  }
 
-  const { data, error } = await supabase.rpc("claim_due_notifications", { p_limit: 25 });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
+  // Work through the queue in batches until it is empty or the time budget is used up.
   const appBaseUrl = getAppUrl();
-  const jobs = (data ?? []) as Array<NotificationJob & { unsubscribe_token: string }>;
-  const results = [];
-  for (const row of jobs) {
-    const job: NotificationJob = {
-      ...row,
-      unsubscribe_url: `${appBaseUrl}/unsubscribe?token=${encodeURIComponent(row.unsubscribe_token)}&channel=${row.channel}`,
-    };
-    const useFake = row.dry_run_mode || process.env.NOTIFICATION_PROVIDER === "fake";
-    const provider = useFake ? new FakeNotificationProvider() : createNotificationProvider(row.channel);
-    const result = await processNotification(job, provider);
-    const { error: recordError } = await supabase.rpc("record_notification_result", {
-      p_id: result.id,
-      p_status: result.status,
-      p_provider_message_id: result.providerMessageId,
-      p_cost: result.cost,
-      p_error: result.error,
-      p_next_attempt_at: result.nextAttemptAt,
-    });
-    results.push({ ...result, recorded: !recordError });
+  const startedAt = Date.now();
+  const counts: Record<string, number> = {};
+  let claimed = 0;
+  let unrecorded = 0;
+  while (Date.now() - startedAt < TIME_BUDGET_MS) {
+    const { data, error } = await supabase.rpc("claim_due_notifications", { p_limit: BATCH_SIZE });
+    if (error) return NextResponse.json({ error: "Could not read the message queue.", claimed, counts }, { status: 500 });
+    const jobs = (data ?? []) as Array<NotificationJob & { unsubscribe_token: string }>;
+    claimed += jobs.length;
+    for (const row of jobs) {
+      const job: NotificationJob = {
+        ...row,
+        unsubscribe_url: `${appBaseUrl}/unsubscribe?token=${encodeURIComponent(row.unsubscribe_token)}&channel=${row.channel}`,
+      };
+      const useFake = row.dry_run_mode || process.env.NOTIFICATION_PROVIDER === "fake";
+      const provider = useFake ? new FakeNotificationProvider() : createNotificationProvider(row.channel);
+      const result = await processNotification(job, provider);
+      const { error: recordError } = await supabase.rpc("record_notification_result", {
+        p_id: result.id,
+        p_status: result.status,
+        p_provider_message_id: result.providerMessageId,
+        p_cost: result.cost,
+        p_error: result.error,
+        p_next_attempt_at: result.nextAttemptAt,
+      });
+      counts[result.status] = (counts[result.status] ?? 0) + 1;
+      if (recordError) unrecorded += 1;
+    }
+    if (jobs.length < BATCH_SIZE) break;
   }
-  return NextResponse.json({ ok: true, claimedCount: jobs.length, processed: results, timestamp: new Date().toISOString() });
+  return NextResponse.json({ ok: true, claimed, counts, unrecorded, timestamp: new Date().toISOString() });
 }
 
 export async function GET(request: NextRequest) {
