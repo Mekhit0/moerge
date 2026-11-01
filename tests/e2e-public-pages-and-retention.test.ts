@@ -10,18 +10,19 @@ import { publicBookingInputSchema } from "../src/lib/validation";
 
 describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention", () => {
   describe("1. SEO & Metadata Compliance", () => {
-    it("has professional, high-converting metadata and open graph tags", () => {
+    it("has Georgian search friendly default metadata without a site wide canonical", () => {
       expect(metadata.title).toEqual({
-        default: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+        default: "moarge | სალონის პროგრამა: ონლაინ ჯავშანი, კალენდარი, კლიენტები",
         template: "%s | moarge",
       });
-      expect(metadata.description).toContain("სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების");
-      expect(metadata.description).not.toContain("21-დღიანი"); // Focus is on automated care reminders
-      expect(metadata.keywords).toContain("სალონის მართვა");
-      expect(metadata.keywords).toContain("ავტომატური შეხსენებები");
-      expect(metadata.keywords).toContain("კლიენტების დაბრუნება");
+      expect(metadata.description).toContain("სალონის მართვის პროგრამა");
+      expect(metadata.description).not.toContain("—");
+      expect(metadata.keywords).toContain("სალონის პროგრამა");
+      expect(metadata.keywords).toContain("ონლაინ ჯავშანი");
       expect(metadata.openGraph?.siteName).toBe("moarge");
       expect((metadata.twitter as { card?: string })?.card).toBe("summary_large_image");
+      // A canonical in the root layout would make every page point at the home page.
+      expect(metadata.alternates?.canonical).toBeUndefined();
     });
 
     it("has mobile-ready viewport configuration", () => {
@@ -39,7 +40,12 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
       const urls = sitemapEntries.map((e) => e.url);
       expect(urls).toContain("https://www.moarge.test");
       expect(urls).toContain("https://www.moarge.test/book");
-      expect(urls).toContain("https://www.moarge.test/login");
+      expect(urls).not.toContain("https://www.moarge.test/login");
+      expect(urls).toContain("https://www.moarge.test/salonis-programa");
+      expect(new Set(urls).size).toBe(urls.length);
+
+      const rule = Array.isArray(robotsRules.rules) ? robotsRules.rules[0] : robotsRules.rules;
+      expect(rule.disallow).toEqual(expect.arrayContaining(["/api/", "/dashboard", "/platform", "/settings"]));
       expect(urls).toContain("https://www.moarge.test/terms");
       expect(urls).toContain("https://www.moarge.test/privacy");
     });

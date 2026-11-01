@@ -11,22 +11,22 @@ export const siteViewport: Viewport = {
 export const siteMetadata: Metadata = {
   metadataBase: new URL(getAppUrl()),
   title: {
-    default: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+    default: "moarge | სალონის პროგრამა: ონლაინ ჯავშანი, კალენდარი, კლიენტები",
     template: "%s | moarge",
   },
   description:
-    "moarge — სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების პლატფორმა საქართველოში.",
+    "სალონის მართვის პროგრამა ქართულად: ონლაინ ჯავშანი, კალენდარი, კლიენტების ბაზა, შეხსენებები და შემოსავალი.",
+  applicationName: "moarge",
   keywords: [
-    "სალონის მართვა",
-    "ონლაინ ჯავშანი",
     "სალონის პროგრამა",
-    "სალონის განრიგი",
-    "ავტომატური შეხსენებები",
-    "კლიენტების დაბრუნება",
-    "ეპილაციის სალონი",
+    "სალონის მართვის პროგრამა",
+    "ონლაინ ჯავშანი",
+    "ონლაინ ჩაწერა",
+    "სალონის კალენდარი",
+    "კლიენტების ბაზა",
     "სილამაზის სალონი",
-    "salon booking software georgia",
     "moarge",
+    "მოარგე",
   ],
   authors: [{ name: "moarge" }],
   creator: "moarge",
@@ -35,9 +35,6 @@ export const siteMetadata: Metadata = {
     email: false,
     address: false,
     telephone: false,
-  },
-  alternates: {
-    canonical: "/",
   },
   icons: {
     icon: [
@@ -53,16 +50,17 @@ export const siteMetadata: Metadata = {
     locale: "ka_GE",
     url: getAppUrl(),
     siteName: "moarge",
-    title: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+    title: "moarge | სალონის პროგრამა: ონლაინ ჯავშანი, კალენდარი, კლიენტები",
     description:
-      "სალონის მართვის, ონლაინ ჯავშნების და კლიენტების ავტომატური შეხსენებების თანამედროვე პლატფორმა საქართველოში.",
+      "სალონის მართვის პროგრამა ქართულად: ონლაინ ჯავშანი, კალენდარი, კლიენტების ბაზა, შეხსენებები და შემოსავალი.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "moarge | სალონის ჭკვიანი ჯავშნები და ავტომატური შეხსენებები",
+    title: "moarge | სალონის პროგრამა: ონლაინ ჯავშანი, კალენდარი, კლიენტები",
     description:
-      "გაზარდეთ თქვენი სალონის განმეორებითი ვიზიტები და დაიცავით გრაფიკი გადაფარვებისგან.",
+      "სალონის მართვის პროგრამა ქართულად: ონლაინ ჯავშანი, კალენდარი, კლიენტების ბაზა, შეხსენებები და შემოსავალი.",
   },
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
   robots: {
     index: true,
     follow: true,

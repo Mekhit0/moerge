@@ -250,7 +250,7 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                "წინამდებარე პირობები რეგულირდება და განიმარტება საქართველოს მოქმედი კანონმდებლობის შესაბამისად. ნებისმიერი დავა ან უთანხმოება, რომელიც შეიძლება წარმოიშვას ამ ხელშეკრულებიდან, მხარეთა მიერ გადაწყდება მოლაპარაკების გზით, ხოლო შეთანხმების მიუღწევლობის შემთხვევაში — საქართველოს სასამართლოების მიერ (ქალაქი თბილისი).",
+                "წინამდებარე პირობები რეგულირდება და განიმარტება საქართველოს მოქმედი კანონმდებლობის შესაბამისად. ნებისმიერი დავა ან უთანხმოება, რომელიც შეიძლება წარმოიშვას ამ ხელშეკრულებიდან, მხარეთა მიერ გადაწყდება მოლაპარაკების გზით, ხოლო შეთანხმების მიუღწევლობის შემთხვევაში საქართველოს სასამართლოების მიერ (ქალაქი თბილისი).",
                 "These Terms shall be governed by and construed in accordance with the laws of Georgia. Any dispute arising out of or in connection with these Terms shall be resolved through good-faith negotiation, or submitted to the jurisdiction of the courts of Tbilisi, Georgia."
               )}
             </p>
