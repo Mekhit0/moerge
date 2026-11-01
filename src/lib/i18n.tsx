@@ -11,23 +11,18 @@ import {
 
 export type AppLocale = "ka" | "en";
 
-export const GEORGIAN_DEFAULT_EMAIL_SUBJECT =
-  "დროა დაჯავშნოთ თქვენი შემდეგი ეპილაციის ვიზიტი!";
+export const GEORGIAN_DEFAULT_EMAIL_SUBJECT = "დროა ისევ გვეწვიოთ";
 
-export const GEORGIAN_DEFAULT_EMAIL_BODY = `გამარჯობა {{client_name}},
+export const GEORGIAN_DEFAULT_EMAIL_BODY = `გამარჯობა, {{client_name}}!
 
-თქვენი ბოლო ეპილაციის პროცედურიდან გავიდა 21 დღე — სიამოვნებით გიმასპინძლებთ კვლავ ჩვენს სალონში!
+ბოლო ვიზიტიდან უკვე დრო გავიდა და სიამოვნებით გნახავთ ისევ.
 
-ახლა საუკეთესო დროა დაგეგმოთ თქვენი შემდეგი ვიზიტი სრულყოფილი შედეგისთვის.
-
-მზად ხართ ჩასაწერად? დაჯავშნეთ ონლაინ:
+დაჯავშნეთ თქვენთვის მოსახერხებელი დრო:
 
 {{booking_link}}
 
-მადლობას გიხდით, რომ ირჩევთ {{salon_name}}-ს. გელოდებით!
-
-საუკეთესო სურვილებით,
-{{salon_name}}-ის გუნდი`;
+გელოდებით,
+{{salon_name}}`;
 
 export const TREATMENT_LABELS_I18N: Record<
   AppLocale,

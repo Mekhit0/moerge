@@ -262,20 +262,20 @@ export const salonSettingsSchema = z
       .max(500)
       .optional()
       .default(
-        "აირჩიეთ სასურველი პროცედურა და თავისუფალი საათი — ჯავშანი მყისიერად აისახება სალონის განრიგში."
+        "აირჩიეთ სერვისი, სპეციალისტი და თავისუფალი დრო."
       ),
     salon_address: z
       .string()
       .trim()
       .max(250)
       .optional()
-      .default("თბილისი, ი. ჭავჭავაძის გამზ. 34"),
+      .default(""),
     salon_phone: z
       .string()
       .trim()
       .max(60)
       .optional()
-      .default("+995 555 00 21 21"),
+      .default(""),
     working_hours_start: z
       .string()
       .trim()

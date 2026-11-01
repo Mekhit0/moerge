@@ -508,19 +508,15 @@ export const SERVICE_PRESET_TEMPLATES: ServiceTemplatePreset[] = [
   },
 ];
 
-export const DEFAULT_EMAIL_SUBJECT = "It's time to book your next epilation appointment!";
+export const DEFAULT_EMAIL_SUBJECT = "Time for your next visit";
 
 export const DEFAULT_EMAIL_BODY_TEMPLATE = `Hi {{client_name}},
 
-It's been 21 days since your last epilation appointment, and we'd love to welcome you back!
+It has been a while since your last visit and we would love to see you again.
 
-It's a great time to plan your next visit.
-
-Ready to book your next appointment?
+Book a time that suits you:
 
 {{booking_link}}
 
-Thank you for choosing {{salon_name}}. We look forward to seeing you again!
-
-Best regards,
-{{salon_name}} Team`;
+See you soon,
+{{salon_name}}`;

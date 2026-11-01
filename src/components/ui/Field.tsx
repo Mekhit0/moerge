@@ -48,6 +48,6 @@ export function Select({ className, children, ...rest }: React.SelectHTMLAttribu
   return <select className={controlClass(Boolean(rest["aria-invalid"]), cn("appearance-none pr-10", className))} {...rest}>{children}</select>;
 }
 
-export function Textarea({ className, ...rest }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({ className, ...rest }: React.ComponentProps<"textarea">) {
   return <textarea className={controlClass(Boolean(rest["aria-invalid"]), cn("min-h-24 py-3", className))} {...rest} />;
 }

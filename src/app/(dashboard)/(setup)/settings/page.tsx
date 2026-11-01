@@ -1,38 +1,26 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
-import SettingsManager from "@/components/SettingsManager";
+import SalonSettingsForm from "@/components/settings/SalonSettingsForm";
 import AuditLogPanel from "@/components/AuditLogPanel";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const ctx = await getAuthenticatedSalonContext();
-  if (!ctx) {
-    redirect("/login?access=none");
-  }
-
-  const hasEnvResendKey = Boolean(
-    process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith("re_")
-  );
-
-  const resendConfigured = hasEnvResendKey;
-  const webhookSecretConfigured = Boolean(
-    process.env.RESEND_WEBHOOK_SECRET &&
-      process.env.RESEND_WEBHOOK_SECRET.startsWith("whsec_")
-  );
+  if (!ctx) redirect("/login?access=none");
 
   return (
-    <>
-    <SettingsManager
-      initialSettings={{
-        ...ctx.settings,
-        salon_slug: ctx.salonSlug,
+    <SalonSettingsForm
+      initial={{ ...ctx.settings, salon_slug: ctx.salonSlug }}
+      emailConfigured={Boolean(process.env.RESEND_API_KEY?.startsWith("re_") && process.env.RESEND_FROM_DOMAIN?.trim())}
+      deposit={{
+        deposit_required: Boolean(ctx.settings.deposit_required),
+        deposit_amount_gel: ctx.settings.deposit_amount_gel ?? null,
+        deposit_percentage: ctx.settings.deposit_percentage ?? null,
       }}
-      resendConfigured={resendConfigured}
-      webhookSecretConfigured={webhookSecretConfigured}
-    />
-    {(ctx.role === "owner" || ctx.role === "admin") && <AuditLogPanel />}
-    </>
+    >
+      <AuditLogPanel />
+    </SalonSettingsForm>
   );
 }

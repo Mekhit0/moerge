@@ -532,12 +532,10 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
         unsubscribeUrl: "https://example.com/unsubscribe?token=123",
       });
 
-      expect(rendered.subject).toBe(
-        "It's time to book your next epilation appointment!"
-      );
+      expect(rendered.subject).toBe("Time for your next visit");
       expect(rendered.text).toContain("Hi Elena Rostova,");
       expect(rendered.text).toContain("https://example.com/book");
-      expect(rendered.text).toContain("moarge Demo Salon Team");
+      expect(rendered.text).toContain("moarge Demo Salon");
       expect(rendered.html).toContain("Book Your Next Appointment");
       expect(rendered.html).toContain("Unsubscribe from future reminders");
     });
@@ -651,11 +649,11 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
         bodyTemplate: GEORGIAN_DEFAULT_EMAIL_BODY,
       });
 
-      expect(renderedKa.subject).toBe(
-        "დროა დაჯავშნოთ თქვენი შემდეგი ეპილაციის ვიზიტი!"
-      );
-      expect(renderedKa.text).toContain("გამარჯობა ნინო ბერიძე,");
-      expect(renderedKa.text).toContain("21 დღე");
+      expect(renderedKa.subject).toBe("დროა ისევ გვეწვიოთ");
+      expect(renderedKa.text).toContain("გამარჯობა, ნინო ბერიძე!");
+      // The default text fits any salon and any reminder period, and uses no em dashes.
+      expect(renderedKa.text).not.toContain("21 დღე");
+      expect(renderedKa.text).not.toContain("—");
       expect(renderedKa.text).toContain("https://example.com/book");
     });
   });
