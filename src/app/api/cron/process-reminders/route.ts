@@ -8,6 +8,8 @@ import {
   processNotification,
   type NotificationJob,
 } from "@/lib/notifications";
+import { logAppError } from "@/lib/error-log";
+import { sendErrorDigest } from "@/lib/error-alert";
 
 // Vercel's free plan allows up to 60 seconds; stop claiming new work well before that.
 export const maxDuration = 60;
@@ -43,7 +45,10 @@ async function processQueue(request: NextRequest) {
   const frequentRun = body?.source === "supabase_pg_cron";
   if (!frequentRun) {
     const { error: billingError } = await supabase.rpc("process_billing_cycle");
-    if (billingError) return NextResponse.json({ error: "Billing cycle failed." }, { status: 500 });
+    if (billingError) {
+      await logAppError({ source: "cron", message: `Billing cycle failed: ${billingError.message}`, path: "/api/cron/process-reminders" });
+      return NextResponse.json({ error: "Billing cycle failed." }, { status: 500 });
+    }
   }
 
   // Work through the queue in batches until it is empty or the time budget is used up.
@@ -54,7 +59,10 @@ async function processQueue(request: NextRequest) {
   let unrecorded = 0;
   while (Date.now() - startedAt < TIME_BUDGET_MS) {
     const { data, error } = await supabase.rpc("claim_due_notifications", { p_limit: BATCH_SIZE });
-    if (error) return NextResponse.json({ error: "Could not read the message queue.", claimed, counts }, { status: 500 });
+    if (error) {
+      await logAppError({ source: "cron", message: `Message queue failed: ${error.message}`, path: "/api/cron/process-reminders" });
+      return NextResponse.json({ error: "Could not read the message queue.", claimed, counts }, { status: 500 });
+    }
     const jobs = (data ?? []) as Array<NotificationJob & { unsubscribe_token: string }>;
     claimed += jobs.length;
     for (const row of jobs) {
@@ -78,7 +86,12 @@ async function processQueue(request: NextRequest) {
     }
     if (jobs.length < BATCH_SIZE) break;
   }
-  return NextResponse.json({ ok: true, claimed, counts, unrecorded, timestamp: new Date().toISOString() });
+  if (unrecorded > 0) {
+    await logAppError({ source: "cron", message: `${unrecorded} message results could not be saved`, path: "/api/cron/process-reminders" });
+  }
+  // Errors from the whole app: at most one email an hour to the platform owner.
+  const alerted = await sendErrorDigest(supabase).catch(() => 0);
+  return NextResponse.json({ ok: true, claimed, counts, unrecorded, alerted, timestamp: new Date().toISOString() });
 }
 
 export async function GET(request: NextRequest) {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { reportClientError } from "@/lib/report-error";
 import Link from "next/link";
 import { AlertCircle, RefreshCw, Home, LogOut } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -17,7 +17,7 @@ export default function DashboardError({
   const { t } = useLanguage();
   useEffect(() => {
     console.error("Dashboard error:", error);
-    Sentry.captureException(error);
+    reportClientError(error);
   }, [error]);
 
   async function handleSignOut() {

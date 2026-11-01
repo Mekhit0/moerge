@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { reportClientError } from "@/lib/report-error";
 import Link from "next/link";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 
@@ -14,7 +14,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("Global application error:", error);
-    Sentry.captureException(error);
+    reportClientError(error);
   }, [error]);
 
   return (

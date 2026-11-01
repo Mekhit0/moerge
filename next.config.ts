@@ -1,6 +1,5 @@
 import type { NextConfig } from "next";
 import path from "path";
-import { withSentryConfig } from "@sentry/nextjs/config";
 
 // Basic protection headers for every page and API response.
 const baseHeaders = [
@@ -28,7 +27,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
-  silent: true,
-  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
-});
+export default nextConfig;

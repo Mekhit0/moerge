@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { reportClientError } from "@/lib/report-error";
 
 /**
  * Last resort when the root layout itself fails. It replaces the whole page, so it has its own
- * html and body and uses plain styles. The error is reported to Sentry when it is configured.
+ * html and body and uses plain styles. The error goes to our own error log.
  */
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    reportClientError(error);
   }, [error]);
 
   return (
