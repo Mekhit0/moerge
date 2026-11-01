@@ -31,6 +31,8 @@ interface AppShellProps {
   staffName: string;
   staffEmail: string;
   canManageData: boolean;
+  /** Which earnings page this person sees: the salon's, their own (masters) or none. */
+  earnings: "salon" | "own" | "none";
   readOnly: boolean;
   isPlatformOwner?: boolean;
   children: React.ReactNode;
@@ -48,6 +50,7 @@ export default function AppShell({
   staffName,
   staffEmail,
   canManageData,
+  earnings,
   readOnly,
   isPlatformOwner = false,
   children,
@@ -66,7 +69,7 @@ export default function AppShell({
     { href: "/dashboard", label: t("დღეს", "Today"), icon: Home },
     { href: "/appointments", label: t("კალენდარი", "Calendar"), icon: CalendarDays },
     { href: "/clients", label: t("კლიენტები", "Clients"), icon: Users },
-    ...(canManageData ? [{ href: "/reports", label: t("შემოსავალი", "Income"), icon: Wallet }] : []),
+    ...(earnings !== "none" ? [{ href: "/reports", label: earnings === "own" ? t("ჩემი შემოსავალი", "My earnings") : t("შემოსავალი", "Earnings"), icon: Wallet }] : []),
     ...(canManageData ? [{ href: "/settings", label: t("პარამეტრები", "Settings"), icon: Settings }] : []),
   ];
 

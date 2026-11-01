@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import AppShell from "@/components/AppShell";
 import { appUrl } from "@/lib/app-url";
+import { earningsAccess } from "@/lib/earnings-server";
 
 export default async function DashboardLayout({
   children,
@@ -32,6 +33,7 @@ export default async function DashboardLayout({
       staffName={ctx.user?.fullName || "Staff"}
       staffEmail={ctx.user?.email || ""}
       canManageData={ctx.role === "owner" || ctx.role === "admin"}
+      earnings={{ owner: "salon", office: "salon", master: "own", none: "none" }[earningsAccess(ctx)] as "salon" | "own" | "none"}
       readOnly={readOnly}
       isPlatformOwner={Boolean(process.env.PLATFORM_OWNER_USER_ID && ctx.user.id === process.env.PLATFORM_OWNER_USER_ID)}
     >

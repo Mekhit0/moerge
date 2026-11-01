@@ -106,6 +106,7 @@ export interface SalonSettings {
   custom_services?: CustomBookingService[];
   send_booking_confirmation_email?: boolean;
   onboarding_completed_at?: string | null;
+  admins_see_earnings?: boolean;
   deposit_required?: boolean;
   deposit_amount_gel?: number | null;
   deposit_percentage?: number | null;
