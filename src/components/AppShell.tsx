@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   ShieldAlert,
+  GraduationCap,
   ExternalLink,
 } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
@@ -132,7 +133,15 @@ export default function AppShell({
             );
           })}
 
-          <div className="pt-4">
+          <div className="space-y-2 pt-4">
+            <Link
+              href="/guide"
+              aria-current={pathname.startsWith("/guide") ? "page" : undefined}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition ${pathname.startsWith("/guide") ? "bg-rose-600 text-white" : "text-stone-600 hover:bg-rose-50 hover:text-rose-900"}`}
+            >
+              <GraduationCap className="h-4 w-4 shrink-0" />
+              {t("გზამკვლევი", "Guide")}
+            </Link>
             <a
               href={bookingUrl}
               target="_blank"
@@ -209,6 +218,10 @@ export default function AppShell({
               <span>{t("ჩემი ჯავშნის გვერდი", "My booking page")}</span>
               <ExternalLink className="h-4 w-4" />
             </a>
+            <Link href="/guide" className="flex min-h-11 items-center gap-3 px-4 rounded-xl text-sm font-medium text-stone-700 hover:bg-rose-50">
+              <GraduationCap className="w-4 h-4 text-rose-500" />
+              {t("გზამკვლევი", "Guide")}
+            </Link>
             {isPlatformOwner && (
               <Link href="/platform" className="flex min-h-11 items-center gap-3 px-4 rounded-xl text-sm font-medium text-stone-700 hover:bg-rose-50">
                 <ShieldAlert className="w-4 h-4 text-rose-500" />

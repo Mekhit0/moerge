@@ -93,7 +93,10 @@ export default function DashboardClient({
       <Card className="border-rose-200" aria-label={t("სალონის მომზადება", "Salon setup")}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-semibold text-stone-900">{t("სალონის მომზადება", "Get your salon ready")}</h2>
-          <span className="text-sm font-medium text-stone-500">{doneCount} / {setupSteps.length}</span>
+          <span className="flex items-center gap-3 text-sm font-medium text-stone-500">
+            <Link href="/guide" className="font-semibold text-brand-strong hover:underline">{t("როგორ მუშაობს?", "How does it work?")}</Link>
+            {doneCount} / {setupSteps.length}
+          </span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-brand-soft">
           <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(doneCount / setupSteps.length) * 100}%` }} />

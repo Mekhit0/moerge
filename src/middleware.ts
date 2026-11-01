@@ -7,6 +7,8 @@ const PROTECTED_PREFIXES = [
   "/appointments",
   "/email-history",
   "/settings",
+  "/reports",
+  "/guide",
 ];
 
 export async function middleware(request: NextRequest) {
