@@ -7,6 +7,8 @@ export default defineConfig({
     globals: true,
     include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
     setupFiles: ["./tests/setup.ts"],
+    // Database integration tests create a salon, users and visits before they start.
+    hookTimeout: 60_000,
   },
   resolve: {
     alias: {

@@ -52,9 +52,9 @@ interface PublicSalonInfo {
 
 interface BookingResult {
   appointment_id: string;
-  client_id: string;
+  client_id?: string;
   salon_name: string;
-  is_returning_client: boolean;
+  is_returning_client?: boolean;
   treatment_date: string;
   treatment_time: string;
   treatment_type: TreatmentType;

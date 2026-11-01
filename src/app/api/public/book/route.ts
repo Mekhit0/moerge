@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   );
 
   if (infoError) {
-    return NextResponse.json({ error: infoError.message }, { status: 500 });
+    return NextResponse.json({ error: "ჯავშნის გვერდი ვერ ჩაიტვირთა. / Could not load the booking page." }, { status: 500 });
   }
 
   const salonId = (infoData as { salon_id?: string } | null)?.salon_id;
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         p_date: dateParam,
         p_staff_id: staffId || null,
       });
-      if (slotsError) return NextResponse.json({ error: slotsError.message }, { status: 500 });
+      if (slotsError) return NextResponse.json({ error: "თავისუფალი დრო ვერ ჩაიტვირთა. / Could not load free times." }, { status: 500 });
       availability = { date: dateParam, slots: slots ?? [] };
     }
   }
@@ -239,8 +239,8 @@ export async function POST(request: NextRequest) {
     p_sms_consent: parsed.data.sms_consent,
     p_language: parsed.data.preferred_language,
   });
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  const resObj = data as { success?: boolean; conflict?: boolean; error?: string; available_slots?: string[]; salon_id?: string; salon_name?: string; appointment_id?: string; client_id?: string; client_email?: string; service_name?: string; manage_token?: string };
+  if (error) return NextResponse.json({ error: "ჯავშანი ვერ შეიქმნა. სცადეთ თავიდან. / The booking could not be created. Please try again." }, { status: 400 });
+  const resObj = data as { success?: boolean; conflict?: boolean; error?: string; available_slots?: string[]; salon_name?: string; appointment_id?: string; manage_token?: string };
   if (!resObj?.success && resObj?.conflict) {
     return NextResponse.json(
       {
@@ -258,9 +258,18 @@ export async function POST(request: NextRequest) {
     ? await serviceClient.from("appointments").select("booking_code").eq("id", resObj.appointment_id).eq("salon_id", salon.id).maybeSingle()
     : { data: null };
 
+  // Only what the person who booked needs. Never client ids or stored contact details: anyone can
+  // type any phone number into this form.
+  const booked = data as { treatment_date?: string; treatment_time?: string; treatment_type?: string; service_name?: string; staff_name?: string };
   return NextResponse.json({
     booking: {
-      ...(typeof data === "object" && data !== null ? data : {}),
+      appointment_id: resObj.appointment_id,
+      salon_name: resObj.salon_name ?? salon.name,
+      treatment_date: booked.treatment_date ?? parsed.data.treatment_date,
+      treatment_time: booked.treatment_time ?? normalizedTime,
+      treatment_type: booked.treatment_type ?? parsed.data.treatment_type,
+      service_name: booked.service_name ?? null,
+      staff_name: booked.staff_name ?? null,
       booking_code: created?.booking_code ?? null,
       manage_url: resObj.manage_token
         ? appUrl(`/manage-booking?token=${encodeURIComponent(resObj.manage_token)}`)
