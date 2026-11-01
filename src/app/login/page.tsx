@@ -24,6 +24,7 @@ import MoargeLogo from "@/components/MoargeLogo";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
 import { appUrl } from "@/lib/app-url";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 
 type Mode = "signin" | "signup" | "reset";
 
@@ -31,7 +32,7 @@ const inputClass =
   "w-full min-h-12 pl-11 pr-4 rounded-xl border border-stone-200 bg-stone-50/50 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition";
 
 export default function LoginPage() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
   const [salonName, setSalonName] = useState("");
@@ -43,6 +44,9 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [redirectTo, setRedirectTo] = useState("/dashboard");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Turnstile tokens are single-use; bumping the key renders a fresh check after each attempt.
+  const [turnstileKey, setTurnstileKey] = useState(0);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -115,9 +119,12 @@ export default function LoginPage() {
             password,
             fullName: fullName.trim(),
             salonName: salonName.trim(),
+            turnstile_token: turnstileToken,
           }),
         });
         const regData = await regRes.json().catch(() => ({}));
+        setTurnstileToken(null);
+        setTurnstileKey((key) => key + 1);
         if (!regRes.ok) {
           setError(regData.error || t("რეგისტრაცია ვერ მოხერხდა. სცადეთ თავიდან.", "Sign-up failed. Please try again."));
           setLoading(false);
@@ -278,7 +285,9 @@ export default function LoginPage() {
                 </Field>
               )}
 
-              <button type="submit" disabled={loading}
+              {mode === "signup" && <TurnstileWidget key={turnstileKey} onToken={setTurnstileToken} language={lang} />}
+
+              <button type="submit" disabled={loading || (mode === "signup" && Boolean(TURNSTILE_SITE_KEY) && !turnstileToken)}
                 className="w-full min-h-14 px-5 rounded-2xl bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white font-bold text-base shadow-lg shadow-rose-600/25 flex items-center justify-center gap-2 transition">
                 {loading
                   ? t("გთხოვთ დაელოდოთ...", "Please wait...")

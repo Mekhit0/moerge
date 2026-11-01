@@ -3,6 +3,7 @@ import { createPublicServerSupabaseClient, createServiceClient } from "@/lib/sup
 import { isValidEmailAddress } from "@/lib/validation";
 import { consumeServerRateLimit } from "@/lib/server-rate-limit";
 import { appUrl } from "@/lib/app-url";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function getClientIp(request: NextRequest): string {
   const xRealIp = request.headers.get("x-real-ip");
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
       password?: string;
       fullName?: string;
       salonName?: string;
+      turnstile_token?: string;
     } = {};
 
     try {
@@ -88,6 +90,19 @@ export async function POST(request: NextRequest) {
             "ძალიან ბევრი რეგისტრაციის მცდელობა. გთხოვთ სცადოთ მოგვიანებით. / Too many registration attempts from this IP. Please try again later.",
         },
         { status: 429 }
+      );
+    }
+
+    // Bot check before an account and a salon are created.
+    const botCheck = await verifyTurnstile(typeof body.turnstile_token === "string" ? body.turnstile_token : null, clientIp);
+    if (!botCheck.ok) {
+      return NextResponse.json(
+        {
+          error: botCheck.reason === "unavailable"
+            ? "უსაფრთხოების შემოწმება ვერ მოხერხდა. სცადეთ თავიდან. / The security check is unavailable. Please try again."
+            : "დაადასტურეთ, რომ რობოტი არ ხართ. / Please confirm you are not a robot.",
+        },
+        { status: 400 }
       );
     }
 
