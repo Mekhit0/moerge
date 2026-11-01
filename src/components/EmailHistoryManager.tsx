@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   MailCheck,
   RotateCcw,
@@ -340,9 +341,9 @@ export default function EmailHistoryManager({
               "შეხსენებები კლიენტებს რეალურად არ ეგზავნებათ. ნამდვილი გაგზავნის ჩართვა შეგიძლიათ ",
               "Reminders are not really sent to clients. You can turn on real sending in "
             )}
-            <a href="/settings" className="underline font-semibold">
+            <Link href="/settings" className="underline font-semibold">
               {t("პარამეტრებში", "Settings")}
-            </a>
+            </Link>
             .
           </span>
         </div>
