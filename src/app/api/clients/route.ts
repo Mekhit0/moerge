@@ -81,6 +81,12 @@ export async function POST(request: NextRequest) {
 
   const normalized = parsed.data.email ? normalizeEmail(parsed.data.email) : null;
 
+  if (parsed.data.preferred_staff_id) {
+    const { data: member } = await ctx.supabase.from("staff").select("id")
+      .eq("id", parsed.data.preferred_staff_id).eq("salon_id", ctx.salonId).maybeSingle();
+    if (!member) return NextResponse.json({ error: "სპეციალისტი ვერ მოიძებნა. / Specialist not found." }, { status: 404 });
+  }
+
   const { data: existingClient } = await ctx.supabase
     .from("clients")
     .select("id, full_name, is_archived")
@@ -92,8 +98,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: existingClient.is_archived
-          ? `A client with phone "${parsed.data.phone}" (${existingClient.full_name}) already exists in archived clients. Restore their profile instead.`
-          : `A client with phone "${parsed.data.phone}" (${existingClient.full_name}) is already registered in this salon.`,
+          ? `ეს ნომერი უკვე აქვს არქივში მყოფ კლიენტს: ${existingClient.full_name}. / This number belongs to an archived client: ${existingClient.full_name}.`
+          : `ეს ნომერი უკვე აქვს კლიენტს: ${existingClient.full_name}. / This number already belongs to ${existingClient.full_name}.`,
+        client_id: existingClient.id,
       },
       { status: 409 }
     );
@@ -110,6 +117,8 @@ export async function POST(request: NextRequest) {
       email_consent: parsed.data.email_consent,
       sms_consent: parsed.data.sms_consent,
       preferred_language: parsed.data.preferred_language,
+      birthday: parsed.data.birthday,
+      preferred_staff_id: parsed.data.preferred_staff_id,
       unsubscribed_at: parsed.data.email_consent ? null : new Date().toISOString(),
       sms_unsubscribed_at: parsed.data.sms_consent ? null : new Date().toISOString(),
     })
@@ -119,7 +128,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     if (error.code === "23505") {
       return NextResponse.json(
-        { error: "A client with this phone number already exists in your salon." },
+        { error: "ამ ნომრით ან ელ-ფოსტით კლიენტი უკვე არსებობს. / A client with this phone or email already exists." },
         { status: 409 }
       );
     }

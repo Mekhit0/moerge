@@ -164,6 +164,8 @@ export async function PATCH(
       body.preferred_language === "ka" || body.preferred_language === "en"
         ? body.preferred_language
         : existing.preferred_language,
+    birthday: body.birthday !== undefined ? body.birthday : existing.birthday,
+    preferred_staff_id: body.preferred_staff_id !== undefined ? body.preferred_staff_id : existing.preferred_staff_id,
   });
 
   if (!parsed.success) {
@@ -174,6 +176,12 @@ export async function PATCH(
   }
 
   const normalized = parsed.data.email ? normalizeEmail(parsed.data.email) : null;
+
+  if (parsed.data.preferred_staff_id && parsed.data.preferred_staff_id !== existing.preferred_staff_id) {
+    const { data: member } = await ctx.supabase.from("staff").select("id")
+      .eq("id", parsed.data.preferred_staff_id).eq("salon_id", ctx.salonId).maybeSingle();
+    if (!member) return NextResponse.json({ error: "სპეციალისტი ვერ მოიძებნა. / Specialist not found." }, { status: 404 });
+  }
 
   if (parsed.data.phone !== existing.normalized_phone) {
     const { data: dup } = await ctx.supabase
@@ -187,7 +195,7 @@ export async function PATCH(
     if (dup) {
       return NextResponse.json(
         {
-          error: `Another client (${dup.full_name}) already uses this phone number.`,
+          error: `ეს ნომერი უკვე აქვს კლიენტს: ${dup.full_name}. / Another client (${dup.full_name}) already uses this number.`,
         },
         { status: 409 }
       );
@@ -204,6 +212,8 @@ export async function PATCH(
       email_consent: parsed.data.email_consent,
       sms_consent: parsed.data.sms_consent,
       preferred_language: parsed.data.preferred_language,
+      birthday: parsed.data.birthday,
+      preferred_staff_id: parsed.data.preferred_staff_id,
       unsubscribed_at: parsed.data.email_consent
         ? null
         : existing.unsubscribed_at ?? new Date().toISOString(),

@@ -64,33 +64,41 @@ export const clientInputSchema = z.object({
   full_name: z
     .string()
     .trim()
-    .min(2, "Client full name must be at least 2 characters.")
-    .max(120, "Client full name cannot exceed 120 characters."),
+    .min(2, "სახელი მინიმუმ 2 სიმბოლოა. / The name must be at least 2 characters.")
+    .max(120, "სახელი ძალიან გრძელია. / The name is too long."),
   email: z
     .string()
     .trim()
     .transform((v) => v.toLowerCase())
-    .refine((v) => !v || isValidEmailAddress(v), "Please enter a valid email address.")
+    .refine((v) => !v || isValidEmailAddress(v), "შეამოწმეთ ელ-ფოსტა. / Please enter a valid email address.")
     .optional()
     .nullable()
     .transform((v) => v || null),
   phone: z
     .string()
     .trim()
-    .min(5, "Please enter a valid Georgian mobile phone number.")
-    .max(40, "Phone number cannot exceed 40 characters.")
-    .refine((v) => normalizeGeorgianPhone(v) !== null, "Enter a Georgian mobile number such as +995 5XX XX XX XX.")
+    .min(5, "შეიყვანეთ მობილურის ნომერი. / Enter a mobile number.")
+    .max(40, "ნომერი ძალიან გრძელია. / The number is too long.")
+    .refine((v) => normalizeGeorgianPhone(v) !== null, "შეიყვანეთ ქართული მობილური, მაგ: 5XX XX XX XX. / Enter a Georgian mobile number such as 5XX XX XX XX.")
     .transform((v) => normalizeGeorgianPhone(v)!),
   notes: z
     .string()
     .trim()
-    .max(1000, "Notes cannot exceed 1000 characters.")
+    .max(1000, "შენიშვნა ძალიან გრძელია. / The note is too long.")
     .optional()
     .nullable()
     .transform((v) => (v && v.length > 0 ? v : null)),
   email_consent: z.boolean().optional().default(false),
   sms_consent: z.boolean().optional().default(false),
   preferred_language: z.enum(["ka", "en"]).optional().default("ka"),
+  birthday: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || (DATE_REGEX.test(v) && isValidCalendarDate(v) && v >= "1900-01-01" && v <= new Date().toISOString().slice(0, 10)), "შეამოწმეთ დაბადების თარიღი. / Check the birthday."),
+  preferred_staff_id: z.string().uuid().optional().nullable().transform((v) => v ?? null),
 });
 
 /** Reply addresses new salons start with; client replies sent there are lost. */

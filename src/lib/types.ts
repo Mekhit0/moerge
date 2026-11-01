@@ -131,6 +131,8 @@ export interface Client {
   unsubscribe_token: string;
   is_archived: boolean;
   is_blocked?: boolean;
+  birthday?: string | null;
+  preferred_staff_id?: string | null;
   archived_at: string | null;
   last_completed_epilation_date: string | null;
   next_expected_appointment_date: string | null;

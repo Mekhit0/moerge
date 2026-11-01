@@ -51,3 +51,11 @@ export function shortDayLabels(value: string, lang: Lang) {
     month: lang === "ka" ? KA_MONTHS[month].slice(0, 3) : EN_MONTHS[month].slice(0, 3),
   };
 }
+
+/** "12 ოქტ" / "12 Oct", with the year when it is not the current one: "12 ოქტ 2025". */
+export function formatShortDate(value: string, lang: Lang, currentYear?: number): string {
+  const { day, month } = dateParts(value);
+  const year = Number(value.slice(0, 4));
+  const label = lang === "ka" ? `${day} ${KA_MONTHS[month].slice(0, 3)}` : `${day} ${EN_MONTHS[month].slice(0, 3)}`;
+  return currentYear !== undefined && year !== currentYear ? `${label} ${year}` : label;
+}
