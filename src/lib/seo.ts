@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAppUrl } from "./app-url";
 import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, SUPPORT_EMAIL, SUPPORT_PHONE_TEL } from "./contact";
+import { CHEAPEST_MONTHLY_GEL, PACKAGES, PRICING_STARTS_AT } from "./pricing";
 
 const SITE_NAME = "moarge";
 // Set explicitly: a page's own openGraph block replaces the inherited one, image included.
@@ -64,7 +65,15 @@ export function softwareJsonLd(description: string) {
     operatingSystem: "Web, iOS, Android",
     inLanguage: ["ka", "en"],
     description,
-    offers: { "@type": "Offer", price: "0", priceCurrency: "GEL", description: "30 დღე უფასოდ" },
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "GEL",
+      lowPrice: String(CHEAPEST_MONTHLY_GEL),
+      highPrice: String(Math.max(...PACKAGES.filter((pkg) => pkg.available).map((pkg) => pkg.monthlyGel))),
+      offerCount: PACKAGES.filter((pkg) => pkg.available).length,
+      url: `${getAppUrl()}/pricing`,
+      validFrom: PRICING_STARTS_AT.toISOString(),
+    },
     publisher: { "@id": `${getAppUrl()}/#organization` },
   };
 }

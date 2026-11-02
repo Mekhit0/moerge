@@ -26,7 +26,7 @@ export function MarketingHeader({ onHome = false, showLanguage = true }: { onHom
         <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-stone-600" aria-label={t("გვერდის ნავიგაცია", "Page navigation")}>
           <a href={`${base}#features`} className="hover:text-rose-600 transition">{t("შესაძლებლობები", "Features")}</a>
           <a href={`${base}#how`} className="hover:text-rose-600 transition">{t("როგორ მუშაობს", "How it works")}</a>
-          <a href={`${base}#pilot`} className="hover:text-rose-600 transition">{t("სატესტო თვე", "Test month")}</a>
+          <Link href="/pricing" className="hover:text-rose-600 transition">{t("ფასები", "Pricing")}</Link>
           <a href={`${base}#faq`} className="hover:text-rose-600 transition">{t("კითხვები", "FAQ")}</a>
         </nav>
 
@@ -66,7 +66,7 @@ export function MarketingFooter({ onHome = false }: { onHome?: boolean }) {
       links: [
         { href: SIGNUP_HREF, label: t("რეგისტრაცია", "Sign up") },
         { href: "/login", label: t("შესვლა", "Sign in") },
-        { href: `${base}#pilot`, label: t("სატესტო თვე", "Test month") },
+        { href: "/pricing", label: t("ფასები", "Pricing") },
         { href: `${base}#faq`, label: t("კითხვები", "FAQ") },
       ],
     },

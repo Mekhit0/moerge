@@ -1,8 +1,12 @@
 import LandingPage from "@/components/marketing/LandingPage";
 import { jsonLdScript, organizationJsonLd, pageMetadata, softwareJsonLd, websiteJsonLd } from "@/lib/seo";
+import { currentOffer } from "@/lib/pricing";
+
+// Rebuilt every hour so the November wording switches to the trial wording on 1 December by itself.
+export const revalidate = 3600;
 
 const TITLE = "moarge | სალონის პროგრამა: ონლაინ ჯავშანი, კალენდარი, კლიენტები";
-const DESCRIPTION = "სალონის მართვის პროგრამა ქართულად: ონლაინ ჯავშანი 24/7, კალენდარი სპეციალისტების მიხედვით, კლიენტების ბაზა, შეხსენებები და შემოსავალი. 30 დღე უფასოდ.";
+const DESCRIPTION = "სალონის მართვის პროგრამა ქართულად: ონლაინ ჯავშანი 24/7, კალენდარი, კლიენტების ბაზა, გადახდები და შემოსავალი. 19 ₾-დან თვეში, უფასო საცდელით.";
 
 export const metadata = pageMetadata({
   title: TITLE,
@@ -20,7 +24,7 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(structured) }} />
-      <LandingPage />
+      <LandingPage offer={currentOffer()} />
     </>
   );
 }

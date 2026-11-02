@@ -1,24 +1,46 @@
-import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import PricingDetails from "@/components/PricingDetails";
-import { BILLING_CONFIG } from "@/lib/billing-plans";
+import PricingView from "@/components/marketing/PricingView";
+import { CHEAPEST_MONTHLY_GEL, PACKAGES, PRICING_STARTS_AT, currentOffer } from "@/lib/pricing";
+import { pricingFaq } from "@/lib/pricing-faq";
+import { breadcrumbJsonLd, faqJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
+import { getAppUrl } from "@/lib/app-url";
 
-export const metadata: Metadata = {
-  title: { absolute: "სალონის მართვის პროგრამის ფასები | moarge" },
-  description: "moarge-ის ფასები: უფასო საცდელი პერიოდი, Business ₾60-ად და Multi-branch ₾150-ად. შეადარეთ ფილიალები და SMS ლიმიტები.",
-  alternates: { canonical: "/pricing" },
-  openGraph: {
-    type: "website",
-    locale: "ka_GE",
-    url: "/pricing",
-    siteName: "moarge",
-    title: "სალონის მართვის პროგრამის ფასები | moarge",
-    description: "შეადარეთ moarge-ის პაკეტები, ფილიალების რაოდენობა და SMS ლიმიტები.",
-  },
-};
+// Rebuilt every hour so the November wording switches to the trial wording on 1 December by itself.
+export const revalidate = 3600;
+
+export const metadata = pageMetadata({
+  title: "ფასები: სალონის პროგრამა 19 ₾-დან თვეში",
+  description: `moarge-ის ფასები: სოლო ${PACKAGES[0].monthlyGel} ₾, ბიზნესი ${PACKAGES[1].monthlyGel} ₾ თვეში 10 სპეციალისტით. 6 და 12 თვით გადახდისას ფასდაკლება. უფასო საცდელი პერიოდი.`,
+  path: "/pricing",
+  keywords: ["სალონის პროგრამის ფასი", "სალონის პროგრამა ფასი", "moarge ფასები", "salon software price georgia"],
+});
 
 export default function PricingPage() {
-  // During the pilot there are no paid plans; the landing page explains the free test month.
-  if (!BILLING_CONFIG.billingEnabled) redirect("/#pilot");
-  return <PricingDetails />;
+  const offer = currentOffer();
+  const sellable = PACKAGES.filter((pkg) => pkg.available);
+  const structured = [
+    breadcrumbJsonLd([{ name: "moarge", path: "/" }, { name: "ფასები", path: "/pricing" }]),
+    faqJsonLd(pricingFaq(offer).map((item) => ({ q: item.q.ka, a: item.a.ka }))),
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "moarge",
+      url: getAppUrl(),
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web, iOS, Android",
+      offers: {
+        "@type": "AggregateOffer",
+        priceCurrency: "GEL",
+        lowPrice: String(CHEAPEST_MONTHLY_GEL),
+        highPrice: String(Math.max(...sellable.map((pkg) => pkg.monthlyGel))),
+        offerCount: sellable.length,
+        validFrom: PRICING_STARTS_AT.toISOString(),
+      },
+    },
+  ];
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(structured) }} />
+      <PricingView offer={offer} />
+    </>
+  );
 }

@@ -7,19 +7,22 @@ import { useLanguage } from "@/lib/i18n";
 import { DEMO_BOOKING_HREF, MarketingFooter, MarketingHeader, SIGNUP_HREF } from "./MarketingChrome";
 import ProductTour from "@/components/tour/ProductTour";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
+import { CHEAPEST_MONTHLY_GEL, EARLY_BIRD, PACKAGES, SMS_PACK, SMS_PACK_PRICE_GEL, formatGel, type Offer } from "@/lib/pricing";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 
-export default function MoargeLandingPage() {
+export default function MoargeLandingPage({ offer }: { offer: Offer }) {
   const { t } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const trialDays = BILLING_CONFIG.trialDays;
+  const { trialDays } = offer;
   const staffLimit = BILLING_CONFIG.trialStaffLimit;
+  const [solo, business] = PACKAGES;
+  const fromPrice = t(`${CHEAPEST_MONTHLY_GEL} ₾-დან თვეში`, `from ${CHEAPEST_MONTHLY_GEL} ₾ a month`);
 
   // Each row: how it goes today, and how it goes with moarge.
   const comparison = [
     [t("კლიენტები მთელი დღე რეკავენ ჩასაწერად", "Clients call all day to book"), t("კლიენტი ბმულით თავად ეწერება, ღამითაც", "Clients book from your link, even at night")],
     [t("ერთ დროზე ორი კლიენტი იწერება", "Two clients end up in the same slot"), t("კალენდარი დაკავებულ დროს არავის მისცემს", "The calendar never gives out a taken slot")],
-    [t("კლიენტს ავიწყდება და არ მოდის", "Clients forget and don't come"), t("შეხსენება მიდის დღით და ორი საათით ადრე", "A reminder goes out a day and two hours before")],
+    [t("კლიენტს ავიწყდება და არ მოდის", "Clients forget and don't come"), t("კლიენტი ვიზიტამდე შეხსენებას იღებს", "Clients get a reminder before the visit")],
     [t("ვინ როდის იყო, რვეულში უნდა ეძებო", "Finding who came when means flipping pages"), t("ყოველი კლიენტის ისტორია ერთ გვერდზეა", "Every client's history is on one page")],
     [t("თვის ბოლოს საკომისიოს ხელით ითვლით", "Commission gets counted by hand"), t("შემოსავალი და საკომისიო თავად ითვლება", "Earnings and commission add up on their own")],
   ];
@@ -28,7 +31,7 @@ export default function MoargeLandingPage() {
   const features = [
     { href: "/onlain-javshani", icon: Globe, title: t("ონლაინ ჩაწერა", "Online booking"), text: t("კლიენტი ირჩევს სერვისს, სპეციალისტს და დროს. აპლიკაცია და რეგისტრაცია არ სჭირდება.", "Clients pick a service, a specialist and a time. No app, no account.") },
     { href: "/salonis-kalendari", icon: CalendarDays, title: t("კალენდარი", "Calendar"), text: t("ყველა სპეციალისტი ერთ ეკრანზე. ვიზიტს მარტივად გადაიტანთ, შესვენებას დაბლოკავთ.", "Every specialist on one screen. Move visits easily, block out breaks.") },
-    { href: "/shekhsenebebi", icon: BellRing, title: t("შეხსენებები", "Reminders"), text: t("ელ-ფოსტით, დღით და ორი საათით ადრე. SMS მალე დაემატება.", "By email, a day and two hours before. SMS is coming soon.") },
+    { href: "/shekhsenebebi", icon: BellRing, title: t("შეხსენებები", "Reminders"), text: t("ვიზიტამდე ერთი დღით და ორი საათით ადრე. SMS შეხსენებები ბიზნეს პაკეტში, მალე.", "A day and two hours before the visit. SMS reminders in Business, soon.") },
     { icon: RefreshCcw, title: t("გადატანა დარეკვის გარეშე", "Changes without a call"), text: t("ჯავშნის კოდით კლიენტი თავად გადაიტანს ან გააუქმებს ვიზიტს.", "With the booking code, clients move or cancel on their own.") },
     { href: "/klientebis-baza", icon: Users, title: t("კლიენტების ბაზა", "Client base"), text: t("ისტორია, ალერგიები, ფერის ფორმულები. სიები: დაბრუნების დროა, VIP, დიდი ხანია არ მოსულა.", "History, allergies, colour formulas. Lists of who is due back, VIPs and who hasn't come in a while.") },
     { icon: Wallet, title: t("ვიზიტი და გადახდა", "Visits and payments"), text: t("ნაღდი, ბარათი, ფასდაკლება და თიფი. დღის კასა თავად იკრიბება.", "Cash, card, discount and tip. The day's takings add up by themselves.") },
@@ -45,13 +48,16 @@ export default function MoargeLandingPage() {
   const faqs = [
     {
       q: t("რა ღირს?", "How much does it cost?"),
-      a: t(`პირველი ${trialDays} დღე უფასოა და ბარათი არ გჭირდებათ.`, `The first ${trialDays} days are free and you don't need a card.`),
+      a: t(
+        `${solo.name.ka} ${solo.monthlyGel} ₾ და ${business.name.ka} ${business.monthlyGel} ₾ თვეში, ბიზნესში ${business.staffIncluded} სპეციალისტი შედის. 6 თვით გადახდისას 10% ფასდაკლებაა, 12 თვით 20%. ${offer.pilot ? "ნოემბერში moarge სრულიად უფასოა." : `პირველი ${trialDays} დღე უფასოა.`}`,
+        `${solo.name.en} is ${solo.monthlyGel} ₾ and ${business.name.en} ${business.monthlyGel} ₾ a month, with ${business.staffIncluded} specialists included in Business. Pay for 6 months and get 10% off, 12 months and get 20% off. ${offer.pilot ? "In November moarge is completely free." : `The first ${trialDays} days are free.`}`
+      ),
     },
     {
-      q: t(`რა ხდება ${trialDays} დღის შემდეგ?`, `What happens after ${trialDays} days?`),
+      q: t("რა ხდება უფასო პერიოდის შემდეგ?", "What happens after the free period?"),
       a: t(
-        "ანგარიში მხოლოდ სანახავი ხდება. ახალ ჯავშანს ვეღარ დაამატებთ, მაგრამ მონაცემები რჩება და არაფერი იშლება.",
-        "The account turns view only. You can't add new bookings, but your data stays and nothing is deleted."
+        `${offer.pilot ? `ნოემბერში დარეგისტრირებული სალონები ${trialDays} დღე უფასოდ იყენებენ. ` : ""}შემდეგ აირჩევთ პაკეტს და გადაიხდით ბარათით. თუ არ აირჩევთ, ანგარიში მხოლოდ სანახავი ხდება, მონაცემები კი რჩება და არაფერი იშლება.`,
+        `${offer.pilot ? `Salons that sign up in November use it free for ${trialDays} days. ` : ""}Then you pick a package and pay by card. If you don't, the account turns view only, and your data stays and nothing is deleted.`
       ),
     },
     {
@@ -75,13 +81,16 @@ export default function MoargeLandingPage() {
     {
       q: t("შეხსენება SMS-ით მოდის?", "Do reminders come by SMS?"),
       a: t(
-        "ჯერჯერობით ელ-ფოსტით, თუ კლიენტმა ელ-ფოსტა მიუთითა და დათანხმდა. SMS-ზე ვმუშაობთ.",
-        "For now by email, when the client left an email and agreed. We're working on SMS."
+        `SMS შეხსენებები ბიზნეს პაკეტშია, თვეში ${formatGel(business.smsIncluded)} SMS. დამატებით ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾ ღირს, ნებისმიერ პაკეტზე. SMS შეხსენებებს ახლა ვრთავთ.`,
+        `SMS reminders come with Business, ${formatGel(business.smsIncluded)} SMS a month. Extra ${formatGel(SMS_PACK.minimum)} SMS cost ${formatGel(SMS_PACK_PRICE_GEL)} ₾ on any package. We're switching SMS reminders on now.`
       ),
     },
     {
       q: t("რამდენი სპეციალისტის დამატება შეიძლება?", "How many specialists can I add?"),
-      a: t(`სატესტო პერიოდში ${staffLimit}-მდე. თითოეულს საკუთარი განრიგი და სერვისები აქვს.`, `Up to ${staffLimit} during the trial. Each has their own schedule and services.`),
+      a: t(
+        `სოლოში ერთი, ბიზნესში ${business.staffIncluded} შედის და ყოველი დამატებითი ${business.extraStaffGel} ₾ თვეში. უფასო პერიოდში ${staffLimit}-მდე. თითოეულს საკუთარი განრიგი და სერვისები აქვს.`,
+        `One on Solo. Business includes ${business.staffIncluded}, and each extra one is ${business.extraStaffGel} ₾ a month. Up to ${staffLimit} during the free period. Each has their own schedule and services.`
+      ),
     },
     {
       q: t("ჩემი მონაცემები დაცულია?", "Is my data safe?"),
@@ -124,7 +133,10 @@ export default function MoargeLandingPage() {
                 </Link>
               </div>
               <p className="mt-5 text-sm text-stone-500">
-                {t(`${trialDays} დღე უფასოდ, ბარათის გარეშე. ${staffLimit}-მდე სპეციალისტი.`, `${trialDays} days free, no card. Up to ${staffLimit} specialists.`)}
+                {offer.pilot
+                  ? t("ნოემბერში უფასოდ, ბარათის გარეშე. დეკემბრიდან ", "Free in November, no card. From December ")
+                  : t(`${trialDays} დღე უფასოდ, ბარათის გარეშე. შემდეგ `, `${trialDays} days free, no card. Then `)}
+                <Link href="/pricing" className="font-semibold text-stone-700 underline decoration-stone-300 underline-offset-2 hover:text-rose-700">{fromPrice}</Link>
               </p>
             </div>
 
@@ -207,12 +219,19 @@ export default function MoargeLandingPage() {
         <section id="pilot" className="py-14 sm:py-20 scroll-mt-20">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 md:items-start">
             <div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-stone-900">{t("ვეძებთ პირველ სალონებს", "We're looking for our first salons")}</h2>
+              <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-stone-900">
+                {offer.pilot ? t("ნოემბერი უფასოა", "November is free") : t(`${trialDays} დღე უფასოდ`, `${trialDays} days free`)}
+              </h2>
               <p className="mt-4 text-base sm:text-lg text-stone-600 leading-relaxed">
-                {t(
-                  "moarge ახალია. გვინდა, რომ რამდენიმე სალონმა ერთი თვე უფასოდ გამოიყენოს და გულახდილად გვითხრას, რა აკლია. თქვენი რჩევით ვწყვეტთ, რას გავაკეთებთ შემდეგ.",
-                  "moarge is new. We want a few salons to use it free for a month and tell us honestly what's missing. Your advice decides what we build next."
-                )}
+                {offer.pilot
+                  ? t(
+                    `moarge ახალია და ნოემბერს სალონებთან ერთად ვცდით. დარეგისტრირდით ახლა, გამოიყენეთ ${trialDays} დღე უფასოდ და გვითხარით, რა აკლია. თქვენი რჩევით ვწყვეტთ, რას გავაკეთებთ შემდეგ.`,
+                    `moarge is new and we're testing it with salons through November. Sign up now, use it free for ${trialDays} days and tell us what's missing. Your advice decides what we build next.`
+                  )
+                  : t(
+                    "სცადეთ moarge თქვენს სალონში, თქვენი კლიენტებით. ბარათი არ გჭირდებათ. თუ მოგეწონებათ, აირჩევთ პაკეტს.",
+                    "Try moarge in your salon, with your own clients. No card needed. If you like it, pick a package."
+                  )}
               </p>
               <p className="mt-4 text-sm text-stone-500">
                 {t("აზრი მოგვწერეთ პანელიდან, ღილაკით „უკუკავშირი“, ან აქ: ", "Send feedback from the dashboard with the Feedback button, or to ")}
@@ -222,10 +241,12 @@ export default function MoargeLandingPage() {
             <div className="rounded-2xl border border-stone-200 bg-white p-6 sm:p-7">
               <dl className="divide-y divide-stone-100">
                 {[
-                  [t("ფასი", "Price"), t(`${trialDays} დღე უფასოდ`, `${trialDays} days free`)],
+                  offer.pilot ? [t("ნოემბერი", "November"), t("უფასოდ", "Free")] : [t("საცდელი", "Trial"), t(`${trialDays} დღე უფასოდ`, `${trialDays} days free`)],
+                  [offer.pilot ? t("დეკემბრიდან", "From December") : t("შემდეგ", "Then"), fromPrice],
                   [t("ბარათი", "Card"), t("არ გჭირდებათ", "Not needed")],
-                  [t("გუნდი", "Team"), t(`${staffLimit}-მდე სპეციალისტი`, `Up to ${staffLimit} specialists`)],
-                  [t("ფუნქციები", "Features"), t("ყველა, შეზღუდვის გარეშე", "All of them")],
+                  offer.earlyBird
+                    ? [t("დეკემბერში", "In December"), t(`პირველ ${EARLY_BIRD.salons} სალონს −${EARLY_BIRD.discountPercent}%`, `−${EARLY_BIRD.discountPercent}% for the first ${EARLY_BIRD.salons} salons`)]
+                    : [t("გუნდი", "Team"), t(`${staffLimit}-მდე სპეციალისტი`, `Up to ${staffLimit} specialists`)],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-baseline justify-between gap-4 py-3 first:pt-0">
                     <dt className="text-sm text-stone-500">{label}</dt>
@@ -236,6 +257,9 @@ export default function MoargeLandingPage() {
               <Link href={SIGNUP_HREF} className="mt-6 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-6 text-base font-bold text-white transition hover:bg-rose-700">
                 {t("სალონის რეგისტრაცია", "Register your salon")}
                 <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="/pricing" className="mt-3 flex min-h-11 items-center justify-center text-sm font-semibold text-stone-700 underline decoration-stone-300 underline-offset-2 hover:text-rose-700">
+                {t("ყველა პაკეტი და ფასი", "All packages and prices")}
               </Link>
             </div>
           </div>
@@ -280,7 +304,11 @@ export default function MoargeLandingPage() {
             <div className="flex flex-col gap-5 rounded-2xl bg-rose-600 px-6 py-8 text-white sm:flex-row sm:items-center sm:justify-between sm:px-10">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{t("სცადეთ ამ კვირაში", "Try it this week")}</h2>
-                <p className="mt-1.5 text-base text-rose-100">{t(`რეგისტრაციას რამდენიმე წუთი სჭირდება. ${trialDays} დღე უფასოა.`, `Signing up takes a few minutes. ${trialDays} days are free.`)}</p>
+                <p className="mt-1.5 text-base text-rose-100">
+                  {offer.pilot
+                    ? t("რეგისტრაციას რამდენიმე წუთი სჭირდება. ნოემბერში უფასოა.", "Signing up takes a few minutes. It's free in November.")
+                    : t(`რეგისტრაციას რამდენიმე წუთი სჭირდება. ${trialDays} დღე უფასოა.`, `Signing up takes a few minutes. ${trialDays} days are free.`)}
+                </p>
               </div>
               <Link href={SIGNUP_HREF} className="inline-flex min-h-13 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-7 text-base font-bold text-rose-700 transition hover:bg-rose-50">
                 {t("დაიწყეთ უფასოდ", "Start for free")}

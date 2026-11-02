@@ -22,6 +22,7 @@ import { BILLING_CONFIG } from "@/lib/billing-plans";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 import MoargeLogo from "./MoargeLogo";
 import FeedbackButton from "./FeedbackButton";
+import TrialNotice, { type TrialNoticeInfo } from "./TrialNotice";
 
 interface AppShellProps {
   salonName: string;
@@ -35,6 +36,8 @@ interface AppShellProps {
   /** Which earnings page this person sees: the salon's, their own (masters) or none. */
   earnings: "salon" | "own" | "none";
   readOnly: boolean;
+  /** Set for owners and admins while the salon is on a free period. */
+  trialNotice?: TrialNoticeInfo | null;
   isPlatformOwner?: boolean;
   children: React.ReactNode;
 }
@@ -53,6 +56,7 @@ export default function AppShell({
   canManageData,
   earnings,
   readOnly,
+  trialNotice = null,
   isPlatformOwner = false,
   children,
 }: AppShellProps) {
@@ -247,6 +251,7 @@ export default function AppShell({
               ? <Link className="ml-1 underline" href="/billing">{t("გადახდის ნახვა", "View billing")}</Link>
               : <a className="ml-1 underline" href={`mailto:${SUPPORT_EMAIL}`}>{t("დაგვიკავშირდით", "Contact us")}</a>}
           </div>}
+          {trialNotice && !readOnly && <TrialNotice info={trialNotice} />}
           {children}
         </main>
         <FeedbackButton />
