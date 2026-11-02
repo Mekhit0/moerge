@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Mail, Phone } from "lucide-react";
+import { ChevronDown, Mail, Phone } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
 import { COMPANY_SHORT_NAME, SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL } from "@/lib/contact";
@@ -16,7 +16,7 @@ export function MarketingHeader({ onHome = false, showLanguage = true }: { onHom
   const { t } = useLanguage();
   const base = onHome ? "" : "/";
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100/80">
+    <header className="sticky top-0 z-40 bg-ivory/95 backdrop-blur border-b border-stone-200/70">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="moarge">
           <MoargeLogo size="md" variant="icon" />
@@ -35,7 +35,7 @@ export function MarketingHeader({ onHome = false, showLanguage = true }: { onHom
           <Link href="/login" className="hidden sm:inline-flex min-h-10 items-center px-4 rounded-xl text-sm font-semibold text-stone-700 hover:bg-rose-50 transition">
             {t("შესვლა", "Sign in")}
           </Link>
-          <Link href={SIGNUP_HREF} className="inline-flex min-h-10 items-center gap-1.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-sm transition">
+          <Link href={SIGNUP_HREF} className="inline-flex min-h-10 items-center gap-1.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition">
             {t("დაწყება", "Start")}
           </Link>
         </div>
@@ -44,9 +44,13 @@ export function MarketingHeader({ onHome = false, showLanguage = true }: { onHom
   );
 }
 
-/** Footer of the public pages, with links to every feature and salon type page. */
+/**
+ * Footer of the public pages, with links to every feature and salon type page.
+ * On phones each group folds into one row so the footer stays short; on wide screens all are open.
+ */
 export function MarketingFooter({ onHome = false }: { onHome?: boolean }) {
   const { t } = useLanguage();
+  const [openColumn, setOpenColumn] = useState<string | null>(null);
   const base = onHome ? "" : "/";
   const columns = [
     {
@@ -78,48 +82,47 @@ export function MarketingFooter({ onHome = false }: { onHome?: boolean }) {
   ];
 
   return (
-    <footer className="bg-ivory border-t border-rose-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-8">
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-sm space-y-4">
-            <MoargeLogo size="md" variant="full" />
-            <p className="text-base text-stone-600 leading-relaxed">
-              {t(
-                "სალონის მართვის პროგრამა: ონლაინ ჯავშანი, კალენდარი, კლიენტების ბაზა და შემოსავალი საქართველოს სალონებისთვის.",
-                "Salon software: online booking, a calendar, a client base and earnings for salons in Georgia."
-              )}
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-              <a href={`tel:${SUPPORT_PHONE_TEL}`} className="group inline-flex min-h-12 items-center gap-3 rounded-2xl border border-rose-100 bg-white px-4 text-sm font-semibold text-stone-800 shadow-xs transition hover:border-rose-300 hover:shadow-sm">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition group-hover:bg-rose-600 group-hover:text-white"><Phone className="h-4 w-4" /></span>
-                {SUPPORT_PHONE_DISPLAY}
-              </a>
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="group inline-flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-rose-100 bg-white px-4 text-sm font-semibold text-stone-800 shadow-xs transition hover:border-rose-300 hover:shadow-sm">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition group-hover:bg-rose-600 group-hover:text-white"><Mail className="h-4 w-4" /></span>
-                <span className="truncate">{SUPPORT_EMAIL}</span>
-              </a>
-            </div>
-          </div>
+    <footer className="bg-ivory border-t border-stone-200/70">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-6 lg:pt-12">
+        <div className="flex flex-col gap-6 lg:flex-row lg:justify-between lg:gap-10">
+          <Link href="/" className="flex items-center gap-2.5 self-start" aria-label="moarge">
+            <MoargeLogo size="sm" variant="icon" />
+            <span className="text-lg font-black tracking-[0.06em] text-stone-900">MOARGE</span>
+          </Link>
 
-          <nav aria-label={t("ფუტერის ბმულები", "Footer links")} className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:gap-10">
-            {columns.map((column) => (
-              <div key={column.title}>
-                <p className="text-xs font-bold uppercase tracking-wider text-stone-400">{column.title}</p>
-                <ul className="mt-4 space-y-3 text-sm">
-                  {column.links.map((link) => (
-                    <li key={link.href}>
-                      <Link href={link.href} className="text-stone-700 transition hover:text-rose-600">{link.label}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+          <nav aria-label={t("ფუტერის ბმულები", "Footer links")} className="border-t border-stone-200 lg:grid lg:grid-cols-4 lg:gap-12 lg:border-t-0">
+            {columns.map((column) => {
+              const open = openColumn === column.title;
+              return (
+                <div key={column.title} className="border-b border-stone-200 lg:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => setOpenColumn(open ? null : column.title)}
+                    aria-expanded={open}
+                    className="flex min-h-12 w-full items-center justify-between text-left text-sm font-bold text-stone-900 lg:pointer-events-none lg:min-h-0 lg:text-xs lg:uppercase lg:tracking-wide lg:text-stone-400"
+                  >
+                    {column.title}
+                    <ChevronDown className={`h-4 w-4 text-stone-400 transition-transform lg:hidden ${open ? "rotate-180" : ""}`} />
+                  </button>
+                  <ul className={`${open ? "grid" : "hidden"} grid-cols-2 gap-x-4 gap-y-1 pb-3 text-sm lg:mt-4 lg:grid lg:grid-cols-1 lg:gap-y-2.5 lg:pb-0`}>
+                    {column.links.map((link) => (
+                      <li key={link.href}>
+                        <Link href={link.href} className="inline-flex min-h-9 items-center text-stone-600 transition hover:text-rose-700 lg:min-h-0">{link.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </nav>
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-rose-100 pt-6 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {COMPANY_SHORT_NAME}. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</p>
-          <p>Managed by {COMPANY_SHORT_NAME}</p>
+        <div className="mt-6 flex flex-col gap-2 text-sm text-stone-500 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between lg:mt-10 lg:border-t lg:border-stone-200 lg:pt-6">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <a href={`tel:${SUPPORT_PHONE_TEL}`} className="inline-flex min-h-9 items-center gap-1.5 font-semibold text-stone-700 hover:text-rose-700"><Phone className="h-4 w-4 text-rose-600" />{SUPPORT_PHONE_DISPLAY}</a>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex min-h-9 min-w-0 items-center gap-1.5 font-semibold text-stone-700 hover:text-rose-700"><Mail className="h-4 w-4 shrink-0 text-rose-600" /><span className="truncate">{SUPPORT_EMAIL}</span></a>
+          </div>
+          <p className="text-xs">© {new Date().getFullYear()} {COMPANY_SHORT_NAME}. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</p>
         </div>
       </div>
     </footer>

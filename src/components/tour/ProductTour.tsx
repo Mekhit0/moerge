@@ -46,8 +46,7 @@ export default function ProductTour() {
   return (
     <div ref={ref} className="relative" onMouseEnter={() => setHovering(true)} onMouseLeave={() => setHovering(false)}
       onFocus={() => setHovering(true)} onBlur={() => setHovering(false)}>
-      <div className="absolute -inset-6 -z-10 rounded-[3rem] bg-gradient-to-br from-rose-200/50 via-rose-100/30 to-amber-100/40 blur-2xl" />
-      <div className="rounded-[2rem] border border-rose-100 bg-white/80 p-4 shadow-2xl shadow-rose-950/10 backdrop-blur sm:p-5">
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex gap-1.5 overflow-x-auto pb-3 no-scrollbar" role="tablist" aria-label={t("ნახეთ, როგორ მუშაობს", "See how it works")}>
           {STORY.map((id, index) => (
             <button key={id} type="button" role="tab" aria-selected={index === chapter} onClick={() => goTo(index)}

@@ -167,15 +167,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-ivory">
       {/* Brand panel: computers only, so phones see the form first */}
-      <aside className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-stone-900 via-rose-950 to-stone-950 text-white p-14 flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-1/4 right-0 w-96 h-96 bg-rose-600/20 rounded-full blur-3xl pointer-events-none" />
+      <aside className="hidden lg:flex lg:w-1/2 bg-stone-900 text-white p-14 flex-col justify-between">
         <Link href="/" className="relative z-10 inline-block w-fit hover:opacity-95 transition">
           <MoargeLogo size="lg" variant="full" theme="white" />
         </Link>
         <div className="relative z-10 max-w-md space-y-6">
           <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-[1.12]">
             {t("სალონის ჯავშნები ", "Salon bookings ")}
-            <span className="bg-gradient-to-r from-rose-400 via-rose-300 to-amber-200 bg-clip-text text-transparent">
+            <span className="text-rose-400">
               {t("რვეულის გარეშე", "without the notebook")}
             </span>
           </h1>
@@ -186,9 +185,7 @@ export default function LoginPage() {
               { icon: Users, text: t(`${BILLING_CONFIG.trialStaffLimit}-მდე სპეციალისტი`, `Up to ${BILLING_CONFIG.trialStaffLimit} specialists`) },
             ].map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3">
-                <span className="inline-flex w-10 h-10 items-center justify-center rounded-xl bg-white/10 text-rose-300 shrink-0">
-                  <Icon className="w-5 h-5" />
-                </span>
+                <Icon className="w-5 h-5 text-rose-400 shrink-0" />
                 {text}
               </li>
             ))}
