@@ -238,7 +238,7 @@ export const salonSettingsSchema = z
         "Brand color must be a valid hex color (e.g., #e11d48)."
       )
       .default("#e11d48"),
-    auto_reminders_enabled: z.boolean().default(true),
+    auto_reminders_enabled: z.boolean().default(false),
     dry_run_mode: z.boolean().default(false),
     test_recipient_email: z
       .string()
@@ -305,7 +305,7 @@ export const salonSettingsSchema = z
     deposit_required: z.boolean().optional().default(false),
     deposit_amount_gel: z.coerce.number().positive().max(10000).optional().nullable(),
     deposit_percentage: z.coerce.number().int().min(1).max(100).optional().nullable(),
-    send_booking_confirmation_email: z.boolean().optional().default(true),
+    send_booking_confirmation_email: z.boolean().optional().default(false),
     sms_reminder_24h: z.boolean().optional(),
     sms_reminder_2h: z.boolean().optional(),
     sms_booking_confirmation: z.boolean().optional(),
@@ -315,16 +315,6 @@ export const salonSettingsSchema = z
     const hasPercent = data.deposit_percentage !== undefined && data.deposit_percentage !== null;
     if ((data.deposit_required && hasFixed === hasPercent) || (!data.deposit_required && (hasFixed || hasPercent))) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["deposit_required"], message: "Choose either a fixed deposit or a percentage deposit." });
-    }
-    if (data.auto_reminders_enabled) {
-      if (isPlaceholderReplyEmail(data.verified_sender_email)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["verified_sender_email"],
-          message:
-            "მიუთითეთ ელფოსტა, სადაც კლიენტების პასუხები მოვა. / Enter the email where client replies should arrive.",
-        });
-      }
     }
   });
 

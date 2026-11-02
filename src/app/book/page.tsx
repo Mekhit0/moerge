@@ -107,10 +107,8 @@ function PublicBookingFormContent() {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [staffSlots, setStaffSlots] = useState<NonNullable<NonNullable<PublicSalonInfo["availability"]>["slots"]>>([]);
   const [fullName, setFullName] = useState(searchParams.get("name") ?? "");
-  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [emailConsent, setEmailConsent] = useState(false);
   const [smsConsent, setSmsConsent] = useState(true);
   const [websiteTrap, setWebsiteTrap] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -241,7 +239,6 @@ function PublicBookingFormContent() {
         body: JSON.stringify({
           salon_slug: salonSlugParam,
           full_name: fullName.trim(),
-          email: email.trim().toLowerCase() || null,
           phone: phone.trim(),
           treatment_date: treatmentDate,
           treatment_time: treatmentTime,
@@ -251,7 +248,6 @@ function PublicBookingFormContent() {
           website: websiteTrap,
           turnstile_token: turnstileToken,
           notes: composedNotes.slice(0, 1000) || null,
-          email_consent: emailConsent,
           sms_consent: smsConsent,
           preferred_language: lang,
         }),
@@ -484,9 +480,6 @@ function PublicBookingFormContent() {
                   <label className="block text-sm font-semibold text-stone-700">{t("ტელეფონი", "Phone")}
                     <input required type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClass} placeholder="5XX XX XX XX" />
                   </label>
-                  <label className="block text-sm font-semibold text-stone-700">{t("ელფოსტა", "Email")} <span className="font-normal text-stone-400">{t("(არასავალდებულო)", "(optional)")}</span>
-                    <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="name@gmail.com" />
-                  </label>
                   <details className="group">
                     <summary className="cursor-pointer list-none text-sm font-semibold text-rose-700">{t("+ შენიშვნის დამატება", "+ Add a note")}</summary>
                     <textarea rows={3} maxLength={700} value={notes} onChange={(event) => setNotes(event.target.value)} className={`${inputClass} min-h-24 py-3`} placeholder={t("რამე, რაც სალონმა უნდა იცოდეს", "Anything the salon should know")} />
@@ -496,10 +489,6 @@ function PublicBookingFormContent() {
                     <label className="flex items-start gap-3 text-sm text-stone-600">
                       <input type="checkbox" checked={smsConsent} onChange={(event) => setSmsConsent(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-rose-600" />
                       {t("მსურს SMS შეხსენება ვიზიტამდე", "Send me an SMS reminder before the visit")}
-                    </label>
-                    <label className="flex items-start gap-3 text-sm text-stone-600">
-                      <input type="checkbox" checked={emailConsent} onChange={(event) => setEmailConsent(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-rose-600" />
-                      {t("მსურს შეხსენება ელფოსტით", "Send me reminders by email")}
                     </label>
                   </div>
                 </div>

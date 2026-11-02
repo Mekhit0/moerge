@@ -140,10 +140,6 @@ export function ClientFormSheet({ open, client, staff, onClose, onSaved }: {
           <Field label={t("ელ-ფოსტა", "Email")} optionalLabel={t("(არასავალდებულო)", "(optional)")}>
             {(props) => <Input {...props} type="email" inputMode="email" value={value.email ?? ""} onChange={(event) => set("email", event.target.value)} autoComplete="off" />}
           </Field>
-          {value.email && <label className="flex min-h-11 items-center gap-3 text-sm text-stone-700">
-            <input type="checkbox" className="h-5 w-5 accent-rose-600" checked={value.email_consent} onChange={(event) => set("email_consent", event.target.checked)} />
-            {t("თანახმაა ელ-ფოსტით შეხსენებებზე", "Agrees to email reminders")}
-          </label>}
           <div>
             <p className="mb-2 text-sm font-semibold text-stone-700">{t("შეტყობინებების ენა", "Message language")}</p>
             <ChipRow>

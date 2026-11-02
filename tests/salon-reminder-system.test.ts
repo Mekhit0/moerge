@@ -505,8 +505,8 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
       }
     });
 
-    it("validates salon settings before enabling automatic sending", () => {
-      const invalidPlaceholderSender = salonSettingsSchema.safeParse({
+    it("saves salon settings without a reply email now that client emails are off", () => {
+      const base = {
         salon_name: "moarge Demo Salon",
         sender_display_name: "moarge Demo Salon",
         verified_sender_email: "test@example.com",
@@ -519,9 +519,12 @@ describe("Salon Appointment Reminder System - Comprehensive Test Suite", () => {
         brand_color: "#e11d48",
         auto_reminders_enabled: true,
         dry_run_mode: false,
-      });
+      };
 
-      expect(invalidPlaceholderSender.success).toBe(false);
+      // Client emails are switched off, so a placeholder reply address no longer blocks saving.
+      expect(salonSettingsSchema.safeParse(base).success).toBe(true);
+      // A malformed address is still refused.
+      expect(salonSettingsSchema.safeParse({ ...base, verified_sender_email: "not-an-email" }).success).toBe(false);
     });
 
     it("renders customizable email template with salon branding and unsubscribe link", () => {

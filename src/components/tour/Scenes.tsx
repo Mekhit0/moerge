@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, CheckCircle2, Copy, Download, Lock, Mail, MessageCircle, Move, Plus, Sparkles, UserCheck, Wallet } from "lucide-react";
+import { Check, CheckCircle2, Copy, Download, Lock, MessageCircle, Move, Plus, Sparkles, UserCheck, Wallet } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/components/ui";
 import { useCountUp } from "./useSceneLoop";
@@ -168,6 +168,7 @@ function CalendarScene({ step }: SceneProps) {
 /* 3. The reminder reaches the client by email. */
 function ReminderScene({ step }: SceneProps) {
   const { t } = useLanguage();
+  const text = t("სალონი ია: ხვალ 12:30-ზე გელოდებით. მანიკური. კოდი 750934", "Salon Ia: see you tomorrow at 12:30. Manicure. Code 750934");
   return (
     <div className="relative flex h-full flex-col bg-stone-900 text-white">
       <div className={cn("pt-10 text-center", EASE, step >= 2 ? "opacity-0" : "opacity-100")}>
@@ -175,25 +176,28 @@ function ReminderScene({ step }: SceneProps) {
         <p className="text-[11px] text-stone-300">{t("ოთხშაბათი, 11 ნოემბერი", "Wednesday, 11 November")}</p>
       </div>
       <div className={cn("absolute inset-x-3 top-36 rounded-2xl bg-white/95 p-3 text-stone-900 shadow-xl", EASE, show(step === 1, "-translate-y-6"))}>
-        <p className="flex items-center gap-1.5 text-[10px] font-semibold text-stone-500"><Mail className="h-3 w-3 text-rose-600" />{t("ელ-ფოსტა · ახლა", "Email · now")}</p>
-        <p className="mt-1 text-[12px] font-bold">{t("სალონი ია: ხვალ გელოდებით", "Salon Ia: see you tomorrow")}</p>
-        <p className="text-[11px] text-stone-600">{t("ხვალ 12:30 · მანიკური · ანა", "Tomorrow 12:30 · Manicure · Ana")}</p>
+        <p className="flex items-center gap-1.5 text-[10px] font-semibold text-stone-500"><MessageCircle className="h-3 w-3 text-emerald-600" />{t("SMS · moarge · ახლა", "SMS · moarge · now")}</p>
+        <p className="mt-1 text-[11px] leading-snug text-stone-800">{text}</p>
         <Tap when={step === 1} delay={1300} />
       </div>
-      <div className={cn("absolute inset-0 bg-ivory p-3 text-stone-900", EASE, show(step >= 2, "translate-y-6"))}>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-rose-600">{t("შეხსენება", "Reminder")}</p>
-        <p className="mt-1 text-sm font-bold">{t("სალონი ია: ხვალ გელოდებით", "Salon Ia: see you tomorrow")}</p>
-        <div className="mt-3 space-y-1.5 rounded-xl bg-white p-3 text-[11px] shadow-sm">
-          <p className="flex justify-between"><span className="text-stone-500">{t("დრო", "Time")}</span><b>{t("ხვალ 12:30", "Tomorrow 12:30")}</b></p>
-          <p className="flex justify-between"><span className="text-stone-500">{t("სერვისი", "Service")}</span><b>{t("მანიკური", "Manicure")}</b></p>
-          <p className="flex justify-between"><span className="text-stone-500">{t("სპეციალისტი", "Specialist")}</span><b>{t("ანა", "Ana")}</b></p>
-          <p className="flex justify-between"><span className="text-stone-500">{t("კოდი", "Code")}</span><b className="tracking-widest text-rose-700">750 934</b></p>
+      <div className={cn("absolute inset-0 flex flex-col bg-ivory text-stone-900", EASE, show(step >= 2, "translate-y-6"))}>
+        <div className="border-b border-stone-200 bg-white px-3 py-2 text-center">
+          <p className="text-[12px] font-bold">moarge</p>
+          <p className="text-[9px] text-stone-500">{t("SMS", "SMS")}</p>
         </div>
-        <div className={cn("mt-3 grid grid-cols-2 gap-2", EASE, show(step >= 3))}>
-          <span className="rounded-xl bg-rose-600 py-2 text-center text-[11px] font-semibold text-white">{t("გადატანა", "Reschedule")}</span>
-          <span className="rounded-xl border border-stone-200 bg-white py-2 text-center text-[11px] font-semibold">{t("გაუქმება", "Cancel")}</span>
+        <div className="flex-1 space-y-2 p-3">
+          <p className="text-center text-[9px] text-stone-400">{t("დღეს 11:00", "Today 11:00")}</p>
+          <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[11px] leading-snug shadow-sm">{text}</div>
+          <div className={cn("ml-auto max-w-[80%] space-y-1.5 rounded-2xl rounded-tr-sm bg-rose-50 p-2.5 text-[10px]", EASE, show(step >= 3))}>
+            <p className="font-semibold text-rose-800">{t("moarge.com › ჩემი ჯავშანი", "moarge.com › My booking")}</p>
+            <p className="text-stone-600">{t("კოდი 750934 და ტელეფონი", "Code 750934 and phone")}</p>
+            <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+              <span className="rounded-lg bg-rose-600 py-1.5 text-center font-semibold text-white">{t("გადატანა", "Reschedule")}</span>
+              <span className="rounded-lg border border-stone-200 bg-white py-1.5 text-center font-semibold">{t("გაუქმება", "Cancel")}</span>
+            </div>
+          </div>
+          <p className={cn("text-center text-[10px] text-stone-500", EASE, show(step >= 3))}>{t("კლიენტს დარეკვა არ სჭირდება", "No phone call needed")}</p>
         </div>
-        <p className={cn("mt-3 text-center text-[10px] text-stone-500", EASE, show(step >= 3))}>{t("კლიენტს დარეკვა არ სჭირდება", "No phone call needed")}</p>
       </div>
     </div>
   );
@@ -412,9 +416,9 @@ export const SCENES: Record<string, SceneInfo> = {
     title: { ka: "შეხსენება ავტომატურად", en: "Reminders go out on their own" },
     captions: [
       { ka: "ვიზიტამდე ერთი დღით ადრე", en: "One day before the visit" },
-      { ka: "კლიენტი იღებს წერილს", en: "The client gets an email" },
-      { ka: "დრო, სერვისი, სპეციალისტი და კოდი", en: "Time, service, specialist and code" },
-      { ka: "გადატანა ან გაუქმება დარეკვის გარეშე", en: "Reschedule or cancel without a call" },
+      { ka: "კლიენტი იღებს SMS-ს", en: "The client gets an SMS" },
+      { ka: "დრო, სერვისი და ჯავშნის კოდი", en: "Time, service and booking code" },
+      { ka: "კოდით გადატანა ან გაუქმება დარეკვის გარეშე", en: "Move or cancel with the code, no call" },
     ],
   },
   visit: {

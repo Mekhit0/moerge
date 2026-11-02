@@ -76,6 +76,9 @@ describe.skipIf(!canRun)("SMS reminders: queue, quota and delivery (integration)
     expect(confirmation.body).toContain(appointment.booking_code);
     expect(confirmation.body).not.toContain("http");
     expect(confirmation.sms_parts).toBe(1);
+    // Client emails are switched off: nothing goes into the queue by email.
+    const { count } = await db.from("notification_log").select("id", { count: "exact", head: true }).eq("appointment_id", appointment.id).eq("channel", "email");
+    expect(count).toBe(0);
   });
 
   it("spends package SMS first, then bought ones, and keeps a sent SMS spent", async () => {

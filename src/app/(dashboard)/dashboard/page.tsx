@@ -45,8 +45,8 @@ export default async function DashboardPage() {
       .eq("salon_id", ctx.salonId).eq("status", "scheduled")
       .gte("treatment_date", addCalendarDays(today, 1))
       .order("starts_at", { ascending: true }).limit(5),
-    ctx.supabase.from("reminders").select("id", head)
-      .eq("salon_id", ctx.salonId).eq("status", "scheduled").gte("scheduled_for_date", today),
+    ctx.supabase.from("notification_log").select("id", head)
+      .eq("salon_id", ctx.salonId).eq("channel", "sms").eq("status", "pending"),
     ctx.supabase.from("services").select("id", head).eq("salon_id", ctx.salonId).eq("is_active", true),
     ctx.supabase.from("staff").select("id", head).eq("salon_id", ctx.salonId).eq("is_active", true),
     ctx.supabase.from("staff_working_hours").select("id", head).eq("salon_id", ctx.salonId),

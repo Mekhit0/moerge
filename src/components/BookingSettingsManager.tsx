@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
 
 type StaffItem = { id: string; full_name: string; is_active: boolean; service_ids: string[] };
@@ -75,10 +74,6 @@ export default function BookingSettingsManager({ section }: { section: "staff" |
 
   return <div className="space-y-5">
     <h1 className="text-2xl font-bold text-stone-900">{title}</h1>
-    <p className="mt-1 text-sm text-stone-500">{t("განრიგი და დაჯავშნის გუნდი", "Manage the team and booking schedule")}</p>
-    <nav className="mt-5 flex flex-wrap gap-2" aria-label={t("განრიგის პარამეტრები", "Booking settings")}>
-      {(["staff", "services", "schedules", "time-off"] as const).map((item) => <Link key={item} href={`/settings/${item}`} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${item === section ? "border-rose-600 bg-rose-600 text-white" : "border-stone-200 bg-white text-stone-700"}`}>{({ staff: t("სპეციალისტები", "Staff"), services: t("სერვისები", "Services"), schedules: t("განრიგი", "Schedules"), "time-off": t("დასვენება", "Time off") })[item]}</Link>)}
-    </nav>
     {message && <p role="status" className="my-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{message}</p>}
     {section === "staff" && <section className="mt-6 rounded-2xl border bg-white p-5">
       <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); void submit("/api/staff", "POST", { full_name: name, service_ids: staffServiceIds }); setName(""); setStaffServiceIds([]); }}>

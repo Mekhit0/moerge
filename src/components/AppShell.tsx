@@ -27,9 +27,7 @@ import TrialNotice, { type TrialNoticeInfo } from "./TrialNotice";
 interface AppShellProps {
   salonName: string;
   bookingUrl: string;
-  autoRemindersEnabled: boolean;
   dryRunMode: boolean;
-  emailDeliveryConfigured: boolean;
   staffName: string;
   staffEmail: string;
   canManageData: boolean;
@@ -43,14 +41,12 @@ interface AppShellProps {
 }
 
 // Settings groups the setup pages that live outside /settings.
-const SETTINGS_PATHS = ["/settings", "/billing", "/email-history"];
+const SETTINGS_PATHS = ["/settings", "/billing"];
 
 export default function AppShell({
   salonName,
   bookingUrl,
-  autoRemindersEnabled,
   dryRunMode,
-  emailDeliveryConfigured,
   staffName,
   staffEmail,
   canManageData,
@@ -91,13 +87,7 @@ export default function AppShell({
     router.refresh();
   }
 
-  const reminderStatus = dryRunMode
-    ? { tone: "amber", text: t("სატესტო რეჟიმი: შეხსენებები კლიენტებს არ ეგზავნებათ", "Test mode: reminders are not sent to clients") }
-    : !autoRemindersEnabled
-      ? { tone: "amber", text: t("ავტომატური შეხსენებები გამორთულია", "Automatic reminders are off") }
-      : !emailDeliveryConfigured
-        ? { tone: "amber", text: t("ელფოსტით შეხსენებები ჯერ არ მუშაობს", "Email reminders are not set up yet") }
-        : { tone: "emerald", text: t("ავტომატური შეხსენებები ჩართულია", "Automatic reminders are on") };
+  const testModeNote = dryRunMode ? t("სატესტო რეჟიმი: SMS კლიენტებს არ ეგზავნებათ", "Test mode: SMS are not sent to clients") : null;
 
   return (
     <div className="min-h-screen flex bg-ivory text-stone-900">
@@ -162,9 +152,7 @@ export default function AppShell({
           <div className="px-3 py-1">
             <div className="text-sm font-semibold text-stone-900 truncate">{staffName}</div>
             <div className="text-xs text-stone-500 truncate">{staffEmail}</div>
-            <p className={`mt-1.5 text-xs font-medium ${reminderStatus.tone === "emerald" ? "text-emerald-700" : "text-amber-700"}`}>
-              {reminderStatus.text}
-            </p>
+            {testModeNote && <p className="mt-1.5 text-xs font-medium text-amber-700">{testModeNote}</p>}
           </div>
           {isPlatformOwner && (
             <Link href="/platform" className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-stone-600 hover:bg-white">
@@ -210,9 +198,7 @@ export default function AppShell({
         {/* Mobile menu: things that do not fit in the bottom bar */}
         {mobileMenuOpen && (
           <div id="mobile-dashboard-menu" className="lg:hidden bg-white border-b border-stone-200 px-4 py-3 shadow-lg space-y-1">
-            <p className={`px-4 pb-2 text-xs font-medium ${reminderStatus.tone === "emerald" ? "text-emerald-700" : "text-amber-700"}`}>
-              {reminderStatus.text}
-            </p>
+            {testModeNote && <p className="px-4 pb-2 text-xs font-medium text-amber-700">{testModeNote}</p>}
             <a
               href={bookingUrl}
               target="_blank"

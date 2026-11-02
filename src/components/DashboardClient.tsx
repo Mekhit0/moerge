@@ -137,9 +137,9 @@ export default function DashboardClient({
         icon={<Wallet className="h-5 w-5" />}
       />}
       {canManage ? <StatCard
-        label={t("შეხსენებები", "Reminders")}
+        label={t("დაგეგმილი SMS", "Scheduled SMS")}
         value={String(scheduledReminders)}
-        hint={t("გაიგზავნება თავად", "Sent automatically")}
+        hint={t("შეხსენებები კლიენტებს", "Reminders to clients")}
         icon={<Bell className="h-5 w-5" />}
       /> : <StatCard
         label={t("დასრულებული", "Done")}

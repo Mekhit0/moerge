@@ -107,7 +107,8 @@ export async function POST(request: NextRequest) {
       email_body_template: parsed.data.email_body_template,
       booking_url: autoBookingUrl,
       brand_color: parsed.data.brand_color,
-      auto_reminders_enabled: parsed.data.auto_reminders_enabled,
+      // Client emails are switched off; these stay off whatever an older page sends.
+      auto_reminders_enabled: false,
       dry_run_mode: parsed.data.dry_run_mode,
       test_recipient_email: parsed.data.test_recipient_email,
       booking_title: parsed.data.booking_title,
@@ -121,8 +122,7 @@ export async function POST(request: NextRequest) {
       deposit_required: parsed.data.deposit_required,
       deposit_amount_gel: parsed.data.deposit_required ? parsed.data.deposit_amount_gel : null,
       deposit_percentage: parsed.data.deposit_required ? parsed.data.deposit_percentage : null,
-      send_booking_confirmation_email:
-        parsed.data.send_booking_confirmation_email ?? true,
+      send_booking_confirmation_email: false,
       // Only what the form sent; an older page without these switches leaves them as they are.
       ...(parsed.data.sms_reminder_24h !== undefined && { sms_reminder_24h: parsed.data.sms_reminder_24h }),
       ...(parsed.data.sms_reminder_2h !== undefined && { sms_reminder_2h: parsed.data.sms_reminder_2h }),

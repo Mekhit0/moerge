@@ -206,7 +206,7 @@ export const getAuthenticatedSalonContext = cache(async function getAuthenticate
         email_body_template: "",
         booking_url: autoBookingUrl,
         brand_color: "#e11d48",
-        auto_reminders_enabled: true,
+        auto_reminders_enabled: false,
         dry_run_mode: false,
         test_recipient_email: null,
         created_at: new Date().toISOString(),
