@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, ExternalLink, Mail, Send } from "lucide-react";
 import { GEORGIAN_DEFAULT_EMAIL_BODY, GEORGIAN_DEFAULT_EMAIL_SUBJECT, useLanguage } from "@/lib/i18n";
+import { SMS_LIVE } from "@/lib/pricing";
 import { DEFAULT_EMAIL_BODY_TEMPLATE, DEFAULT_EMAIL_SUBJECT, type SalonSettings } from "@/lib/types";
 import { renderReminderEmail } from "@/lib/email-template";
 import { isPlaceholderReplyEmail, isValidEmailAddress } from "@/lib/validation";
@@ -31,6 +32,9 @@ interface Form {
   auto_reminders_enabled: boolean;
   reminder_interval_days: number;
   send_booking_confirmation_email: boolean;
+  sms_reminder_24h: boolean;
+  sms_reminder_2h: boolean;
+  sms_booking_confirmation: boolean;
   sender_display_name: string;
   verified_sender_email: string;
   email_subject: string;
@@ -55,6 +59,9 @@ function fromSettings(settings: SalonSettings & { salon_slug?: string }): Form {
     auto_reminders_enabled: settings.auto_reminders_enabled ?? true,
     reminder_interval_days: settings.reminder_interval_days ?? 21,
     send_booking_confirmation_email: settings.send_booking_confirmation_email ?? true,
+    sms_reminder_24h: settings.sms_reminder_24h ?? true,
+    sms_reminder_2h: settings.sms_reminder_2h ?? false,
+    sms_booking_confirmation: settings.sms_booking_confirmation ?? false,
     sender_display_name: settings.sender_display_name ?? settings.salon_name ?? "",
     verified_sender_email: isPlaceholderReplyEmail(settings.verified_sender_email) ? "" : settings.verified_sender_email ?? "",
     email_subject: settings.email_subject || GEORGIAN_DEFAULT_EMAIL_SUBJECT,
@@ -79,8 +86,10 @@ const FIELD_LABELS: Record<string, { ka: string; en: string }> = {
  * Salon settings on one calm page: the salon, online booking, email reminders and a closed
  * "Advanced" part. Nothing saves until "Save"; the save bar only shows when something changed.
  */
-export default function SalonSettingsForm({ initial, emailConfigured, deposit, children }: {
+export default function SalonSettingsForm({ initial, sms, emailConfigured, deposit, children }: {
   initial: SalonSettings & { salon_slug?: string };
+  /** This month's SMS: what is left of the package's SMS, the package size and bought SMS. */
+  sms: { includedLeft: number; included: number; bought: number };
   emailConfigured: boolean;
   /** Kept as stored: deposits are not offered in the app yet. */
   deposit: { deposit_required: boolean; deposit_amount_gel: number | null; deposit_percentage: number | null };
@@ -274,6 +283,34 @@ export default function SalonSettingsForm({ initial, emailConfigured, deposit, c
             <Field label={t("გვერდის სათაური", "Page heading")}>{(props) => <Input {...props} value={form.booking_title} onChange={(event) => set("booking_title", event.target.value)} maxLength={200} />}</Field>
             <Field label={t("მოკლე ტექსტი კლიენტებისთვის", "Short text for clients")}>{(props) => <Textarea {...props} value={form.booking_subtitle} onChange={(event) => set("booking_subtitle", event.target.value)} maxLength={500} className="min-h-20" />}</Field>
           </div>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title={t("SMS შეხსენებები", "SMS reminders")} description={t("კლიენტი იღებს მოკლე SMS-ს ჯავშნის კოდით. ერთი SMS ჩვეულებრივ ერთი შეტყობინებაა.", "Clients get a short SMS with the booking code. One message is usually one SMS.")} />
+        {!SMS_LIVE && <Alert tone="info" className="mb-4">{t("SMS შეხსენებებს ახლა ვრთავთ. არჩევანი შეინახება და ჩაირთვება მზადყოფნისას.", "We're switching SMS reminders on now. Your choices are saved and start working once ready.")}</Alert>}
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-md">
+          <div className="rounded-xl border border-stone-200 bg-white p-3">
+            <p className="text-xs text-stone-500">{t("ამ თვეში დარჩა", "Left this month")}</p>
+            <p className="mt-0.5 text-lg font-bold tabular-nums text-stone-900">{sms.includedLeft}<span className="text-sm font-normal text-stone-400"> / {sms.included}</span></p>
+          </div>
+          <div className="rounded-xl border border-stone-200 bg-white p-3">
+            <p className="text-xs text-stone-500">{t("ნაყიდი SMS", "Bought SMS")}</p>
+            <p className="mt-0.5 text-lg font-bold tabular-nums text-stone-900">{sms.bought}</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {([
+            ["sms_reminder_24h", t("ვიზიტამდე ერთი დღით ადრე", "A day before the visit"), t("ყველაზე სასარგებლო: კლიენტს ახსოვს და დროულად მოდის.", "The most useful one: clients remember and come on time.")],
+            ["sms_reminder_2h", t("ვიზიტამდე ორი საათით ადრე", "Two hours before the visit"), t("მეორე შეხსენება იმავე დღეს. დამატებითი SMS.", "A second reminder on the day. One more SMS.")],
+            ["sms_booking_confirmation", t("დადასტურება ჯავშნისას", "Confirmation when booking"), t("SMS ჯავშნის კოდით, ჩაწერისთანავე.", "An SMS with the booking code right after booking.")],
+          ] as const).map(([key, title, hint]) => (
+            <label key={key} className="flex min-h-11 items-center justify-between gap-4">
+              <span><span className="block font-semibold text-stone-900">{title}</span><span className="text-sm text-stone-500">{hint}</span></span>
+              <input type="checkbox" role="switch" className="h-6 w-6 shrink-0 accent-rose-600" checked={form[key]} onChange={(event) => set(key, event.target.checked)} />
+            </label>
+          ))}
+          <p className="text-sm text-stone-500">{t("SMS მიდის მხოლოდ იმ კლიენტებთან, ვინც ჯავშნისას SMS შეხსენება აირჩია.", "SMS only go to clients who chose SMS reminders when booking.")}</p>
         </div>
       </Card>
 

@@ -27,7 +27,7 @@ function localMessage(message: string, lang: "ka" | "en") {
 
 const EMPTY: ClientFormValue = {
   full_name: "", phone: "", email: "", birthday: null, preferred_staff_id: null, notes: "",
-  sms_consent: false, email_consent: false, preferred_language: "ka",
+  sms_consent: true, email_consent: false, preferred_language: "ka",
 };
 
 /**

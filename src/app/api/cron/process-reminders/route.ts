@@ -10,6 +10,7 @@ import {
 } from "@/lib/notifications";
 import { logAppError } from "@/lib/error-log";
 import { sendErrorDigest } from "@/lib/error-alert";
+import { UBILL_LOW_BALANCE, ubillBalance } from "@/lib/sms";
 
 // Vercel's free plan allows up to 60 seconds; stop claiming new work well before that.
 export const maxDuration = 60;
@@ -88,6 +89,12 @@ async function processQueue(request: NextRequest) {
   }
   if (unrecorded > 0) {
     await logAppError({ source: "cron", message: `${unrecorded} message results could not be saved`, path: "/api/cron/process-reminders" });
+  }
+  // Once a day: a low uBill balance goes into the error log, so the owner gets the hourly alert email.
+  if (!frequentRun && process.env.UBILL_API_KEY) {
+    const left = await ubillBalance().catch(() => null);
+    if (left === null) await logAppError({ source: "cron", message: "Could not read the uBill SMS balance", path: "/api/cron/process-reminders" });
+    else if (left < UBILL_LOW_BALANCE) await logAppError({ source: "cron", message: `uBill SMS balance is low: ${left} SMS left. Top up at my.ubill.ge`, path: "/api/cron/process-reminders" });
   }
   // Errors from the whole app: at most one email an hour to the platform owner.
   const alerted = await sendErrorDigest(supabase).catch(() => 0);

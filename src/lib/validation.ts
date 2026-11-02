@@ -306,6 +306,9 @@ export const salonSettingsSchema = z
     deposit_amount_gel: z.coerce.number().positive().max(10000).optional().nullable(),
     deposit_percentage: z.coerce.number().int().min(1).max(100).optional().nullable(),
     send_booking_confirmation_email: z.boolean().optional().default(true),
+    sms_reminder_24h: z.boolean().optional(),
+    sms_reminder_2h: z.boolean().optional(),
+    sms_booking_confirmation: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     const hasFixed = data.deposit_amount_gel !== undefined && data.deposit_amount_gel !== null;

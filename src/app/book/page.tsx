@@ -111,7 +111,7 @@ function PublicBookingFormContent() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [emailConsent, setEmailConsent] = useState(false);
-  const [smsConsent, setSmsConsent] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(true);
   const [websiteTrap, setWebsiteTrap] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // Turnstile tokens are single-use; bumping the key renders a fresh check after each attempt.

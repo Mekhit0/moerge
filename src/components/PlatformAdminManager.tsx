@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AlertTriangle, ArrowLeft, Bug, CheckCircle2, Mail, MessageSquare, RotateCcw, Store } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
+import { UBILL_LOW_BALANCE } from "@/lib/sms";
 import { formatShortDate } from "@/lib/dates";
 import MoargeLogo from "@/components/MoargeLogo";
 import { Alert, Badge, Button, Card, CardHeader, Chip, ChipRow, EmptyState, Skeleton, StatCard, Tabs, cn, useToast } from "@/components/ui";
@@ -12,7 +13,7 @@ import { Alert, Badge, Button, Card, CardHeader, Chip, ChipRow, EmptyState, Skel
 type Tab = "overview" | "salons" | "feedback" | "errors" | "messages";
 type Salon = { salon_id: string; salon_name: string; slug: string; created_at: string; subscription_status: string | null; plan_code: string | null; trial_ends_at: string | null; active_staff: number; active_branches: number; bookings_period: number; sms_messages_period: number; sms_cost_gel: number };
 type Feedback = { id: string; salon_name: string | null; author: string | null; author_email: string | null; body: string; page_path: string; created_at: string; resolved_at: string | null };
-type Summary = { salons: number; trialing: number; trials_ending: number; bookings_30d: number; open_feedback: number; errors_24h: number; messages_sent_24h: number; messages_failed_24h: number };
+type Summary = { salons: number; trialing: number; trials_ending: number; bookings_30d: number; open_feedback: number; errors_24h: number; messages_sent_24h: number; messages_failed_24h: number; ubill_sms: number | null };
 type ErrorGroup = { key: string; source: string; message: string; path: string | null; count: number; first_seen: string; last_seen: string; resolved: boolean; ids: string[]; salons: number };
 type Problem = { id: string; salon_name: string | null; message_type: string; channel: string; status: string; attempt_count: number; error: string; created_at: string };
 
@@ -107,12 +108,14 @@ export default function PlatformAdminManager() {
               <CardHeader title={t("ყურადღება", "Needs attention")} />
               <ul className="space-y-2 text-sm">
                 {summary.trials_ending > 0 && <li className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-600" />{t(`${summary.trials_ending} სალონს საცდელი ვადა 7 დღეში უმთავრდება.`, `${summary.trials_ending} salons end their trial within 7 days.`)}</li>}
+                {summary.ubill_sms !== null && summary.ubill_sms < UBILL_LOW_BALANCE && <li className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-600" />{t(`uBill-ზე ${summary.ubill_sms} SMS დარჩა. შეავსეთ ბალანსი, თორემ შეხსენებები გაჩერდება.`, `${summary.ubill_sms} SMS left on uBill. Top up, or reminders will stop.`)}</li>}
                 {summary.messages_failed_24h > 0 && <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-red-600" />{t(`${summary.messages_failed_24h} შეტყობინება ვერ გაიგზავნა 24 სთ-ში.`, `${summary.messages_failed_24h} messages failed in 24 hours.`)}</li>}
                 {summary.errors_24h > 0 && <li className="flex items-center gap-2"><Bug className="h-4 w-4 text-red-600" />{t(`${summary.errors_24h} შეცდომა 24 სთ-ში.`, `${summary.errors_24h} errors in 24 hours.`)}</li>}
                 {summary.open_feedback > 0 && <li className="flex items-center gap-2"><MessageSquare className="h-4 w-4 text-brand" />{t(`${summary.open_feedback} ახალი უკუკავშირი.`, `${summary.open_feedback} new feedback.`)}</li>}
-                {!summary.trials_ending && !summary.messages_failed_24h && !summary.errors_24h && !summary.open_feedback && <li className="flex items-center gap-2 text-emerald-700"><CheckCircle2 className="h-4 w-4" />{t("ყველაფერი რიგზეა.", "All good.")}</li>}
+                {!summary.trials_ending && !summary.messages_failed_24h && !summary.errors_24h && !summary.open_feedback && !(summary.ubill_sms !== null && summary.ubill_sms < UBILL_LOW_BALANCE) && <li className="flex items-center gap-2 text-emerald-700"><CheckCircle2 className="h-4 w-4" />{t("ყველაფერი რიგზეა.", "All good.")}</li>}
               </ul>
               <p className="mt-4 text-xs text-stone-500">{t(`გაგზავნილი შეტყობინებები 24 სთ-ში: ${summary.messages_sent_24h}`, `Messages sent in 24 hours: ${summary.messages_sent_24h}`)}</p>
+              <p className="mt-1 text-xs text-stone-500">{summary.ubill_sms === null ? t("uBill-ის ნაშთი: უცნობია (გასაღები არ არის ან uBill არ პასუხობს)", "uBill balance: unknown (no key, or uBill did not answer)") : t(`uBill-ის ნაშთი: ${summary.ubill_sms} SMS`, `uBill balance: ${summary.ubill_sms} SMS`)}</p>
             </Card>
           </div>
         ) : !loadError && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[0, 1, 2, 3].map((index) => <Skeleton key={index} className="h-28" />)}</div>)}

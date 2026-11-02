@@ -13,7 +13,8 @@ describe("Phase 4 billing configuration and provider boundary", () => {
     expect(BILLING_CONFIG.extraStaffMonthlyGel).toBe(9);
     expect(BILLING_CONFIG.prepaidDiscounts).toEqual({ 3: 5, 6: 10, 12: 15 });
     expect(BILLING_CONFIG.smsOveragePriceGel).toBe(0.05);
-    expect(BILLING_CONFIG.smsPackPriceGel).toBe(0.03);
+    expect(BILLING_CONFIG.smsPackPriceGel).toBe(0.02);
+    expect(BILLING_CONFIG.smsPackMinimum).toBe(1000);
     expect(BILLING_CONFIG.smsProviderCostGel).toBe(0.01);
   });
 

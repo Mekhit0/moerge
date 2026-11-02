@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requirePlatformOwner } from "@/lib/platform";
+import { ubillBalance } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +11,14 @@ export async function GET() {
   const { db } = owner;
   const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
 
-  const [overview, feedback, openErrors, failedMessages, sentMessages] = await Promise.all([
+  const [overview, feedback, openErrors, failedMessages, sentMessages, ubillSms] = await Promise.all([
     db.rpc("platform_salon_overview", { p_limit: 200, p_offset: 0, p_since: new Date(Date.now() - 30 * 86_400_000).toISOString() }),
     db.from("dashboard_feedback").select("id,salon_id,submitted_by,body,page_path,created_at,resolved_at").order("created_at", { ascending: false }).limit(200),
     db.from("app_errors").select("id", { count: "exact", head: true }).is("resolved_at", null).gte("created_at", dayAgo),
     db.from("notification_log").select("id", { count: "exact", head: true }).eq("status", "failed").gte("created_at", dayAgo),
-    db.from("notification_log").select("id", { count: "exact", head: true }).eq("status", "sent").gte("created_at", dayAgo),
+    db.from("notification_log").select("id", { count: "exact", head: true }).in("status", ["sent", "delivered"]).gte("created_at", dayAgo),
+    // SMS left on the moarge uBill account; null until the key is set or when uBill does not answer.
+    process.env.UBILL_API_KEY ? ubillBalance().catch(() => null) : Promise.resolve(null),
   ]);
   if (overview.error || feedback.error) return NextResponse.json({ error: "Could not load platform data." }, { status: 500 });
 
@@ -42,6 +45,7 @@ export async function GET() {
       errors_24h: openErrors.count ?? 0,
       messages_sent_24h: sentMessages.count ?? 0,
       messages_failed_24h: failedMessages.count ?? 0,
+      ubill_sms: ubillSms,
     },
     salons: overview.data ?? [],
     feedback: rows.map((row) => ({

@@ -7,7 +7,7 @@ export type ErrorSource = "server" | "client" | "cron";
 export function cleanErrorText(text: string, max: number): string {
   return text
     .replace(/\b(eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{5,}|re_[A-Za-z0-9_]{10,}|sk_[A-Za-z0-9_]{10,}|whsec_[A-Za-z0-9]{10,})\b/g, "[redacted]")
-    .replace(/(token|secret|password|apikey|api_key)=([^&\s]+)/gi, "$1=[redacted]")
+    .replace(/(token|secret|password|apikey|api_key|key)=([^&\s]+)/gi, "$1=[redacted]")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, max) || "Unknown error";

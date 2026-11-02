@@ -123,6 +123,10 @@ export async function POST(request: NextRequest) {
       deposit_percentage: parsed.data.deposit_required ? parsed.data.deposit_percentage : null,
       send_booking_confirmation_email:
         parsed.data.send_booking_confirmation_email ?? true,
+      // Only what the form sent; an older page without these switches leaves them as they are.
+      ...(parsed.data.sms_reminder_24h !== undefined && { sms_reminder_24h: parsed.data.sms_reminder_24h }),
+      ...(parsed.data.sms_reminder_2h !== undefined && { sms_reminder_2h: parsed.data.sms_reminder_2h }),
+      ...(parsed.data.sms_booking_confirmation !== undefined && { sms_booking_confirmation: parsed.data.sms_booking_confirmation }),
     })
     .eq("salon_id", ctx.salonId)
     .select(SAFE_SALON_SETTINGS_SELECT)

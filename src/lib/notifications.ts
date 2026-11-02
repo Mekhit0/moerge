@@ -1,5 +1,5 @@
 import { calculateRetryPlan, classifyEmailError } from "./scheduling";
-import { BILLING_CONFIG } from "./billing-plans";
+import { SMS_PROVIDER_COST_GEL, sendUbillSms, smsParts } from "./sms";
 import { createResendTransport, platformSender, type EmailTransport } from "./reminder-worker";
 
 export type NotificationChannel = "sms" | "email";
@@ -32,6 +32,8 @@ export interface NotificationJob {
   client_allowed: boolean;
   client_archived: boolean;
   dry_run_mode: boolean;
+  /** Billed SMS parts, set by the queue for SMS. */
+  sms_parts?: number | null;
 }
 
 export interface NotificationProvider {
@@ -101,39 +103,17 @@ export function createEmailNotificationProvider(
   };
 }
 
+/** SMS through uBill. Cost is what uBill charges: one price per SMS part. */
 export function createUbilSmsProvider(options: {
   apiKey?: string;
   brandId?: string;
   fetcher?: typeof fetch;
 } = {}): NotificationProvider {
-  const apiKey = (options.apiKey ?? process.env.UBILL_API_KEY)?.trim();
-  const brandId = (options.brandId ?? process.env.UBILL_BRAND_ID)?.trim();
-  const fetcher = options.fetcher ?? fetch;
   return {
     async send(job) {
-      if (!apiKey || !brandId || !/^\d+$/.test(brandId)) {
-        const error = new Error("UBILL_API_KEY and UBILL_BRAND_ID must be configured.") as Error & { statusCode: number };
-        error.statusCode = 503;
-        throw error;
-      }
-      const number = job.recipient.replace(/\D/g, "");
-      const response = await fetcher("https://api.ubill.dev/v1/sms/send", {
-        method: "POST",
-        headers: { key: apiKey, "Content-Type": "application/json" },
-        body: JSON.stringify({ brandID: Number(brandId), numbers: [number], text: job.body }),
-      });
-      const payload = await response.json().catch(() => ({})) as {
-        statusID?: number;
-        smsID?: string | number;
-        message?: string;
-      };
-      if (!response.ok || payload.statusID !== 0 || payload.smsID == null) {
-        const statusCode = response.status === 429 || response.status >= 500 ? response.status : 422;
-        const error = new Error(payload.message || `uBill rejected SMS (status ${payload.statusID ?? response.status}).`) as Error & { statusCode: number };
-        error.statusCode = statusCode;
-        throw error;
-      }
-      return { id: String(payload.smsID), cost: BILLING_CONFIG.smsProviderCostGel };
+      const result = await sendUbillSms({ number: job.recipient, text: job.body }, options);
+      const parts = job.sms_parts ?? smsParts(job.body);
+      return { id: result.id, cost: Math.round(parts * SMS_PROVIDER_COST_GEL * 10000) / 10000 };
     },
   };
 }

@@ -105,6 +105,9 @@ export interface SalonSettings {
   booking_cancel_deadline_hours?: number;
   custom_services?: CustomBookingService[];
   send_booking_confirmation_email?: boolean;
+  sms_reminder_24h?: boolean;
+  sms_reminder_2h?: boolean;
+  sms_booking_confirmation?: boolean;
   onboarding_completed_at?: string | null;
   admins_see_earnings?: boolean;
   deposit_required?: boolean;
