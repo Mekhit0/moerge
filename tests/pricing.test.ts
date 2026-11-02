@@ -27,8 +27,8 @@ describe("public prices", () => {
   });
 
   it("switch from the free November to the 7-day trial at midnight Tbilisi time", () => {
-    expect(currentOffer(new Date("2026-11-30T19:59:59Z"))).toMatchObject({ pilot: true, trialDays: 30, earlyBird: true });
-    expect(currentOffer(new Date("2026-11-30T20:00:00Z"))).toMatchObject({ pilot: false, trialDays: 7, earlyBird: true });
+    expect(currentOffer(new Date("2026-11-30T19:59:59Z"))).toMatchObject({ pilot: true, trialDays: 30, earlyBird: true, smsLive: false });
+    expect(currentOffer(new Date("2026-11-30T20:00:00Z"))).toMatchObject({ pilot: false, trialDays: 7, earlyBird: true, smsLive: true });
     expect(currentOffer(new Date("2026-12-31T20:00:00Z"))).toMatchObject({ pilot: false, earlyBird: false });
   });
 

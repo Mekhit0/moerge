@@ -11,16 +11,16 @@ export const PRICING_STARTS_AT = new Date("2026-12-01T00:00:00+04:00");
 export const PILOT_TRIAL_DAYS = 30;
 export const TRIAL_DAYS = 7;
 
-/** SMS reminders are being connected. Flip this once they really go out, and the "soon" labels go. */
-export const SMS_LIVE = false;
-
 /** The December early-bird offer is shown until the end of December. */
 export const EARLY_BIRD_ENDS_AT = new Date("2027-01-01T00:00:00+04:00");
 
-/** Before 1 December new salons get the free test month; from then on, a 7-day trial. */
+/**
+ * Before 1 December new salons get the free test month; from then on, a 7-day trial.
+ * SMS reminders start with the paid packages on 1 December; nobody can send SMS before that.
+ */
 export function currentOffer(now: Date = new Date()) {
   const pilot = now.getTime() < PRICING_STARTS_AT.getTime();
-  return { pilot, trialDays: pilot ? PILOT_TRIAL_DAYS : TRIAL_DAYS, earlyBird: now.getTime() < EARLY_BIRD_ENDS_AT.getTime() };
+  return { pilot, trialDays: pilot ? PILOT_TRIAL_DAYS : TRIAL_DAYS, earlyBird: now.getTime() < EARLY_BIRD_ENDS_AT.getTime(), smsLive: !pilot };
 }
 export type Offer = ReturnType<typeof currentOffer>;
 

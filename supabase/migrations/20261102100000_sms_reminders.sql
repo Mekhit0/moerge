@@ -203,7 +203,7 @@ BEGIN
    WHERE status='processing' AND locked_at<now()-interval '15 minutes';
 
   FOR r IN
-    SELECT n.id, n.channel FROM public.notification_log n JOIN public.salons s ON s.id=n.salon_id
+    SELECT n.id, n.channel, s.subscription_status FROM public.notification_log n JOIN public.salons s ON s.id=n.salon_id
     LEFT JOIN public.subscriptions sub ON sub.salon_id=s.id
     WHERE n.status IN ('pending','retry') AND n.scheduled_at<=now() AND (n.next_attempt_at IS NULL OR n.next_attempt_at<=now())
       AND ((s.subscription_status='active') OR (s.subscription_status='trialing' AND s.trial_ends_at>now()) OR
@@ -213,7 +213,10 @@ BEGIN
     FOR UPDATE OF n SKIP LOCKED
   LOOP
     IF r.channel='sms' AND NOT public.reserve_sms_notification(r.id) THEN
-      UPDATE public.notification_log SET status='suppressed', error='No SMS left', updated_at=now() WHERE id=r.id;
+      -- SMS come with paid packages; a trial has none.
+      UPDATE public.notification_log
+      SET status='suppressed', error=CASE WHEN r.subscription_status='trialing' THEN 'SMS starts with a paid plan' ELSE 'No SMS left' END, updated_at=now()
+      WHERE id=r.id;
     ELSE
       UPDATE public.notification_log SET status='processing', attempt_count=attempt_count+1, locked_at=now(), updated_at=now() WHERE id=r.id;
       v_ids := v_ids || r.id;

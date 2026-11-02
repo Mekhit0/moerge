@@ -1,10 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, ExternalLink, Mail, Send } from "lucide-react";
 import { GEORGIAN_DEFAULT_EMAIL_BODY, GEORGIAN_DEFAULT_EMAIL_SUBJECT, useLanguage } from "@/lib/i18n";
-import { SMS_LIVE } from "@/lib/pricing";
 import { DEFAULT_EMAIL_BODY_TEMPLATE, DEFAULT_EMAIL_SUBJECT, type SalonSettings } from "@/lib/types";
 import { renderReminderEmail } from "@/lib/email-template";
 import { isPlaceholderReplyEmail, isValidEmailAddress } from "@/lib/validation";
@@ -88,8 +88,8 @@ const FIELD_LABELS: Record<string, { ka: string; en: string }> = {
  */
 export default function SalonSettingsForm({ initial, sms, emailConfigured, deposit, children }: {
   initial: SalonSettings & { salon_slug?: string };
-  /** This month's SMS: what is left of the package's SMS, the package size and bought SMS. */
-  sms: { includedLeft: number; included: number; bought: number };
+  /** This month's SMS: what is left of the package's SMS, the package size and bought SMS. smsLive is false before 1 December. */
+  sms: { includedLeft: number; included: number; bought: number; smsLive: boolean };
   emailConfigured: boolean;
   /** Kept as stored: deposits are not offered in the app yet. */
   deposit: { deposit_required: boolean; deposit_amount_gel: number | null; deposit_percentage: number | null };
@@ -288,7 +288,9 @@ export default function SalonSettingsForm({ initial, sms, emailConfigured, depos
 
       <Card>
         <CardHeader title={t("SMS შეხსენებები", "SMS reminders")} description={t("კლიენტი იღებს მოკლე SMS-ს ჯავშნის კოდით. ერთი SMS ჩვეულებრივ ერთი შეტყობინებაა.", "Clients get a short SMS with the booking code. One message is usually one SMS.")} />
-        {!SMS_LIVE && <Alert tone="info" className="mb-4">{t("SMS შეხსენებებს ახლა ვრთავთ. არჩევანი შეინახება და ჩაირთვება მზადყოფნისას.", "We're switching SMS reminders on now. Your choices are saved and start working once ready.")}</Alert>}
+        {!sms.smsLive
+          ? <Alert tone="info" className="mb-4">{t("SMS შეხსენებები ირთვება 1 დეკემბრიდან, ფასიან პაკეტებზე. ბიზნესში თვეში 1 000 SMS შედის. არჩევანი შეინახება.", "SMS reminders start on 1 December, on paid plans. Business includes 1,000 SMS a month. Your choices are saved.")}{" "}<Link href="/pricing" className="font-semibold underline">{t("ფასები", "Prices")}</Link></Alert>
+          : sms.included === 0 && sms.bought === 0 && <Alert tone="info" className="mb-4">{t("SMS შეხსენებები ფასიან პაკეტშია. ბიზნესში თვეში 1 000 SMS შედის.", "SMS reminders come with paid plans. Business includes 1,000 SMS a month.")}{" "}<Link href="/pricing" className="font-semibold underline">{t("ფასები", "Prices")}</Link></Alert>}
         <div className="mb-5 grid grid-cols-2 gap-3 sm:max-w-md">
           <div className="rounded-xl border border-stone-200 bg-white p-3">
             <p className="text-xs text-stone-500">{t("ამ თვეში დარჩა", "Left this month")}</p>

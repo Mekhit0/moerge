@@ -8,7 +8,7 @@ import { SUPPORT_EMAIL } from "@/lib/contact";
 import { cn } from "@/components/ui";
 import { MarketingFooter, MarketingHeader, SIGNUP_HREF } from "./MarketingChrome";
 import {
-  BILLING_PERIODS, EARLY_BIRD, PACKAGES, SMS_LIVE, SMS_PACK, SMS_PACK_PRICE_GEL,
+  BILLING_PERIODS, EARLY_BIRD, PACKAGES, SMS_PACK, SMS_PACK_PRICE_GEL,
   formatGel, packagePrice, type BillingMonths, type Offer, type PricePackage,
 } from "@/lib/pricing";
 import { pricingFaq } from "@/lib/pricing-faq";
@@ -22,7 +22,7 @@ export default function PricingView({ offer }: { offer: Offer }) {
   const faqs = pricingFaq(offer);
 
   function lines(pkg: PricePackage): Line[] {
-    const smsSoon = !SMS_LIVE;
+    const smsSoon = !offer.smsLive;
     const common: Line[] = [
       { text: t("ონლაინ ჯავშნის ბმული და QR კოდი", "Booking link and QR code"), included: true },
       { text: t("კალენდარი, შესვენებები, დასვენება", "Calendar, breaks, time off"), included: true },
@@ -136,7 +136,7 @@ export default function PricingView({ offer }: { offer: Offer }) {
                           {line.included ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> : <Minus className="mt-0.5 h-4 w-4 shrink-0" />}
                           <span>
                             {line.text}
-                            {line.soon && <span className="ml-1.5 rounded bg-stone-100 px-1.5 py-0.5 text-[11px] font-semibold text-stone-600">{t("მალე", "soon")}</span>}
+                            {line.soon && <span className="ml-1.5 rounded bg-stone-100 px-1.5 py-0.5 text-[11px] font-semibold text-stone-600">{t("1 დეკემბრიდან", "from 1 December")}</span>}
                           </span>
                         </li>
                       ))}
@@ -159,7 +159,7 @@ export default function PricingView({ offer }: { offer: Offer }) {
                   "Clients actually read an SMS reminder. If your package's SMS aren't enough, or you're on Solo, add as many as you need."
                 )}
               </p>
-              {!SMS_LIVE && <p className="mt-3 text-sm text-stone-500">{t("SMS შეხსენებებს ახლა ვრთავთ.", "We're switching SMS reminders on now.")}</p>}
+              {!offer.smsLive && <p className="mt-3 text-sm text-stone-500">{t("SMS შეხსენებები ირთვება 1 დეკემბრიდან, ფასიან პაკეტებზე.", "SMS reminders start on 1 December, on paid plans.")}</p>}
             </div>
             <div className="rounded-2xl border border-stone-200 bg-ivory p-6">
               <p className="flex items-baseline gap-2">

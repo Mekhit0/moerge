@@ -127,3 +127,23 @@ describe.skipIf(!canRun)("SMS reminders: queue, quota and delivery (integration)
     }
   });
 });
+
+describe.skipIf(!canRun)("SMS on a trial (integration)", { timeout: 60000 }, () => {
+  it("skips SMS for a salon on trial and says why", async () => {
+    const db = createClient(url!, serviceKey!, { auth: { persistSession: false, autoRefreshToken: false } });
+    const run = crypto.randomUUID().slice(0, 8);
+    const { data: salon } = await db.from("salons").insert({ name: "Trial SMS", slug: `sms-trial-${run}`, subscription_tier: "starter", subscription_status: "trialing", trial_ends_at: new Date(Date.now() + 7 * 86_400_000).toISOString() }).select("id").single();
+    try {
+      await db.from("salon_settings").insert({ salon_id: salon!.id, salon_name: "Trial", sender_display_name: "moarge", verified_sender_email: "trial@example.test", sms_booking_confirmation: true });
+      const { data: staff } = await db.from("staff").insert({ salon_id: salon!.id, full_name: "Ana", sort_order: 1 }).select("id").single();
+      const { data: client } = await db.from("clients").insert({ salon_id: salon!.id, full_name: "ნინო", phone: "+995555900002", sms_consent: true }, { defaultToNull: false }).select("id").single();
+      const day = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+      const { data: visit } = await db.from("appointments").insert({ salon_id: salon!.id, client_id: client!.id, staff_id: staff!.id, treatment_date: day, treatment_time: "12:00", treatment_type: "Test", starts_at: `${day}T12:00:00+04:00`, ends_at: `${day}T12:30:00+04:00`, status: "scheduled", price_gel: 40, duration_minutes: 30 }).select("id").single();
+      await db.rpc("claim_due_notifications", { p_limit: 100 });
+      const { data: row } = await db.from("notification_log").select("status,error").eq("appointment_id", visit!.id).eq("channel", "sms").eq("message_type", "booking_confirmation").single();
+      expect(row).toEqual({ status: "suppressed", error: "SMS starts with a paid plan" });
+    } finally {
+      await db.from("salons").delete().eq("id", salon!.id);
+    }
+  });
+});

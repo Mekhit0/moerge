@@ -1,4 +1,4 @@
-import { EARLY_BIRD, PACKAGES, PILOT_TRIAL_DAYS, SMS_LIVE, SMS_PACK, SMS_PACK_PRICE_GEL, TRIAL_DAYS, formatGel, type Offer } from "./pricing";
+import { EARLY_BIRD, PACKAGES, PILOT_TRIAL_DAYS, SMS_PACK, SMS_PACK_PRICE_GEL, TRIAL_DAYS, formatGel, type Offer } from "./pricing";
 
 type Text = { ka: string; en: string };
 
@@ -53,8 +53,8 @@ export function pricingFaq(offer: Offer): Array<{ q: Text; a: Text }> {
     {
       q: { ka: "რა ხდება, თუ SMS ამოიწურა?", en: "What if I run out of SMS?" },
       a: {
-        ka: `იყიდით დამატებით პაკეტს: ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾. ნაყიდი SMS არ იწვება და გადადის შემდეგ თვეში. პაკეტში შემავალი SMS ყოველთვე ახლდება.${SMS_LIVE ? "" : " SMS შეხსენებებს ახლა ვრთავთ."}`,
-        en: `Buy an extra pack: ${formatGel(SMS_PACK.minimum)} SMS for ${formatGel(SMS_PACK_PRICE_GEL)} ₾. Bought SMS never expire and carry over. The SMS in your package renew every month.${SMS_LIVE ? "" : " We're switching SMS reminders on now."}`,
+        ka: `იყიდით დამატებით პაკეტს: ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾. ნაყიდი SMS არ იწვება და გადადის შემდეგ თვეში. პაკეტში შემავალი SMS ყოველთვე ახლდება.${offer.smsLive ? "" : " SMS შეხსენებები ირთვება 1 დეკემბრიდან, ფასიან პაკეტებზე."}`,
+        en: `Buy an extra pack: ${formatGel(SMS_PACK.minimum)} SMS for ${formatGel(SMS_PACK_PRICE_GEL)} ₾. Bought SMS never expire and carry over. The SMS in your package renew every month.${offer.smsLive ? "" : " SMS reminders start on 1 December, on paid plans."}`,
       },
     },
     {

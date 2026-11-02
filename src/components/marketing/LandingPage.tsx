@@ -31,7 +31,9 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
   const features = [
     { href: "/onlain-javshani", icon: Globe, title: t("ონლაინ ჩაწერა", "Online booking"), text: t("კლიენტი ირჩევს სერვისს, სპეციალისტს და დროს. აპლიკაცია და რეგისტრაცია არ სჭირდება.", "Clients pick a service, a specialist and a time. No app, no account.") },
     { href: "/salonis-kalendari", icon: CalendarDays, title: t("კალენდარი", "Calendar"), text: t("ყველა სპეციალისტი ერთ ეკრანზე. ვიზიტს მარტივად გადაიტანთ, შესვენებას დაბლოკავთ.", "Every specialist on one screen. Move visits easily, block out breaks.") },
-    { href: "/shekhsenebebi", icon: BellRing, title: t("შეხსენებები", "Reminders"), text: t("ვიზიტამდე ერთი დღით და ორი საათით ადრე. SMS შეხსენებები ბიზნეს პაკეტში, მალე.", "A day and two hours before the visit. SMS reminders in Business, soon.") },
+    { href: "/shekhsenebebi", icon: BellRing, title: t("შეხსენებები", "Reminders"), text: offer.smsLive
+      ? t("ვიზიტამდე ერთი დღით და ორი საათით ადრე. SMS შეხსენებები ფასიან პაკეტებში.", "A day and two hours before the visit. SMS reminders on paid plans.")
+      : t("ვიზიტამდე ერთი დღით და ორი საათით ადრე. SMS შეხსენებები ფასიან პაკეტებში, 1 დეკემბრიდან.", "A day and two hours before the visit. SMS reminders on paid plans, from 1 December.") },
     { icon: RefreshCcw, title: t("გადატანა დარეკვის გარეშე", "Changes without a call"), text: t("ჯავშნის კოდით კლიენტი თავად გადაიტანს ან გააუქმებს ვიზიტს.", "With the booking code, clients move or cancel on their own.") },
     { href: "/klientebis-baza", icon: Users, title: t("კლიენტების ბაზა", "Client base"), text: t("ისტორია, ალერგიები, ფერის ფორმულები. სიები: დაბრუნების დროა, VIP, დიდი ხანია არ მოსულა.", "History, allergies, colour formulas. Lists of who is due back, VIPs and who hasn't come in a while.") },
     { icon: Wallet, title: t("ვიზიტი და გადახდა", "Visits and payments"), text: t("ნაღდი, ბარათი, ფასდაკლება და თიფი. დღის კასა თავად იკრიბება.", "Cash, card, discount and tip. The day's takings add up by themselves.") },
@@ -81,8 +83,8 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
     {
       q: t("შეხსენება SMS-ით მოდის?", "Do reminders come by SMS?"),
       a: t(
-        `SMS შეხსენებები ბიზნეს პაკეტშია, თვეში ${formatGel(business.smsIncluded)} SMS. დამატებით ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾ ღირს, ნებისმიერ პაკეტზე. SMS შეხსენებებს ახლა ვრთავთ.`,
-        `SMS reminders come with Business, ${formatGel(business.smsIncluded)} SMS a month. Extra ${formatGel(SMS_PACK.minimum)} SMS cost ${formatGel(SMS_PACK_PRICE_GEL)} ₾ on any package. We're switching SMS reminders on now.`
+        `SMS შეხსენებები ბიზნეს პაკეტშია, თვეში ${formatGel(business.smsIncluded)} SMS. დამატებით ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾ ღირს, ნებისმიერ პაკეტზე.${offer.smsLive ? "" : " SMS შეხსენებები ირთვება 1 დეკემბრიდან, ფასიან პაკეტებზე."}`,
+        `SMS reminders come with Business, ${formatGel(business.smsIncluded)} SMS a month. Extra ${formatGel(SMS_PACK.minimum)} SMS cost ${formatGel(SMS_PACK_PRICE_GEL)} ₾ on any package.${offer.smsLive ? "" : " SMS reminders start on 1 December, on paid plans."}`
       ),
     },
     {
