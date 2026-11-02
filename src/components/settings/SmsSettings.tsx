@@ -73,10 +73,23 @@ export default function SmsSettings({ initial, recallDays: initialDays, wallet, 
   const [choices, setChoices] = useState<Choices>(initial);
   const [saving, setSaving] = useState<ChoiceKey | "days" | null>(null);
   const [recallDays, setRecallDays] = useState(initialDays);
+  const [daysText, setDaysText] = useState(String(initialDays));
+
+  function commitTypedDays() {
+    const days = Number(daysText);
+    if (days === recallDays) return;
+    if (!Number.isInteger(days) || days < 7 || days > 365) {
+      toast.error(t("დღეები: 7-დან 365-მდე.", "Days: 7 to 365."));
+      setDaysText(String(recallDays));
+      return;
+    }
+    void saveDays(days);
+  }
 
   async function saveDays(days: number) {
     const before = recallDays;
     setRecallDays(days);
+    setDaysText(String(days));
     setSaving("days");
     try {
       const response = await fetch("/api/settings/sms", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sms_recall_days: days }) });
@@ -84,6 +97,7 @@ export default function SmsSettings({ initial, recallDays: initialDays, wallet, 
       toast.success(t("შენახულია.", "Saved."));
     } catch {
       setRecallDays(before);
+      setDaysText(String(before));
       toast.error(t("შენახვა ვერ მოხერხდა.", "Could not save."));
     } finally { setSaving(null); }
   }
@@ -176,7 +190,14 @@ export default function SmsSettings({ initial, recallDays: initialDays, wallet, 
         {choices.sms_recall && (
           <div className="mt-4 space-y-4">
             <div>
-              <p className="mb-2 text-sm font-semibold text-stone-700">{t("რამდენი დღის შემდეგ", "After how many days")}</p>
+              <label htmlFor="recall-days" className="mb-1.5 block text-sm font-semibold text-stone-700">{t("რამდენი დღის შემდეგ", "After how many days")}</label>
+              <div className="mb-2 flex items-center gap-2">
+                <input id="recall-days" type="number" inputMode="numeric" min={7} max={365} value={daysText} disabled={saving === "days"}
+                  onChange={(event) => setDaysText(event.target.value)} onBlur={commitTypedDays}
+                  onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); commitTypedDays(); } }}
+                  className="min-h-11 w-28 rounded-xl border border-stone-200 bg-white px-3 text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:opacity-60" />
+                <span className="text-sm text-stone-500">{t("დღე, 7-დან 365-მდე", "days, 7 to 365")}</span>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {RECALL_DAYS.map((days) => (
                   <button key={days} type="button" disabled={saving === "days"} onClick={() => void saveDays(days)} aria-pressed={recallDays === days}

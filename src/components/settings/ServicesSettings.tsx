@@ -7,11 +7,12 @@ import { Badge, Button, Card, Chip, ChipRow, EmptyState, Field, Input, Sheet, Sk
 
 type Service = { id: string; name_ka: string; price_gel: number; duration_minutes: number; recall_days: number | null; is_active: boolean; is_online_bookable: boolean; staff_ids: string[] };
 type Staff = { id: string; full_name: string; is_active: boolean };
-type Draft = { id?: string; name: string; price: string; duration: number; recallDays: number | null; online: boolean; staffIds: string[] };
+// Numbers are kept as typed text until saving, so a field can be empty while someone types.
+type Draft = { id?: string; name: string; price: string; duration: string; recallDays: string; online: boolean; staffIds: string[] };
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 180];
-const RECALL = [null, 14, 21, 30, 45, 60, 90] as const;
-const EMPTY: Draft = { name: "", price: "", duration: 60, recallDays: null, online: true, staffIds: [] };
+const RECALL = [14, 21, 30, 45, 60, 90];
+const EMPTY: Draft = { name: "", price: "", duration: "60", recallDays: "", online: true, staffIds: [] };
 
 /** Services and prices: a list to scan, a sheet to add or change one. */
 export default function ServicesSettings() {
@@ -33,7 +34,7 @@ export default function ServicesSettings() {
   const activeStaff = staff.filter((member) => member.is_active);
   const names = (ids: string[]) => staff.filter((member) => ids.includes(member.id)).map((member) => member.full_name).join(", ");
   const open = (service?: Service) => setDraft(service
-    ? { id: service.id, name: service.name_ka, price: String(service.price_gel), duration: service.duration_minutes, recallDays: service.recall_days, online: service.is_online_bookable, staffIds: service.staff_ids ?? [] }
+    ? { id: service.id, name: service.name_ka, price: String(service.price_gel), duration: String(service.duration_minutes), recallDays: service.recall_days == null ? "" : String(service.recall_days), online: service.is_online_bookable, staffIds: service.staff_ids ?? [] }
     : { ...EMPTY, staffIds: activeStaff.length === 1 ? [activeStaff[0].id] : [] });
 
   async function request(method: "POST" | "PATCH", body: Record<string, unknown>) {
@@ -47,10 +48,14 @@ export default function ServicesSettings() {
     const price = Number(draft.price);
     if (draft.name.trim().length < 2) return toast.error(t("ჩაწერეთ სერვისის სახელი.", "Enter the service name."));
     if (!Number.isFinite(price) || price < 0) return toast.error(t("შეამოწმეთ ფასი.", "Check the price."));
+    const duration = Number(draft.duration);
+    if (!Number.isInteger(duration) || duration < 5 || duration > 720) return toast.error(t("ხანგრძლივობა: 5-დან 720 წუთამდე.", "Length: 5 to 720 minutes."));
+    const recallDays = draft.recallDays.trim() === "" ? null : Number(draft.recallDays);
+    if (recallDays !== null && (!Number.isInteger(recallDays) || recallDays < 1 || recallDays > 365)) return toast.error(t("დაბრუნება: 1-დან 365 დღემდე, ან დატოვეთ ცარიელი.", "Come back: 1 to 365 days, or leave it empty."));
     if (activeStaff.length > 0 && draft.staffIds.length === 0) return toast.error(t("აირჩიეთ, ვინ ასრულებს.", "Choose who performs it."));
     setSaving(true);
     try {
-      const body = { name_ka: draft.name.trim(), price_gel: price, duration_minutes: draft.duration, recall_days: draft.recallDays, is_online_bookable: draft.online, staff_ids: draft.staffIds };
+      const body = { name_ka: draft.name.trim(), price_gel: price, duration_minutes: duration, recall_days: recallDays, is_online_bookable: draft.online, staff_ids: draft.staffIds };
       await request(draft.id ? "PATCH" : "POST", draft.id ? { id: draft.id, ...body } : body);
       toast.success(draft.id ? t("შენახულია.", "Saved.") : t("სერვისი დაემატა.", "Service added."));
       setDraft(null);
@@ -129,9 +134,8 @@ export default function ServicesSettings() {
           <Field label={t("სახელი", "Name")}>{(props) => <Input {...props} value={draft.name} maxLength={150} placeholder={t("მაგ. მანიკური", "e.g. Manicure")} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />}</Field>
           <Field label={t("ფასი, ₾", "Price, ₾")}>{(props) => <Input {...props} type="number" inputMode="decimal" min={0} step="0.5" value={draft.price} placeholder="40" onChange={(event) => setDraft({ ...draft, price: event.target.value })} />}</Field>
           <div>
-            <p className="mb-2 text-sm font-semibold text-stone-700">{t("ხანგრძლივობა", "Length")}</p>
-            <ChipRow>{DURATIONS.map((minutes) => <Chip key={minutes} selected={draft.duration === minutes} onClick={() => setDraft({ ...draft, duration: minutes })}>{minutes < 60 ? t(`${minutes} წთ`, `${minutes} min`) : minutes % 60 ? t(`${Math.floor(minutes / 60)} სთ ${minutes % 60} წთ`, `${Math.floor(minutes / 60)} h ${minutes % 60} min`) : t(`${minutes / 60} სთ`, `${minutes / 60} h`)}</Chip>)}</ChipRow>
-            {!DURATIONS.includes(draft.duration) && <p className="mt-2 text-xs text-stone-500">{t(`ახლა: ${draft.duration} წთ`, `Now: ${draft.duration} min`)}</p>}
+            <Field label={t("ხანგრძლივობა, წუთი", "Length, minutes")}>{(props) => <Input {...props} type="number" inputMode="numeric" min={5} max={720} step={5} value={draft.duration} onChange={(event) => setDraft({ ...draft, duration: event.target.value })} />}</Field>
+            <ChipRow className="mt-2">{DURATIONS.map((minutes) => <Chip key={minutes} selected={Number(draft.duration) === minutes} onClick={() => setDraft({ ...draft, duration: String(minutes) })}>{minutes < 60 ? t(`${minutes} წთ`, `${minutes} min`) : minutes % 60 ? t(`${Math.floor(minutes / 60)} სთ ${minutes % 60} წთ`, `${Math.floor(minutes / 60)} h ${minutes % 60} min`) : t(`${minutes / 60} სთ`, `${minutes / 60} h`)}</Chip>)}</ChipRow>
           </div>
           {activeStaff.length > 0 && <div>
             <p className="mb-2 text-sm font-semibold text-stone-700">{t("ვინ ასრულებს", "Who performs it")}</p>
@@ -145,9 +149,14 @@ export default function ServicesSettings() {
             <input type="checkbox" role="switch" className="h-6 w-6 shrink-0 accent-rose-600" checked={draft.online} onChange={(event) => setDraft({ ...draft, online: event.target.checked })} />
           </label>
           <div>
-            <p className="text-sm font-semibold text-stone-700">{t("როდის დაბრუნდეს კლიენტი", "When the client should come back")}</p>
-            <p className="mb-2 text-xs text-stone-500">{t("დაბრუნების SMS-ისთვის. თუ არ აირჩევთ, მოქმედებს SMS პარამეტრების დღეები.", "For the come-back SMS. If not set, the SMS settings' days apply.")}</p>
-            <ChipRow>{RECALL.map((days) => <Chip key={days ?? "none"} selected={draft.recallDays === days} onClick={() => setDraft({ ...draft, recallDays: days })}>{days === null ? t("ზოგადი", "Default") : t(`${days} დღეში`, `In ${days} days`)}</Chip>)}</ChipRow>
+            <Field label={t("როდის დაბრუნდეს კლიენტი, დღე", "When the client should come back, days")} optionalLabel={t("(არასავალდებულო)", "(optional)")}
+              hint={t("დაბრუნების SMS-ისთვის. ცარიელი: მოქმედებს SMS პარამეტრების დღეები.", "For the come-back SMS. Empty: the SMS settings' days apply.")}>
+              {(props) => <Input {...props} type="number" inputMode="numeric" min={1} max={365} value={draft.recallDays} placeholder={t("მაგ. 21", "e.g. 21")} onChange={(event) => setDraft({ ...draft, recallDays: event.target.value })} />}
+            </Field>
+            <ChipRow className="mt-2">
+              <Chip selected={draft.recallDays.trim() === ""} onClick={() => setDraft({ ...draft, recallDays: "" })}>{t("ზოგადი", "Default")}</Chip>
+              {RECALL.map((days) => <Chip key={days} selected={Number(draft.recallDays) === days && draft.recallDays.trim() !== ""} onClick={() => setDraft({ ...draft, recallDays: String(days) })}>{t(`${days} დღე`, `${days} days`)}</Chip>)}
+            </ChipRow>
           </div>
           {editing && <Button variant="ghost" block onClick={() => void setActive(editing, false)}>{t("სერვისის გამორთვა", "Switch the service off")}</Button>}
         </div>}
