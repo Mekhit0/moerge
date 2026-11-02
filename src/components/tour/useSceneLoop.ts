@@ -32,34 +32,53 @@ export function useOnScreen<T extends Element>(): [React.RefObject<T | null>, bo
 /**
  * Steps through a demo on a timer. It pauses when told to, when the tab is hidden, and never runs
  * for people who prefer less motion: they move through the steps with the buttons instead.
+ * `interval` may differ per step, so the finished picture can stay on screen a little longer.
  */
-export function useStepTimer(options: { count: number; interval: number; running: boolean; onWrap?: () => void }) {
+export function useStepTimer(options: { count: number; interval: number | ((step: number) => number); running: boolean; onWrap?: () => void }) {
   const { count, interval, running, onWrap } = options;
   const [step, setStepState] = useState(0);
-  const stepRef = useRef(0);
+  // Bumped to re-arm the timer after a tick that landed while the tab was hidden.
+  const [retry, setRetry] = useState(0);
   const wrapRef = useRef(onWrap);
+  const intervalRef = useRef(interval);
   useEffect(() => { wrapRef.current = onWrap; }, [onWrap]);
-
-  const setStep = (next: number) => {
-    stepRef.current = next;
-    setStepState(next);
-  };
+  useEffect(() => { intervalRef.current = interval; }, [interval]);
 
   useEffect(() => {
     if (!running) return;
-    const tick = window.setInterval(() => {
-      if (document.hidden) return;
-      if (stepRef.current + 1 < count) {
-        stepRef.current += 1;
-        setStepState(stepRef.current);
+    const current = intervalRef.current;
+    const ms = typeof current === "function" ? current(step) : current;
+    const timer = window.setTimeout(() => {
+      if (document.hidden) { setRetry((value) => value + 1); return; }
+      if (step + 1 < count) {
+        setStepState(step + 1);
       } else {
-        stepRef.current = 0;
         setStepState(0);
         wrapRef.current?.();
       }
-    }, interval);
-    return () => window.clearInterval(tick);
-  }, [count, interval, running]);
+    }, ms);
+    return () => window.clearTimeout(timer);
+  }, [count, running, step, retry]);
 
-  return [step, setStep] as const;
+  return [step, setStepState] as const;
+}
+
+/** Counts from 0 up to `value` when `active` turns on; jumps straight there for reduced motion. */
+export function useCountUp(value: number, active: boolean, duration = 700): number {
+  const reduced = usePrefersReducedMotion();
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (!active) { setShown(0); return; }
+    if (reduced) { setShown(value); return; }
+    let frame = 0;
+    const started = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - started) / duration);
+      setShown(Math.round(value * (1 - Math.pow(1 - progress, 3))));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [active, duration, reduced, value]);
+  return shown;
 }

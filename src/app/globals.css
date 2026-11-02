@@ -67,10 +67,34 @@ body {
   display: none;
 }
 
+/* Product tour: a finger tap, a soft chapter change and the story progress fill. */
+@keyframes tour-tap {
+  0% { transform: scale(0.4); opacity: 0; }
+  25% { transform: scale(1); opacity: 1; }
+  70% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.tour-tap { animation: tour-tap 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@keyframes scene-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.scene-in { animation: scene-in 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@keyframes tour-fill {
+  from { transform: scaleX(var(--fill-from)); }
+  to { transform: scaleX(var(--fill-to)); }
+}
+.tour-fill { transform-origin: left; animation: tour-fill var(--fill-ms) linear both; }
+
 @media (prefers-reduced-motion: reduce) {
   .step-in,
+  .scene-in,
+  .tour-fill,
   .sheet-panel[open],
   .dialog-panel[open],
   .sheet-panel::backdrop,
   .dialog-panel::backdrop { animation: none; }
+  .tour-tap { display: none; }
 }

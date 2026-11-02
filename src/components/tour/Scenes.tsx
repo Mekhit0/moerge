@@ -4,6 +4,7 @@ import React from "react";
 import { Check, CheckCircle2, Copy, Download, Lock, Mail, MessageCircle, Move, Plus, Sparkles, UserCheck, Wallet } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/components/ui";
+import { useCountUp } from "./useSceneLoop";
 
 // Small, self-contained pictures of real moarge screens. Each scene is driven by `step` from the
 // outside (the landing page tour or the dashboard guide). Only opacity and transform animate, so
@@ -31,15 +32,29 @@ function show(visible: boolean, from = "translate-y-2") {
 /** Phone or tablet outline around a scene. Purely decorative. */
 export function DeviceFrame({ frame, children }: { frame: "phone" | "tablet"; children: React.ReactNode }) {
   return frame === "phone" ? (
-    <div className="relative mx-auto h-[440px] w-[232px] shrink-0 overflow-hidden rounded-[2.2rem] border-[7px] border-stone-900 bg-white shadow-2xl shadow-rose-950/20">
+    <div className="relative mx-auto h-[440px] w-[232px] shrink-0 overflow-hidden rounded-[2.2rem] border-[7px] border-stone-900 bg-white shadow-xl shadow-stone-900/15">
       <div className="absolute left-1/2 top-1.5 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-stone-900" />
       <div className="relative h-full overflow-hidden pt-7">{children}</div>
     </div>
   ) : (
-    <div className="relative mx-auto h-[340px] w-full max-w-[480px] overflow-hidden rounded-[1.6rem] border-[7px] border-stone-900 bg-white shadow-2xl shadow-rose-950/20">
+    <div className="relative mx-auto h-[340px] w-full max-w-[480px] overflow-hidden rounded-[1.6rem] border-[7px] border-stone-900 bg-white shadow-xl shadow-stone-900/15">
       <div className="relative h-full overflow-hidden">{children}</div>
     </div>
   );
+}
+
+/** A fingertip tap on the element it sits in (the parent must be positioned). */
+function Tap({ when, delay = 0 }: { when: boolean; delay?: number }) {
+  if (!when) return null;
+  return (
+    <span aria-hidden="true" style={{ animationDelay: `${delay}ms` }}
+      className="tour-tap pointer-events-none absolute inset-0 z-20 m-auto h-8 w-8 rounded-full border-2 border-white bg-stone-900/30 shadow-[0_0_0_5px_rgba(28,25,23,0.10)]" />
+  );
+}
+
+/** 11940 → "11 940", the way prices are written in Georgia. */
+function money(value: number): string {
+  return value.toLocaleString("en-US").replace(/,/g, " ");
 }
 
 function Toast({ visible, children }: { visible: boolean; children: React.ReactNode }) {
@@ -68,10 +83,11 @@ function BookingScene({ step }: SceneProps) {
       <div className="relative flex-1 space-y-3 p-3">
         <div className="space-y-1.5">
           {services.map((service, index) => (
-            <div key={service.name} className={cn("flex items-center justify-between rounded-xl border bg-white px-3 py-2 text-[12px]", EASE,
+            <div key={service.name} className={cn("relative flex items-center justify-between rounded-xl border bg-white px-3 py-2 text-[12px]", EASE,
               step >= 1 && index === 0 ? "border-rose-500 ring-2 ring-rose-200" : "border-stone-200", step >= 1 && index !== 0 && "opacity-50")}>
               <span><span className="block font-semibold">{service.name}</span><span className="text-[10px] text-stone-500">{service.time}</span></span>
               <span className="font-bold text-rose-700">{service.price}</span>
+              <Tap when={step === 1 && index === 0} />
             </div>
           ))}
         </div>
@@ -84,8 +100,8 @@ function BookingScene({ step }: SceneProps) {
           <p className="text-[11px] font-semibold text-stone-600">{t("ხვალ, 12 ნოემბერი", "Tomorrow, 12 November")}</p>
           <div className="grid grid-cols-4 gap-1.5">
             {["11:00", "12:30", "14:00", "16:30"].map((time) => (
-              <span key={time} className={cn("rounded-lg border py-1.5 text-center text-[11px] font-semibold", EASE,
-                step >= 2 && time === "12:30" ? "border-rose-600 bg-rose-600 text-white" : "border-stone-200 bg-white")}>{time}</span>
+              <span key={time} className={cn("relative rounded-lg border py-1.5 text-center text-[11px] font-semibold", EASE,
+                step >= 2 && time === "12:30" ? "border-rose-600 bg-rose-600 text-white" : "border-stone-200 bg-white")}>{time}<Tap when={step === 2 && time === "12:30"} /></span>
             ))}
           </div>
         </div>
@@ -134,10 +150,11 @@ function CalendarScene({ step }: SceneProps) {
             step >= 1 ? "opacity-100" : "opacity-0", step === 1 && "ring-2 ring-rose-300")}
             style={{ top: slot * 1.5, height: slot - 4, ...block(step >= 2 ? VIOLET : ROSE), transform: step >= 2 ? `translate(calc(100% + 0.25rem), ${slot * 1.5}px)` : "translate(0,0)" }}>
             <b>{step >= 2 ? "14:00" : "12:30"}</b> {t("ნინო", "Nino")}{step >= 2 && <Move className="ml-0.5 inline h-2.5 w-2.5" />}
+            <Tap when={step === 2} />
           </div>
           <div className={cn("absolute flex w-[calc((100%-0.5rem)/3)] items-start gap-1 rounded-md border border-stone-300 px-1.5 py-1 text-[9px] text-stone-600 [background:repeating-linear-gradient(135deg,#f5f5f4,#f5f5f4_5px,#e7e5e4_5px,#e7e5e4_10px)]", EASE, show(step >= 3, "scale-95"))}
             style={{ left: "calc((100% + 0.25rem) * 2 / 3)", top: slot * 3.5, height: slot - 4 }}>
-            <Lock className="h-2.5 w-2.5 shrink-0" />{t("შესვენება", "Break")}
+            <Lock className="h-2.5 w-2.5 shrink-0" />{t("შესვენება", "Break")}<Tap when={step === 3} />
           </div>
         </div>
       </div>
@@ -152,7 +169,7 @@ function CalendarScene({ step }: SceneProps) {
 function ReminderScene({ step }: SceneProps) {
   const { t } = useLanguage();
   return (
-    <div className="relative flex h-full flex-col bg-gradient-to-b from-stone-800 to-stone-950 text-white">
+    <div className="relative flex h-full flex-col bg-stone-900 text-white">
       <div className={cn("pt-10 text-center", EASE, step >= 2 ? "opacity-0" : "opacity-100")}>
         <p className="text-4xl font-light">11:00</p>
         <p className="text-[11px] text-stone-300">{t("ოთხშაბათი, 11 ნოემბერი", "Wednesday, 11 November")}</p>
@@ -161,6 +178,7 @@ function ReminderScene({ step }: SceneProps) {
         <p className="flex items-center gap-1.5 text-[10px] font-semibold text-stone-500"><Mail className="h-3 w-3 text-rose-600" />{t("ელ-ფოსტა · ახლა", "Email · now")}</p>
         <p className="mt-1 text-[12px] font-bold">{t("სალონი ია: ხვალ გელოდებით", "Salon Ia: see you tomorrow")}</p>
         <p className="text-[11px] text-stone-600">{t("ხვალ 12:30 · მანიკური · ანა", "Tomorrow 12:30 · Manicure · Ana")}</p>
+        <Tap when={step === 1} delay={1300} />
       </div>
       <div className={cn("absolute inset-0 bg-ivory p-3 text-stone-900", EASE, show(step >= 2, "translate-y-6"))}>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-rose-600">{t("შეხსენება", "Reminder")}</p>
@@ -184,6 +202,7 @@ function ReminderScene({ step }: SceneProps) {
 /* 4. The visit on the day: arrived, done, paid. */
 function VisitScene({ step }: SceneProps) {
   const { t } = useLanguage();
+  const added = useCountUp(45, step >= 3);
   const status = step === 0 ? { label: t("დაგეგმილი", "Booked"), tone: "bg-rose-50 text-rose-700" }
     : step === 1 ? { label: t("მოვიდა", "Arrived"), tone: "bg-amber-50 text-amber-700" }
     : { label: step >= 3 ? t("გადახდილია", "Paid") : t("დასრულდა", "Done"), tone: step >= 3 ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700" };
@@ -192,7 +211,7 @@ function VisitScene({ step }: SceneProps) {
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-white p-2.5 shadow-sm"><p className="text-[10px] text-stone-500">{t("ვიზიტები დღეს", "Visits today")}</p><p className="text-lg font-bold">7</p></div>
         <div className="rounded-xl bg-white p-2.5 shadow-sm"><p className="text-[10px] text-stone-500">{t("გადახდილი დღეს", "Paid today")}</p>
-          <p className="text-lg font-bold"><span className={cn("inline-block", EASE, step >= 3 && "text-emerald-700")}>{step >= 3 ? "355 ₾" : "310 ₾"}</span></p></div>
+          <p className="text-lg font-bold"><span className={cn("inline-block tabular-nums", EASE, step >= 3 && "text-emerald-700")}>{money(310 + added)} ₾</span></p></div>
       </div>
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-white p-2.5" style={{ borderLeft: `4px solid ${ROSE}` }}>
         <span className="w-10 text-center text-sm font-bold">12:30</span>
@@ -200,15 +219,15 @@ function VisitScene({ step }: SceneProps) {
         <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", EASE, status.tone)}>{status.label}</span>
       </div>
       <div className={cn("mt-2 grid grid-cols-2 gap-2", EASE, show(step <= 1))}>
-        <span className={cn("flex items-center justify-center gap-1 rounded-xl border py-2 text-[11px] font-semibold", EASE, step === 1 ? "border-amber-300 bg-amber-50" : "border-stone-200 bg-white")}><UserCheck className="h-3.5 w-3.5" />{t("მოვიდა", "Arrived")}</span>
-        <span className="flex items-center justify-center gap-1 rounded-xl bg-rose-600 py-2 text-[11px] font-semibold text-white"><Wallet className="h-3.5 w-3.5" />{t("დასრულება", "Done")}</span>
+        <span className={cn("relative flex items-center justify-center gap-1 rounded-xl border py-2 text-[11px] font-semibold", EASE, step === 1 ? "border-amber-300 bg-amber-50" : "border-stone-200 bg-white")}><UserCheck className="h-3.5 w-3.5" />{t("მოვიდა", "Arrived")}<Tap when={step === 1} /></span>
+        <span className="relative flex items-center justify-center gap-1 rounded-xl bg-rose-600 py-2 text-[11px] font-semibold text-white"><Wallet className="h-3.5 w-3.5" />{t("დასრულება", "Done")}<Tap when={step === 1} delay={1400} /></span>
       </div>
       <div className={cn("mt-2 space-y-1.5 rounded-xl bg-white p-3 text-[11px] shadow-sm", EASE, show(step >= 2, "translate-y-4"))}>
         <p className="flex justify-between"><span className="text-stone-500">{t("ფასი", "Price")}</span><b>40 ₾</b></p>
         <p className="flex justify-between"><span className="text-stone-500">{t("თიფი", "Tip")}</span><b>+5 ₾</b></p>
         <div className="grid grid-cols-3 gap-1 pt-1">
           {[t("ნაღდი", "Cash"), t("ბარათი", "Card"), t("ორივე", "Split")].map((method, index) => (
-            <span key={method} className={cn("rounded-lg border py-1 text-center font-semibold", index === 1 ? "border-rose-600 bg-rose-600 text-white" : "border-stone-200")}>{method}</span>
+            <span key={method} className={cn("relative rounded-lg border py-1 text-center font-semibold", index === 1 ? "border-rose-600 bg-rose-600 text-white" : "border-stone-200")}>{method}<Tap when={step === 2 && index === 1} delay={900} /></span>
           ))}
         </div>
         <p className="flex justify-between border-t border-stone-100 pt-1.5 text-[12px]"><span>{t("სულ", "Total")}</span><b>45 ₾</b></p>
@@ -303,12 +322,17 @@ function TeamScene({ step }: SceneProps) {
 /* 7. Earnings, commission and payouts. */
 function EarningsScene({ step }: SceneProps) {
   const { t } = useLanguage();
+  const paid = useCountUp(11940, step >= 1, 900);
+  const visits = useCountUp(190, step >= 1, 900);
+  const tips = useCountUp(240, step >= 1, 900);
+  const anaPay = useCountUp(2579, step >= 2);
+  const tamarPay = useCountUp(2146, step >= 2);
   const bars = [38, 55, 42, 70, 64, 82, 48];
   return (
     <div className="flex h-full flex-col bg-ivory p-3 text-stone-900">
       <div className="grid grid-cols-3 gap-1.5">
-        {[[t("გადახდილი", "Paid"), step >= 1 ? "11 940 ₾" : "0 ₾"], [t("ვიზიტი", "Visits"), step >= 1 ? "190" : "0"], [t("თიფი", "Tips"), step >= 1 ? "240 ₾" : "0 ₾"]].map(([label, value]) => (
-          <div key={label} className="rounded-xl bg-white p-2 shadow-sm"><p className="text-[9px] text-stone-500">{label}</p><p className="text-[13px] font-bold">{value}</p></div>
+        {[[t("გადახდილი", "Paid"), `${money(paid)} ₾`], [t("ვიზიტი", "Visits"), money(visits)], [t("თიფი", "Tips"), `${money(tips)} ₾`]].map(([label, value]) => (
+          <div key={label} className="rounded-xl bg-white p-2 shadow-sm"><p className="text-[9px] text-stone-500">{label}</p><p className="text-[13px] font-bold tabular-nums">{value}</p></div>
         ))}
       </div>
       <div className="mt-2 flex h-20 items-end gap-[3px] rounded-xl bg-white p-2 shadow-sm">
@@ -318,18 +342,18 @@ function EarningsScene({ step }: SceneProps) {
         ))}
       </div>
       <div className={cn("mt-2 space-y-1.5", EASE, show(step >= 2))}>
-        {[[t("ანა", "Ana"), ROSE, "40%", "2 579 ₾"], [t("თამარი", "Tamar"), VIOLET, "35%", "2 146 ₾"]].map(([name, color, rate, pay]) => (
+        {[[t("ანა", "Ana"), ROSE, "40%", `${money(anaPay)} ₾`], [t("თამარი", "Tamar"), VIOLET, "35%", `${money(tamarPay)} ₾`]].map(([name, color, rate, pay]) => (
           <div key={name} className="flex items-center gap-2 rounded-xl bg-white p-2 text-[11px] shadow-sm">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
             <span className="flex-1 font-semibold">{name}</span>
             <span className="text-stone-500">{rate}</span>
-            <span className="font-bold">{pay}</span>
+            <span className="font-bold tabular-nums">{pay}</span>
           </div>
         ))}
         <p className="text-[9px] text-stone-500">{t("გასაცემი = საკომისიო + თიფი", "Payout = commission + tips")}</p>
       </div>
-      <span className={cn("mt-auto flex items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-semibold", EASE, step >= 3 ? "bg-emerald-600 text-white" : "border border-stone-200 bg-white text-stone-700", show(step >= 2))}>
-        <Download className="h-3.5 w-3.5" />{t("გასაცემები Excel-ში", "Payouts to Excel")}
+      <span className={cn("relative mt-auto flex items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-semibold", EASE, step >= 3 ? "bg-emerald-600 text-white" : "border border-stone-200 bg-white text-stone-700", show(step >= 2))}>
+        <Download className="h-3.5 w-3.5" />{t("გასაცემები Excel-ში", "Payouts to Excel")}<Tap when={step === 3} />
       </span>
     </div>
   );
