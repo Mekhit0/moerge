@@ -110,6 +110,8 @@ function PublicBookingFormContent() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [smsConsent, setSmsConsent] = useState(true);
+  // Offers are opt-in: never ticked in advance.
+  const [smsMarketing, setSmsMarketing] = useState(false);
   const [websiteTrap, setWebsiteTrap] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // Turnstile tokens are single-use; bumping the key renders a fresh check after each attempt.
@@ -249,6 +251,7 @@ function PublicBookingFormContent() {
           turnstile_token: turnstileToken,
           notes: composedNotes.slice(0, 1000) || null,
           sms_consent: smsConsent,
+          sms_marketing_consent: smsMarketing,
           preferred_language: lang,
         }),
       });
@@ -489,6 +492,10 @@ function PublicBookingFormContent() {
                     <label className="flex items-start gap-3 text-sm text-stone-600">
                       <input type="checkbox" checked={smsConsent} onChange={(event) => setSmsConsent(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-rose-600" />
                       {t("მსურს SMS შეხსენება ვიზიტამდე", "Send me an SMS reminder before the visit")}
+                    </label>
+                    <label className="flex items-start gap-3 text-sm text-stone-600">
+                      <input type="checkbox" checked={smsMarketing} onChange={(event) => setSmsMarketing(event.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-rose-600" />
+                      {t("მსურს სალონის შეთავაზებები და შეხსენება, როცა ახალი ვიზიტის დრო მოვა", "Send me the salon's offers and a reminder when it's time for my next visit")}
                     </label>
                   </div>
                 </div>

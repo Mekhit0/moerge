@@ -90,6 +90,8 @@ export const clientInputSchema = z.object({
     .transform((v) => (v && v.length > 0 ? v : null)),
   email_consent: z.boolean().optional().default(false),
   sms_consent: z.boolean().optional().default(false),
+  /** Offers and come-back SMS. Separate from reminders, never assumed. */
+  sms_marketing_consent: z.boolean().optional().default(false),
   preferred_language: z.enum(["ka", "en"]).optional().default("ka"),
   birthday: z
     .string()
@@ -368,6 +370,8 @@ export const publicBookingInputSchema = z.object({
     .transform((v) => (v && v.length > 0 ? v : null)),
   email_consent: z.boolean().optional().default(false),
   sms_consent: z.boolean().optional().default(false),
+  /** Offers and come-back SMS. Separate from reminders, never assumed. */
+  sms_marketing_consent: z.boolean().optional().default(false),
   preferred_language: z.enum(["ka", "en"]).optional().default("ka"),
 }).superRefine((data, ctx) => {
   if (data.treatment_type !== data.service_id) {

@@ -160,6 +160,10 @@ export async function PATCH(
       typeof body.sms_consent === "boolean"
         ? body.sms_consent
         : existing.sms_consent,
+    sms_marketing_consent:
+      typeof body.sms_marketing_consent === "boolean"
+        ? body.sms_marketing_consent
+        : existing.sms_marketing_consent,
     preferred_language:
       body.preferred_language === "ka" || body.preferred_language === "en"
         ? body.preferred_language
@@ -211,6 +215,11 @@ export async function PATCH(
       notes: parsed.data.notes,
       email_consent: parsed.data.email_consent,
       sms_consent: parsed.data.sms_consent,
+      sms_marketing_consent: parsed.data.sms_marketing_consent,
+      // Keep when consent was first given; clear it when withdrawn.
+      sms_marketing_consent_at: parsed.data.sms_marketing_consent
+        ? existing.sms_marketing_consent_at ?? new Date().toISOString()
+        : null,
       preferred_language: parsed.data.preferred_language,
       birthday: parsed.data.birthday,
       preferred_staff_id: parsed.data.preferred_staff_id,

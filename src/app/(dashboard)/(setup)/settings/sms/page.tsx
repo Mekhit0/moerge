@@ -3,14 +3,18 @@ import { redirect } from "next/navigation";
 import { getAuthenticatedSalonContext } from "@/lib/supabase/server";
 import SmsSettings, { type SentSms } from "@/components/settings/SmsSettings";
 import { currentOffer } from "@/lib/pricing";
+import { getAppUrl } from "@/lib/app-url";
+
+// Links in SMS are written without https:// and www, the way the queue writes them.
+const SHORT_HOST = getAppUrl().replace(/^https?:\/\/(www\.)?/, "");
 
 export const dynamic = "force-dynamic";
 
-const SMS_TYPES = ["reminder_24h", "reminder_2h", "booking_confirmation"] as const;
-const TO_CHOICE = { reminder_24h: "sms_reminder_24h", reminder_2h: "sms_reminder_2h", booking_confirmation: "sms_booking_confirmation" } as const;
+const SMS_TYPES = ["reminder_24h", "reminder_2h", "booking_confirmation", "recall"] as const;
+const TO_CHOICE = { reminder_24h: "sms_reminder_24h", reminder_2h: "sms_reminder_2h", booking_confirmation: "sms_booking_confirmation", recall: "sms_recall" } as const;
 
 /** Fills an SMS template the way the queue does, with sample values, so the salon sees the real text. */
-function fill(template: string, salonName: string): string {
+function fill(template: string, salonName: string, salonSlug: string): string {
   const tomorrow = new Date(Date.now() + 86_400_000);
   const date = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", timeZone: "Asia/Tbilisi" }).format(tomorrow).replace("/", ".");
   return template
@@ -19,7 +23,9 @@ function fill(template: string, salonName: string): string {
     .replaceAll("{{service_name}}", "მანიკური")
     .replaceAll("{{time}}", "12:30")
     .replaceAll("{{date}}", date)
-    .replaceAll("{{booking_code}}", "750934");
+    .replaceAll("{{booking_code}}", "750934")
+    .replaceAll("{{short_booking_link}}", `${SHORT_HOST}/b/${salonSlug}`)
+    .replaceAll("{{optout_link}}", `${SHORT_HOST}/s/ab3k7mq`);
 }
 
 export default async function SmsSettingsPage() {
@@ -38,7 +44,7 @@ export default async function SmsSettingsPage() {
   const samples: Partial<Record<(typeof TO_CHOICE)[keyof typeof TO_CHOICE], string>> = {};
   for (const row of templates ?? []) {
     const key = TO_CHOICE[row.message_type as keyof typeof TO_CHOICE];
-    if (key) samples[key] = fill(row.body_template, salonName);
+    if (key) samples[key] = fill(row.body_template, salonName, ctx.salonSlug);
   }
   const sent: SentSms[] = (log ?? []).map((row) => {
     const client = Array.isArray(row.client) ? row.client[0] : row.client;
@@ -51,7 +57,9 @@ export default async function SmsSettingsPage() {
         sms_reminder_24h: ctx.settings.sms_reminder_24h ?? true,
         sms_reminder_2h: ctx.settings.sms_reminder_2h ?? false,
         sms_booking_confirmation: ctx.settings.sms_booking_confirmation ?? false,
+        sms_recall: ctx.settings.sms_recall ?? false,
       }}
+      recallDays={ctx.settings.sms_recall_days ?? 30}
       wallet={{
         includedLeft: Math.max(0, (wallet?.included_quota ?? 0) - (wallet?.used_this_period ?? 0)),
         included: wallet?.included_quota ?? 0,

@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
       notes: parsed.data.notes,
       email_consent: parsed.data.email_consent,
       sms_consent: parsed.data.sms_consent,
+      sms_marketing_consent: parsed.data.sms_marketing_consent,
+      sms_marketing_consent_at: parsed.data.sms_marketing_consent ? new Date().toISOString() : null,
       preferred_language: parsed.data.preferred_language,
       birthday: parsed.data.birthday,
       preferred_staff_id: parsed.data.preferred_staff_id,

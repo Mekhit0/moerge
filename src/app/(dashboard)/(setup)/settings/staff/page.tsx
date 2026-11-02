@@ -1,9 +1,9 @@
-import BookingSettingsManager from "@/components/BookingSettingsManager";
+import StaffSettings from "@/components/settings/StaffSettings";
 import TeamAccess from "@/components/team/TeamAccess";
 
 export default function Page() {
   return <>
-    <BookingSettingsManager section="staff" />
+    <StaffSettings />
     <TeamAccess />
   </>;
 }

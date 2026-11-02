@@ -21,6 +21,7 @@ export default function robots(): MetadataRoute.Robots {
         "/invite",
         "/onboarding",
         "/ui-kit",
+        "/s/",
       ],
     },
     sitemap: appUrl("/sitemap.xml"),

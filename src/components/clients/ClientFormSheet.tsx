@@ -14,6 +14,7 @@ export interface ClientFormValue {
   preferred_staff_id: string | null;
   notes: string | null;
   sms_consent: boolean;
+  sms_marketing_consent?: boolean;
   email_consent: boolean;
   preferred_language: "ka" | "en";
 }
@@ -27,7 +28,7 @@ function localMessage(message: string, lang: "ka" | "en") {
 
 const EMPTY: ClientFormValue = {
   full_name: "", phone: "", email: "", birthday: null, preferred_staff_id: null, notes: "",
-  sms_consent: true, email_consent: false, preferred_language: "ka",
+  sms_consent: true, sms_marketing_consent: false, email_consent: false, preferred_language: "ka",
 };
 
 /**
@@ -81,6 +82,7 @@ export function ClientFormSheet({ open, client, staff, onClose, onSaved }: {
         preferred_staff_id: value.preferred_staff_id,
         notes: value.notes?.trim() || null,
         sms_consent: value.sms_consent,
+        sms_marketing_consent: Boolean(value.sms_marketing_consent),
         email_consent: value.email_consent,
         preferred_language: value.preferred_language,
       }),
@@ -113,6 +115,10 @@ export function ClientFormSheet({ open, client, staff, onClose, onSaved }: {
         <label className="flex min-h-11 items-center gap-3 text-sm text-stone-700">
           <input type="checkbox" className="h-5 w-5 accent-rose-600" checked={value.sms_consent} onChange={(event) => set("sms_consent", event.target.checked)} />
           {t("თანახმაა SMS შეხსენებებზე", "Agrees to SMS reminders")}
+        </label>
+        <label className="flex min-h-11 items-center gap-3 text-sm text-stone-700">
+          <input type="checkbox" className="h-5 w-5 accent-rose-600" checked={Boolean(value.sms_marketing_consent)} onChange={(event) => set("sms_marketing_consent", event.target.checked)} />
+          {t("თანახმაა სარეკლამო SMS-ზე და დაბრუნების შეხსენებაზე", "Agrees to offers and come-back SMS")}
         </label>
 
         {!more && <button type="button" onClick={() => setMore(true)} className="min-h-11 text-sm font-semibold text-brand-strong hover:underline">

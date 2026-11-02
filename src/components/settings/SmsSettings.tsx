@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/i18n";
 import { smsParts } from "@/lib/sms";
 import { Alert, Badge, Card, CardHeader, EmptyState, useToast } from "@/components/ui";
 
-type ChoiceKey = "sms_reminder_24h" | "sms_reminder_2h" | "sms_booking_confirmation";
+type ChoiceKey = "sms_reminder_24h" | "sms_reminder_2h" | "sms_booking_confirmation" | "sms_recall";
 type Choices = Record<ChoiceKey, boolean>;
 type Text = { ka: string; en: string };
 
@@ -25,6 +25,7 @@ const TYPE_LABEL: Record<string, Text> = {
   reminder_24h: { ka: "შეხსენება, დღით ადრე", en: "Reminder, a day before" },
   reminder_2h: { ka: "შეხსენება, 2 სთ-ით ადრე", en: "Reminder, 2 hours before" },
   booking_confirmation: { ka: "დადასტურება", en: "Confirmation" },
+  recall: { ka: "დაბრუნების SMS", en: "Come-back SMS" },
 };
 
 const STATUS: Record<string, { label: Text; tone: "neutral" | "success" | "warning" | "danger" | "brand" }> = {
@@ -49,10 +50,17 @@ const REASON: Array<[string, Text]> = [
   ["trial has expired", { ka: "საცდელი პერიოდი დასრულდა", en: "The trial has ended" }],
   ["canceled", { ka: "ვიზიტი გაუქმდა", en: "The visit was canceled" }],
   ["rescheduled", { ka: "ვიზიტი გადაიტანეს", en: "The visit was moved" }],
+  ["already booked", { ka: "კლიენტი უკვე ჩაწერილია", en: "The client had already booked" }],
+  ["newer visit", { ka: "ჩანაცვლდა ახალი ვიზიტით", en: "Replaced by a newer visit" }],
+  ["stopped offers", { ka: "კლიენტმა შეთავაზებები შეწყვიტა", en: "The client stopped offers" }],
 ];
 
-export default function SmsSettings({ initial, wallet, smsLive, samples, sent }: {
+const RECALL_DAYS = [14, 21, 30, 45, 60, 90];
+
+export default function SmsSettings({ initial, recallDays: initialDays, wallet, smsLive, samples, sent }: {
   initial: Choices;
+  /** Days after a visit for the come-back SMS when the service has no period of its own. */
+  recallDays: number;
   wallet: { includedLeft: number; included: number; bought: number };
   /** False before 1 December, when SMS start with the paid plans. */
   smsLive: boolean;
@@ -63,7 +71,22 @@ export default function SmsSettings({ initial, wallet, smsLive, samples, sent }:
   const { lang, t } = useLanguage();
   const toast = useToast();
   const [choices, setChoices] = useState<Choices>(initial);
-  const [saving, setSaving] = useState<ChoiceKey | null>(null);
+  const [saving, setSaving] = useState<ChoiceKey | "days" | null>(null);
+  const [recallDays, setRecallDays] = useState(initialDays);
+
+  async function saveDays(days: number) {
+    const before = recallDays;
+    setRecallDays(days);
+    setSaving("days");
+    try {
+      const response = await fetch("/api/settings/sms", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sms_recall_days: days }) });
+      if (!response.ok) throw new Error();
+      toast.success(t("შენახულია.", "Saved."));
+    } catch {
+      setRecallDays(before);
+      toast.error(t("შენახვა ვერ მოხერხდა.", "Could not save."));
+    } finally { setSaving(null); }
+  }
 
   async function toggle(key: ChoiceKey, value: boolean) {
     const before = choices;
@@ -140,6 +163,43 @@ export default function SmsSettings({ initial, wallet, smsLive, samples, sent }:
             );
           })}
         </div>
+      </Card>
+
+      <Card>
+        <CardHeader title={t("დაბრუნების SMS", "Come-back SMS")} description={t("მარკეტინგული SMS: ვიზიტიდან რამდენიმე დღეში კლიენტს ეპატიჟებით ხელახლა.", "A marketing SMS: some days after a visit, invite the client back.")} />
+        <label className="flex min-h-11 items-center justify-between gap-4">
+          <span><span className="block font-semibold text-stone-900">{t("დაბრუნების SMS-ის გაგზავნა", "Send come-back SMS")}</span>
+            <span className="text-sm text-stone-500">{t("დილის 11 საათზე, დასრულებული ვიზიტიდან არჩეულ დღეებში.", "At 11 in the morning, the chosen number of days after a completed visit.")}</span></span>
+          <input type="checkbox" role="switch" disabled={saving === "sms_recall"} className="h-6 w-6 shrink-0 accent-rose-600 disabled:opacity-50"
+            checked={choices.sms_recall} onChange={(event) => void toggle("sms_recall", event.target.checked)} />
+        </label>
+        {choices.sms_recall && (
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="mb-2 text-sm font-semibold text-stone-700">{t("რამდენი დღის შემდეგ", "After how many days")}</p>
+              <div className="flex flex-wrap gap-2">
+                {RECALL_DAYS.map((days) => (
+                  <button key={days} type="button" disabled={saving === "days"} onClick={() => void saveDays(days)} aria-pressed={recallDays === days}
+                    className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold transition ${recallDays === days ? "border-rose-600 bg-rose-600 text-white" : "border-stone-200 bg-white text-stone-700 hover:border-rose-300"}`}>
+                    {t(`${days} დღე`, `${days} days`)}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-stone-500">{t("სერვისს თავისი ვადა თუ აქვს (სერვისები › როდის დაბრუნდეს კლიენტი), ის მოქმედებს.", "A service's own period wins if it has one (Services › When the client should come back).")}</p>
+            </div>
+            {samples.sms_recall && (
+              <div className="rounded-2xl rounded-tl-sm bg-stone-100 px-4 py-3 text-sm leading-relaxed text-stone-800 sm:max-w-md">
+                {samples.sms_recall}
+                <p className="mt-1 text-xs text-stone-500">{t(`${samples.sms_recall.length} სიმბოლო · ${smsParts(samples.sms_recall)} SMS`, `${samples.sms_recall.length} characters · ${smsParts(samples.sms_recall)} SMS`)}</p>
+              </div>
+            )}
+            <ul className="space-y-1.5 text-sm text-stone-600">
+              <li>{t("• მიდის მხოლოდ კლიენტებთან, ვინც სარეკლამო SMS-ზე დათანხმდა.", "• Only goes to clients who agreed to offer SMS.")}</li>
+              <li>{t("• არ ეგზავნება კლიენტს, რომელიც უკვე ჩაწერილია ახალ ვიზიტზე.", "• Not sent to a client who has already booked again.")}</li>
+              <li>{t("• ყველა SMS-ში არის შეწყვეტის ბმული.", "• Every SMS has a link to stop them.")}</li>
+            </ul>
+          </div>
+        )}
       </Card>
 
       <Card>

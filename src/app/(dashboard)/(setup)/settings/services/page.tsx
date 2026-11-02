@@ -1,5 +1,5 @@
-import BookingSettingsManager from "@/components/BookingSettingsManager";
+import ServicesSettings from "@/components/settings/ServicesSettings";
 
 export default function Page() {
-  return <BookingSettingsManager section="services" />;
+  return <ServicesSettings />;
 }

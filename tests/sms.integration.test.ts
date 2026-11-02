@@ -150,3 +150,59 @@ describe.skipIf(!canRun)("SMS on a trial (integration)", { timeout: 60000 }, () 
     }
   });
 });
+
+describe.skipIf(!canRun)("Come-back SMS (integration)", { timeout: 60000 }, () => {
+  it("invites back only consenting clients, at 11:00, and lets them stop", async () => {
+    const db = createClient(url!, serviceKey!, { auth: { persistSession: false, autoRefreshToken: false } });
+    const run = crypto.randomUUID().slice(0, 8);
+    const { data: salon } = await db.from("salons").insert({ name: "Comeback", slug: `sms-back-${run}`, subscription_tier: "professional", subscription_status: "active" }).select("id").single();
+    try {
+      await db.from("salon_settings").insert({ salon_id: salon!.id, salon_name: "სალონი ია", sender_display_name: "moarge", verified_sender_email: "back@example.test", sms_recall: true, sms_recall_days: 14 });
+      await db.from("sms_wallet").update({ included_quota: 100 }).eq("salon_id", salon!.id);
+      const { data: staff } = await db.from("staff").insert({ salon_id: salon!.id, full_name: "Ana", sort_order: 1 }).select("id").single();
+      const { data: clients } = await db.from("clients").insert([
+        { salon_id: salon!.id, full_name: "ნინო", phone: "+995555900011", sms_consent: true, sms_marketing_consent: true },
+        { salon_id: salon!.id, full_name: "ეკა", phone: "+995555900012", sms_consent: true },
+      ], { defaultToNull: false }).select("id,phone,sms_optout_code");
+      const nino = clients!.find((row) => row.phone === "+995555900011")!;
+      const eka = clients!.find((row) => row.phone === "+995555900012")!;
+      expect(nino.sms_optout_code).toMatch(/^[a-z0-9]{7}$/);
+
+      const visit = async (clientId: string, day: string, status: string, hour: string) => {
+        const { data, error } = await db.from("appointments").insert({ salon_id: salon!.id, client_id: clientId, staff_id: staff!.id, treatment_date: day, treatment_time: `${hour}:00`, treatment_type: "Test", starts_at: `${day}T${hour}:00:00+04:00`, ends_at: `${day}T${hour}:30:00+04:00`, status, price_gel: 40, duration_minutes: 30 }).select("id").single();
+        if (error || !data) throw error ?? new Error("no visit");
+        return data!.id as string;
+      };
+      const today = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+      const ninoVisit = await visit(nino.id, today, "scheduled", "12");
+      const ekaVisit = await visit(eka.id, today, "scheduled", "14");
+      await db.from("appointments").update({ status: "completed" }).in("id", [ninoVisit, ekaVisit]);
+
+      const { data: recalls } = await db.from("notification_log").select("id,client_id,body,scheduled_at,status").eq("salon_id", salon!.id).eq("message_type", "recall");
+      expect(recalls?.map((row) => row.client_id)).toEqual([nino.id]);
+      const recall = recalls![0];
+      expect(recall.body).toContain(`/s/${nino.sms_optout_code}`);
+      expect(recall.body).toContain(`/b/sms-back-${run}`);
+      const due = new Date(recall.scheduled_at);
+      expect(due.toISOString().slice(11, 16)).toBe("07:00"); // 11:00 in Tbilisi
+      expect(Math.round((due.getTime() - Date.parse(`${today}T00:00:00Z`)) / 86_400_000)).toBe(14);
+
+      // Already booked again: no invitation.
+      const future = new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10);
+      await visit(nino.id, future, "scheduled", "12");
+      await db.from("notification_log").update({ scheduled_at: new Date(Date.now() - 60_000).toISOString() }).eq("id", recall.id);
+      await db.rpc("claim_due_notifications", { p_limit: 100 });
+      const { data: after } = await db.from("notification_log").select("status,error").eq("id", recall.id).single();
+      expect(after).toEqual({ status: "suppressed", error: "Client already booked" });
+
+      // The stop link turns offers off and is only for the server.
+      const anon = createClient(url!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+      expect((await anon.rpc("sms_marketing_optout", { p_code: nino.sms_optout_code })).error).not.toBeNull();
+      expect((await db.rpc("sms_marketing_optout", { p_code: nino.sms_optout_code })).data).toBe(true);
+      const { data: stopped } = await db.from("clients").select("sms_marketing_consent,sms_consent").eq("id", nino.id).single();
+      expect(stopped).toEqual({ sms_marketing_consent: false, sms_consent: true });
+    } finally {
+      await db.from("salons").delete().eq("id", salon!.id);
+    }
+  });
+});

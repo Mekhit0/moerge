@@ -1,5 +1,5 @@
-import BookingSettingsManager from "@/components/BookingSettingsManager";
+import ScheduleSettings from "@/components/settings/ScheduleSettings";
 
 export default function Page() {
-  return <BookingSettingsManager section="schedules" />;
+  return <ScheduleSettings />;
 }

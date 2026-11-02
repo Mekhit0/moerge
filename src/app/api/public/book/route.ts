@@ -255,8 +255,15 @@ export async function POST(request: NextRequest) {
 
   // The booking code is set by a database trigger when the appointment is inserted.
   const { data: created } = resObj.appointment_id
-    ? await serviceClient.from("appointments").select("booking_code").eq("id", resObj.appointment_id).eq("salon_id", salon.id).maybeSingle()
+    ? await serviceClient.from("appointments").select("booking_code,client_id").eq("id", resObj.appointment_id).eq("salon_id", salon.id).maybeSingle()
     : { data: null };
+  // Offers by SMS only with a ticked box. The come-back SMS also needs a completed visit, so a
+  // stranger typing someone else's number cannot sign them up.
+  if (parsed.data.sms_marketing_consent && created?.client_id) {
+    await serviceClient.from("clients")
+      .update({ sms_marketing_consent: true, sms_marketing_consent_at: new Date().toISOString() })
+      .eq("id", created.client_id).eq("salon_id", salon.id).eq("sms_marketing_consent", false);
+  }
 
   // Only what the person who booked needs. Never client ids or stored contact details: anyone can
   // type any phone number into this form.

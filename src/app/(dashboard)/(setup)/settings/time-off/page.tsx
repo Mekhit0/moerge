@@ -1,5 +1,5 @@
-import BookingSettingsManager from "@/components/BookingSettingsManager";
+import TimeOffSettings from "@/components/settings/TimeOffSettings";
 
 export default function Page() {
-  return <BookingSettingsManager section="time-off" />;
+  return <TimeOffSettings />;
 }

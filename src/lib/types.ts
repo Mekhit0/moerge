@@ -108,6 +108,8 @@ export interface SalonSettings {
   sms_reminder_24h?: boolean;
   sms_reminder_2h?: boolean;
   sms_booking_confirmation?: boolean;
+  sms_recall?: boolean;
+  sms_recall_days?: number;
   onboarding_completed_at?: string | null;
   admins_see_earnings?: boolean;
   deposit_required?: boolean;
