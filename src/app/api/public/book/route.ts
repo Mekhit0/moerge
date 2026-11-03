@@ -86,6 +86,8 @@ export async function GET(request: NextRequest) {
         p_service_id: serviceId,
         p_date: dateParam,
         p_staff_id: staffId || null,
+        // Free times follow the salon's time step.
+        p_online: true,
       });
       if (slotsError) return NextResponse.json({ error: "თავისუფალი დრო ვერ ჩაიტვირთა. / Could not load free times." }, { status: 500 });
       availability = { date: dateParam, slots: slots ?? [] };

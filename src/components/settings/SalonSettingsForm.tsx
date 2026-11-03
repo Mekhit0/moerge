@@ -245,6 +245,7 @@ export default function SalonSettingsForm({ initial, deposit, children }: {
           <div>
             <p className="mb-2 text-sm font-semibold text-stone-700">{t("დროის ნაბიჯი ჯავშნისას", "Time step when booking")}</p>
             <ChipRow>{SLOT_STEPS.map((step) => <Chip key={step} selected={form.slot_interval_minutes === step} onClick={() => set("slot_interval_minutes", step)}>{t(`${step} წთ`, `${step} min`)}</Chip>)}</ChipRow>
+            <p className="mt-2 text-xs text-stone-500">{t(`რა ინტერვალით ხედავს კლიენტი თავისუფალ დროებს ონლაინ: მაგ. 30 წთ-ზე 10:00, 10:30, 11:00. კალენდარში თქვენ ნებისმიერ 15 წუთზე წერთ.`, `How far apart clients see free times online: with 30 min, 10:00, 10:30, 11:00. In the calendar you can book any quarter hour.`)}</p>
           </div>
 
           <div>

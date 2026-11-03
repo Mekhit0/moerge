@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
       p_date: date,
       p_staff_id: appointment.staff_id,
       p_exclude_appointment_id: appointment.id,
+      p_online: true,
     });
     if (error) return NextResponse.json({ error: "Could not load free times." }, { status: 500 });
     const times = Array.from(new Set(((slots ?? []) as Array<{ slot_time: string }>)
