@@ -39,7 +39,7 @@ describe("E2E Suite: Landing Page, SEO, Mobile Responsiveness & Smart Retention"
       expect(sitemapEntries.length).toBeGreaterThanOrEqual(5);
       const urls = sitemapEntries.map((e) => e.url);
       expect(urls).toContain("https://www.moarge.test");
-      expect(urls).toContain("https://www.moarge.test/book");
+      expect(urls).not.toContain("https://www.moarge.test/book");
       expect(urls).not.toContain("https://www.moarge.test/login");
       expect(urls).toContain("https://www.moarge.test/salonis-programa");
       expect(new Set(urls).size).toBe(urls.length);

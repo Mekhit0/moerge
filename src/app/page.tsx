@@ -5,7 +5,7 @@ import { currentOffer } from "@/lib/pricing";
 // Rebuilt every hour so the November wording switches to the trial wording on 1 December by itself.
 export const revalidate = 3600;
 
-const TITLE = "moarge | სალონის პროგრამა: ონლაინ ჯავშანი, კალენდარი, კლიენტები";
+const TITLE = "moarge (მოარგე): სალონის მართვის პროგრამა და ონლაინ ჯავშანი";
 const DESCRIPTION = "სალონის მართვის პროგრამა ქართულად: ონლაინ ჯავშანი 24/7, კალენდარი, კლიენტების ბაზა, გადახდები და შემოსავალი. 19 ₾-დან თვეში, უფასო საცდელით.";
 
 export const metadata = pageMetadata({

@@ -200,7 +200,7 @@ export default function PricingView({ offer }: { offer: Offer }) {
                       <span>{faq.q[lang]}</span>
                       {isOpen ? <Minus className="h-5 w-5 shrink-0 text-rose-600" /> : <Plus className="h-5 w-5 shrink-0 text-rose-600" />}
                     </button>
-                    {isOpen && <p className="pb-5 pr-8 text-base leading-relaxed text-stone-600">{faq.a[lang]}</p>}
+                    <p hidden={!isOpen} className="pb-5 pr-8 text-base leading-relaxed text-stone-600">{faq.a[lang]}</p>
                   </div>
                 );
               })}

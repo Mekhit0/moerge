@@ -49,6 +49,13 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
 
   const faqs = [
     {
+      q: t("რა არის moarge?", "What is moarge?"),
+      a: t(
+        "moarge (მოარგე) სალონის მართვის პროგრამაა საქართველოს სილამაზის სალონებისთვის, ბარბერშოპებისთვის და კოსმეტოლოგებისთვის. ერთ ადგილას აერთიანებს ონლაინ ჯავშანს, კალენდარს, კლიენტების ბაზას (CRM) და შემოსავლის დათვლას.",
+        "moarge (მოარგე) is salon management software for beauty salons, barbershops and cosmetologists in Georgia. It brings online booking, the calendar, the client base (CRM) and earnings into one place."
+      ),
+    },
+    {
       q: t("რა ღირს?", "How much does it cost?"),
       a: t(
         `${solo.name.ka} ${solo.monthlyGel} ₾ და ${business.name.ka} ${business.monthlyGel} ₾ თვეში, ბიზნესში ${business.staffIncluded} სპეციალისტი შედის. 6 თვით გადახდისას 10% ფასდაკლებაა, 12 თვით 20%. ${offer.pilot ? "ნოემბერში moarge სრულიად უფასოა." : `პირველი ${trialDays} დღე უფასოა.`}`,
@@ -116,7 +123,7 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
                 {t("სილამაზის სალონებს, ბარბერშოპებს და კოსმეტოლოგებს", "For beauty salons, barbershops and cosmetologists")}
               </p>
               <h1 className="mt-4 text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-black tracking-tight leading-[1.08] text-stone-900">
-                {t("სალონის ჯავშნები ", "Salon bookings ")}
+                {t("სალონის მართვის პროგრამა ", "Salon management software ")}
                 <span className="text-rose-600">{t("რვეულის გარეშე", "without the notebook")}</span>
               </h1>
               <p className="mt-5 text-base sm:text-lg text-stone-600 leading-relaxed max-w-lg">
@@ -292,7 +299,7 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
                       <span>{faq.q}</span>
                       <Icon className="w-5 h-5 text-rose-600 shrink-0" />
                     </button>
-                    {isOpen && <p className="pb-5 pr-8 text-base text-stone-600 leading-relaxed">{faq.a}</p>}
+                    <p hidden={!isOpen} className="pb-5 pr-8 text-base text-stone-600 leading-relaxed">{faq.a}</p>
                   </div>
                 );
               })}
