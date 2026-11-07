@@ -124,7 +124,7 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
               </p>
               <h1 className="mt-4 text-[2.5rem] sm:text-5xl lg:text-[3.5rem] font-black tracking-tight leading-[1.08] text-stone-900">
                 {t("სალონის მართვის პროგრამა ", "Salon management software ")}
-                <span className="text-rose-600">{t("რვეულის გარეშე", "without the notebook")}</span>
+                <span className="block text-rose-600">{t("რვეულის გარეშე", "without the notebook")}</span>
               </h1>
               <p className="mt-5 text-base sm:text-lg text-stone-600 leading-relaxed max-w-lg">
                 {t(
