@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/app-url";
 import {
+  claimWithRetry,
   createNotificationProvider,
   FakeNotificationProvider,
   processNotification,
@@ -16,6 +17,8 @@ import { UBILL_LOW_BALANCE, ubillBalance } from "@/lib/sms";
 export const maxDuration = 60;
 const BATCH_SIZE = 25;
 const TIME_BUDGET_MS = 40_000;
+// A failed read can itself take 20 seconds, so a late retry could run past the 60 second limit.
+const RETRY_CUTOFF_MS = 30_000;
 
 function timingSafeMatch(a: string, b: string): boolean {
   const left = Buffer.from(a);
@@ -59,7 +62,10 @@ async function processQueue(request: NextRequest) {
   let claimed = 0;
   let unrecorded = 0;
   while (Date.now() - startedAt < TIME_BUDGET_MS) {
-    const { data, error } = await supabase.rpc("claim_due_notifications", { p_limit: BATCH_SIZE });
+    const { data, error } = await claimWithRetry(
+      () => supabase.rpc("claim_due_notifications", { p_limit: BATCH_SIZE }),
+      () => Date.now() - startedAt < RETRY_CUTOFF_MS,
+    );
     if (error) {
       await logAppError({ source: "cron", message: `Message queue failed: ${error.message}`, path: "/api/cron/process-reminders" });
       return NextResponse.json({ error: "Could not read the message queue.", claimed, counts }, { status: 500 });

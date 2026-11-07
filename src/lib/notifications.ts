@@ -150,3 +150,21 @@ export async function processNotification(
     };
   }
 }
+
+const CLAIM_RETRY_WAIT_MS = 3_000;
+
+/**
+ * Reads the queue once more after a short wait, so a single network blip does not fail the run.
+ * Safe to repeat: messages claimed by a call whose answer got lost stay locked, and the queue
+ * picks them up again later, so they cannot be sent twice.
+ */
+export async function claimWithRetry<T extends { error: unknown }>(
+  claim: () => PromiseLike<T>,
+  mayRetry: () => boolean,
+  waitMs = CLAIM_RETRY_WAIT_MS,
+): Promise<T> {
+  const first = await claim();
+  if (!first.error || !mayRetry()) return first;
+  await new Promise((resolve) => setTimeout(resolve, waitMs));
+  return claim();
+}

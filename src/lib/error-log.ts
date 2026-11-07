@@ -3,9 +3,17 @@ import { createServiceClient } from "./supabase/server";
 
 export type ErrorSource = "server" | "client" | "cron";
 
+/** A gateway can answer with a whole error page (Cloudflare's 522, say). Only its title is worth keeping. */
+function shortenHtmlPage(text: string): string {
+  const start = text.search(/<!doctype html|<html[\s>]/i);
+  if (start < 0) return text;
+  const title = /<title[^>]*>([^<]*)<\/title>/i.exec(text)?.[1]?.trim();
+  return `${text.slice(0, start)}${title || "HTML error page"}`;
+}
+
 /** Trims and removes anything that looks like a token or key before an error is stored. */
 export function cleanErrorText(text: string, max: number): string {
-  return text
+  return shortenHtmlPage(text)
     .replace(/\b(eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{5,}|re_[A-Za-z0-9_]{10,}|sk_[A-Za-z0-9_]{10,}|whsec_[A-Za-z0-9]{10,})\b/g, "[redacted]")
     .replace(/(token|secret|password|apikey|api_key|key)=([^&\s]+)/gi, "$1=[redacted]")
     .replace(/\s+/g, " ")
