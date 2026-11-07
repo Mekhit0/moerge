@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronDown, Mail, Phone } from "lucide-react";
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
-import { COMPANY_SHORT_NAME, SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL } from "@/lib/contact";
+import { COMPANY_SHORT_NAME, FACEBOOK_URL, INSTAGRAM_URL, SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL } from "@/lib/contact";
 import { SEO_PAGES } from "@/lib/seo-pages";
 
 export const SIGNUP_HREF = "/login?mode=signup";
@@ -121,6 +121,8 @@ export function MarketingFooter({ onHome = false }: { onHome?: boolean }) {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
             <a href={`tel:${SUPPORT_PHONE_TEL}`} className="inline-flex min-h-9 items-center gap-1.5 font-semibold text-stone-700 hover:text-rose-700"><Phone className="h-4 w-4 text-rose-600" />{SUPPORT_PHONE_DISPLAY}</a>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="inline-flex min-h-9 min-w-0 items-center gap-1.5 font-semibold text-stone-700 hover:text-rose-700"><Mail className="h-4 w-4 shrink-0 text-rose-600" /><span className="truncate">{SUPPORT_EMAIL}</span></a>
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center font-semibold text-stone-700 hover:text-rose-700">Instagram</a>
+            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center font-semibold text-stone-700 hover:text-rose-700">Facebook</a>
           </div>
           <p className="text-xs">© {new Date().getFullYear()} {COMPANY_SHORT_NAME}. {t("ყველა უფლება დაცულია.", "All rights reserved.")}</p>
         </div>

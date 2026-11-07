@@ -2,6 +2,8 @@
 export const SUPPORT_EMAIL = "merabikhizanishvili@gmail.com";
 export const SUPPORT_PHONE_DISPLAY = "+995 598 73 47 77";
 export const SUPPORT_PHONE_TEL = "+995598734777";
+export const INSTAGRAM_URL = "https://www.instagram.com/moarge.salon/";
+export const FACEBOOK_URL = "https://www.facebook.com/people/Moarge/61596051124446/";
 // MOARGE is the brand. It is operated by the individual entrepreneur (ინდივიდუალური მეწარმე) WINST, registered in Georgia.
 export const COMPANY_LEGAL_NAME_KA = "ი/მ WINST";
 export const COMPANY_LEGAL_NAME_EN = "IE WINST";

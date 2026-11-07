@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SEO_PAGES, seoPage } from "../src/lib/seo-pages";
-import { jsonLdScript, pageMetadata } from "../src/lib/seo";
+import { jsonLdScript, organizationJsonLd, pageMetadata } from "../src/lib/seo";
 import { SCENES } from "../src/components/tour/Scenes";
 
 const RESERVED = ["book", "login", "register", "terms", "privacy", "pricing", "dashboard", "settings", "api", "guide", "platform"];
@@ -44,6 +44,10 @@ describe("SEO landing pages", () => {
     expect(meta.alternates?.canonical).toBe("https://www.moarge.test/onlain-javshani");
     expect(meta.robots).toEqual({ index: true, follow: true });
     expect(pageMetadata({ title: "t", description: "d", path: "/login", noIndex: true }).robots).toEqual({ index: false, follow: true });
+  });
+
+  it("point the business details at its own social profiles", () => {
+    expect(organizationJsonLd().sameAs).toEqual(["https://www.instagram.com/moarge.salon/", "https://www.facebook.com/people/Moarge/61596051124446/"]);
   });
 
   it("escape structured data so it cannot close the script tag", () => {

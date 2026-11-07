@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getAppUrl } from "./app-url";
-import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, SUPPORT_EMAIL, SUPPORT_PHONE_TEL } from "./contact";
+import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, FACEBOOK_URL, INSTAGRAM_URL, SUPPORT_EMAIL, SUPPORT_PHONE_TEL } from "./contact";
 import { CHEAPEST_MONTHLY_GEL, PACKAGES, PRICING_STARTS_AT } from "./pricing";
 
 const SITE_NAME = "moarge";
@@ -35,6 +35,7 @@ export function organizationJsonLd() {
     legalName: `${COMPANY_LEGAL_NAME_KA} / ${COMPANY_LEGAL_NAME_EN}`,
     url: getAppUrl(),
     logo: `${getAppUrl()}/icon.svg`,
+    sameAs: [INSTAGRAM_URL, FACEBOOK_URL],
     email: SUPPORT_EMAIL,
     telephone: SUPPORT_PHONE_TEL,
     areaServed: { "@type": "Country", name: "Georgia" },
