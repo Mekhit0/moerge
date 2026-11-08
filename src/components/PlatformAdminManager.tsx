@@ -117,6 +117,7 @@ export default function PlatformAdminManager() {
               <p className="mt-4 text-xs text-stone-500">{t(`გაგზავნილი შეტყობინებები 24 სთ-ში: ${summary.messages_sent_24h}`, `Messages sent in 24 hours: ${summary.messages_sent_24h}`)}</p>
               <p className="mt-1 text-xs text-stone-500">{summary.ubill_sms === null ? t("uBill-ის ნაშთი: უცნობია (გასაღები არ არის ან uBill არ პასუხობს)", "uBill balance: unknown (no key, or uBill did not answer)") : t(`uBill-ის ნაშთი: ${summary.ubill_sms} SMS`, `uBill balance: ${summary.ubill_sms} SMS`)}</p>
             </Card>
+            <TrialExtender />
           </div>
         ) : !loadError && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[0, 1, 2, 3].map((index) => <Skeleton key={index} className="h-28" />)}</div>)}
 
@@ -251,5 +252,43 @@ export default function PlatformAdminManager() {
         ))}
       </main>
     </div>
+  );
+}
+
+/**
+ * The safety switch: every running trial lasts until the chosen day, for when card payments are not
+ * ready. It never shortens a trial.
+ */
+function TrialExtender() {
+  const { t } = useLanguage();
+  const toast = useToast();
+  const [until, setUntil] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function extend() {
+    if (!until || !window.confirm(t(`ყველა მიმდინარე საცდელი გაგრძელდება ${until}-მდე, ჩათვლით. გავაგრძელოთ?`, `Every running trial will last until ${until}, inclusive. Continue?`))) return;
+    setBusy(true);
+    try {
+      const response = await fetch("/api/platform/trials", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ until }) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) toast.error(String(result.error ?? t("ვერ მოხერხდა.", "Something went wrong.")));
+      else toast.success(t(`გაგრძელდა: ${result.extended} სალონი.`, `Extended: ${result.extended} salons.`));
+    } catch {
+      toast.error(t("ქსელური შეცდომა.", "Network error."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader title={t("საცდელის გაგრძელება ყველასთვის", "Extend every trial")}
+        description={t("თუ ბარათით გადახდა დროზე არ ჩაირთო, აქ ყველა მიმდინარე საცდელს ერთად გააგრძელებთ. ვადას არასდროს ამოკლებს.", "If card payments are not ready in time, extend every running trial at once. It never shortens a trial.")} />
+      <div className="flex flex-wrap items-center gap-3">
+        <input type="date" value={until} onChange={(event) => setUntil(event.target.value)} aria-label={t("ბოლო დღე", "Last day")}
+          className="min-h-11 rounded-xl border border-stone-200 bg-white px-3 text-base text-stone-900 focus:outline-none focus:ring-2 focus:ring-brand/30" />
+        <Button variant="secondary" loading={busy} disabled={!until || busy} onClick={() => void extend()}>{t("გაგრძელება", "Extend")}</Button>
+      </div>
+    </Card>
   );
 }

@@ -22,6 +22,7 @@ import {
 import { LanguageSwitcher, useLanguage } from "@/lib/i18n";
 import MoargeLogo from "@/components/MoargeLogo";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
+import { currentOffer } from "@/lib/pricing";
 import { appUrl } from "@/lib/app-url";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
@@ -161,7 +162,7 @@ export default function LoginPage() {
   const subtitle = mode === "signin"
     ? t("შედით თქვენი სალონის პანელში.", "Sign in to your salon dashboard.")
     : mode === "signup"
-      ? t(`${BILLING_CONFIG.trialDays} დღე უფასოდ, ბარათის გარეშე.`, `${BILLING_CONFIG.trialDays} days free, no card needed.`)
+      ? t(`${currentOffer().trialDays} დღე უფასოდ, ბარათის გარეშე.`, `${currentOffer().trialDays} days free, no card needed.`)
       : t("მიუთითეთ ელფოსტა და გამოგიგზავნით ბმულს ახალი პაროლისთვის.", "Enter your email and we'll send you a link to set a new password.");
 
   return (
@@ -180,7 +181,7 @@ export default function LoginPage() {
           </h1>
           <ul className="space-y-4 text-base text-stone-200">
             {[
-              { icon: Gift, text: t(`${BILLING_CONFIG.trialDays} დღე უფასოდ, ბარათის გარეშე`, `${BILLING_CONFIG.trialDays} days free, no card needed`) },
+              { icon: Gift, text: t(`${currentOffer().trialDays} დღე უფასოდ, ბარათის გარეშე`, `${currentOffer().trialDays} days free, no card needed`) },
               { icon: CalendarDays, text: t("ონლაინ ჯავშნები და მარტივი კალენდარი", "Online booking and a simple calendar") },
               { icon: Users, text: t(`${BILLING_CONFIG.trialStaffLimit}-მდე სპეციალისტი`, `Up to ${BILLING_CONFIG.trialStaffLimit} specialists`) },
             ].map(({ icon: Icon, text }) => (

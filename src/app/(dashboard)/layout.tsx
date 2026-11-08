@@ -6,8 +6,9 @@ import { appUrl } from "@/lib/app-url";
 import { earningsAccess } from "@/lib/earnings-server";
 import { currentOffer } from "@/lib/pricing";
 
+// The last day of a period: an end at midnight belongs to the day before.
 function formatDay(iso: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "Asia/Tbilisi" }).format(new Date(iso));
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "Asia/Tbilisi" }).format(new Date(new Date(iso).getTime() - 1000));
 }
 
 export default async function DashboardLayout({

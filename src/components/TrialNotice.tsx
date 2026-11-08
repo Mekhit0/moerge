@@ -21,12 +21,14 @@ export default function TrialNotice({ info }: { info: TrialNoticeInfo }) {
   const { lang, t } = useLanguage();
   const storageKey = `moarge-trial-notice-${info.endsAt}`;
   const [hidden, setHidden] = useState(true);
+  // In the last 3 days of a paid-era trial the notice stays, so nobody is surprised by the end.
+  const urgent = !info.pilot && new Date(info.endsAt).getTime() - Date.now() < 3 * 86_400_000;
 
   useEffect(() => {
     try { setHidden(window.localStorage.getItem(storageKey) === "closed"); } catch { setHidden(false); }
   }, [storageKey]);
 
-  if (hidden) return null;
+  if (hidden && !urgent) return null;
   function close() {
     setHidden(true);
     try { window.localStorage.setItem(storageKey, "closed"); } catch { /* the notice simply returns next time */ }
@@ -41,15 +43,17 @@ export default function TrialNotice({ info }: { info: TrialNoticeInfo }) {
             `From 1 December moarge becomes paid: Solo 19 ₾, Business 59 ₾ a month. Your free period ends on ${info.endsOn.en}. Your data stays.`
           )
           : t(
-            `თქვენი უფასო პერიოდი სრულდება: ${info.endsOn.ka}. შემდეგ აირჩიეთ პაკეტი, მონაცემები შენახული რჩება.`,
-            `Your free period ends on ${info.endsOn.en}. Then pick a package; your data stays.`
+            `თქვენი უფასო საცდელი სრულდება: ${info.endsOn.ka}. აირჩიეთ პაკეტი, რომ ანგარიში აქტიური დარჩეს. მონაცემები შენახული რჩება.`,
+            `Your free trial ends on ${info.endsOn.en}. Pick a plan to keep the account active. Your data stays.`
           )}{" "}
-        <Link href="/pricing" className="font-semibold text-rose-700 underline underline-offset-2">{t("ფასების ნახვა", "See prices")}</Link>
+        {info.pilot
+          ? <Link href="/pricing" className="font-semibold text-rose-700 underline underline-offset-2">{t("ფასების ნახვა", "See prices")}</Link>
+          : <Link href="/billing" className="font-semibold text-rose-700 underline underline-offset-2">{t("პაკეტის არჩევა", "Choose a plan")}</Link>}
       </p>
-      <button type="button" onClick={close} aria-label={lang === "ka" ? "დახურვა" : "Close"}
+      {!urgent && <button type="button" onClick={close} aria-label={lang === "ka" ? "დახურვა" : "Close"}
         className="-m-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-700">
         <X className="h-4 w-4" />
-      </button>
+      </button>}
     </div>
   );
 }

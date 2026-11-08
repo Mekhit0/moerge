@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarOff, Clock, CreditCard, MessageSquare, Scissors, Store, Users } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { BILLING_CONFIG } from "@/lib/billing-plans";
+import { billingOpen } from "@/lib/billing-plans";
 
 export default function SettingsNav({ canManageData }: { canManageData: boolean }) {
   const { t } = useLanguage();
@@ -17,7 +17,7 @@ export default function SettingsNav({ canManageData }: { canManageData: boolean 
     { href: "/settings/schedules", label: t("სამუშაო საათები", "Working hours"), icon: Clock },
     { href: "/settings/time-off", label: t("დასვენება", "Days off"), icon: CalendarOff },
     { href: "/settings/sms", label: t("SMS", "SMS"), icon: MessageSquare },
-    ...(canManageData && BILLING_CONFIG.billingEnabled ? [{ href: "/billing", label: t("გადახდა", "Billing"), icon: CreditCard }] : []),
+    ...(canManageData && billingOpen() ? [{ href: "/billing", label: t("გადახდა", "Billing"), icon: CreditCard }] : []),
   ];
 
   return (

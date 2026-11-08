@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, COMPANY_SHORT_NAME, SUPPORT_EMAIL } from "@/lib/contact";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
-import { REFUND } from "@/lib/pricing";
+import { REFUND, currentOffer } from "@/lib/pricing";
 import {
   Sparkles,
   ArrowLeft,
@@ -227,8 +227,8 @@ export default function TermsOfServicePage() {
             </div>
             <p>
               {t(
-                `ახალ სალონებს ეძლევათ ${BILLING_CONFIG.trialDays}-დღიანი უფასო სატესტო პერიოდი ბარათის გარეშე, ${BILLING_CONFIG.trialStaffLimit}-მდე სპეციალისტით. პერიოდის დასრულებისას ანგარიში სანახავ რეჟიმზე გადადის. მონაცემები ინახება და ავტომატურად არ იშლება.`,
-                `New salons get a free ${BILLING_CONFIG.trialDays}-day test period without a card, with up to ${BILLING_CONFIG.trialStaffLimit} specialists. When it ends, the account becomes view-only. Data is kept and is not deleted automatically.`
+                `ახალ სალონებს ეძლევათ ${currentOffer().trialDays}-დღიანი უფასო სატესტო პერიოდი ბარათის გარეშე, ${BILLING_CONFIG.trialStaffLimit}-მდე სპეციალისტით. პერიოდის დასრულებისას ანგარიში სანახავ რეჟიმზე გადადის. მონაცემები ინახება და ავტომატურად არ იშლება.`,
+                `New salons get a free ${currentOffer().trialDays}-day test period without a card, with up to ${BILLING_CONFIG.trialStaffLimit} specialists. When it ends, the account becomes view-only. Data is kept and is not deleted automatically.`
               )}
             </p>
             <p>

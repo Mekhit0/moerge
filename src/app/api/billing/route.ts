@@ -1,93 +1,133 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { BILLING_CONFIG, getBillableExtraBranches, type PaidPlan } from "@/lib/billing-plans";
+import { BILLING_CONFIG, PAYABLE_MONTHS, SELLABLE_PLANS, billingOpen, planInfo, quotePlan, quoteSmsPacks, type PaidPlan, type QuoteLine } from "@/lib/billing-plans";
+import { EARLY_BIRD, PRICING_STARTS_AT, REFUND, currentOffer } from "@/lib/pricing";
 import { getPaymentProvider } from "@/lib/payment-provider";
 import { getAppUrl } from "@/lib/app-url";
 import { createServiceClient, getAuthenticatedSalonContext, requireRole } from "@/lib/supabase/server";
 
-const plans = ["business", "multi_branch"] as const;
-const BILLING_DISABLED = { error: "Billing is not available during the pilot." };
+const BILLING_CLOSED = { error: "ფასიანი პაკეტები 1 დეკემბრიდან იწყება. / Paid plans start on 1 December." };
+
+type Db = ReturnType<typeof createServiceClient>;
+
+/** The first 20 salons to pay for a plan in December get 20% off that first payment. */
+async function earlyBirdPercent(db: Db, salonId: string): Promise<number> {
+  if (!currentOffer().earlyBird) return 0;
+  const { data: paid } = await db.from("invoices").select("salon_id").eq("kind", "plan").eq("status", "paid").gte("paid_at", PRICING_STARTS_AT.toISOString());
+  const salons = new Set((paid ?? []).map((row) => row.salon_id as string));
+  if (salons.has(salonId)) return 0;
+  const { count: before } = await db.from("invoices").select("id", { count: "exact", head: true }).eq("salon_id", salonId).eq("kind", "plan").eq("status", "paid");
+  if ((before ?? 0) > 0 || salons.size >= EARLY_BIRD.salons) return 0;
+  return EARLY_BIRD.discountPercent;
+}
+
+function paymentsEnabled(): boolean {
+  try { getPaymentProvider(); return true; } catch { return false; }
+}
+
+async function context() {
+  const ctx = await getAuthenticatedSalonContext();
+  if (!ctx) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  if (!requireRole(ctx, ["owner", "admin"])) return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  return { ctx };
+}
 
 export async function GET() {
-  if (!BILLING_CONFIG.billingEnabled) return NextResponse.json(BILLING_DISABLED, { status: 404 });
-  const ctx = await getAuthenticatedSalonContext();
-  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!billingOpen()) return NextResponse.json(BILLING_CLOSED, { status: 404 });
+  const { ctx, error } = await context();
+  if (error) return error;
   const db = createServiceClient();
-  const [{ data: subscription }, { data: invoices }, { data: wallet }, { count: staffCount }, { count: branchCount }] = await Promise.all([
-    db.from("subscriptions").select("*, plans(*)").eq("salon_id", ctx.salonId).maybeSingle(),
-    db.from("invoices").select("id,kind,status,total_gel,due_at,period_start,period_end,created_at,invoice_lines(*)").eq("salon_id", ctx.salonId).order("created_at", { ascending: false }).limit(50),
-    db.from("sms_wallet").select("included_quota,prepaid_balance,used_this_period,overage_count,overage_cap_gel,period_start").eq("salon_id", ctx.salonId).maybeSingle(),
+  const [{ data: subscription }, { data: invoices }, { data: wallet }, { count: staffCount }] = await Promise.all([
+    db.from("subscriptions").select("status,plan_code,trial_ends_at,current_period_end,cancel_at_period_end,grace_ends_at").eq("salon_id", ctx.salonId).maybeSingle(),
+    db.from("invoices").select("id,kind,status,total_gel,created_at,paid_at,invoice_lines(description,line_type)").eq("salon_id", ctx.salonId).order("created_at", { ascending: false }).limit(24),
+    db.from("sms_wallet").select("included_quota,prepaid_balance,used_this_period").eq("salon_id", ctx.salonId).maybeSingle(),
     db.from("staff").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true),
-    db.from("salon_branches").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true),
   ]);
-  const plan = subscription?.plan_code as PaidPlan | undefined;
-  const estimate = plan ? BILLING_CONFIG.plans[plan]?.monthlyGel ?? 0 : 0;
-  const extraStaff = Math.max(0, (staffCount ?? 0) - (plan ? BILLING_CONFIG.plans[plan].staffIncluded : 7));
-  const extraBranches = plan ? getBillableExtraBranches(branchCount ?? 0, BILLING_CONFIG.plans[plan].branches) : 0;
-  return NextResponse.json({ config: BILLING_CONFIG, subscription, invoices: invoices ?? [], wallet, activeStaffCount: staffCount ?? 0, activeBranchCount: branchCount ?? 0, extraBranchCount: extraBranches,
-    nextInvoicePreviewGel: estimate + extraStaff * BILLING_CONFIG.extraStaffMonthlyGel + extraBranches * BILLING_CONFIG.extraBranchMonthlyGel + (wallet?.overage_count ?? 0) * BILLING_CONFIG.smsOveragePriceGel,
-    paymentsEnabled: process.env.PAYMENT_PROVIDER === "fake" });
+  return NextResponse.json({
+    subscription,
+    invoices: invoices ?? [],
+    wallet,
+    activeStaffCount: staffCount ?? 0,
+    plans: SELLABLE_PLANS.map((code) => planInfo(code)),
+    months: PAYABLE_MONTHS,
+    earlyBirdPercent: await earlyBirdPercent(db, ctx.salonId),
+    refund: REFUND,
+    smsPack: { minimum: BILLING_CONFIG.smsPackMinimum, priceGel: BILLING_CONFIG.smsPackPriceGel },
+    paymentsEnabled: paymentsEnabled(),
+  });
 }
+
+const actionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("upgrade"), plan: z.enum(SELLABLE_PLANS as [PaidPlan, ...PaidPlan[]]), months: z.union([z.literal(1), z.literal(6), z.literal(12)]).default(1) }),
+  z.object({ action: z.literal("buy_sms"), packs: z.number().int().min(1).max(50) }),
+  z.object({ action: z.literal("pay_invoice"), invoiceId: z.string().uuid() }),
+  z.object({ action: z.literal("cancel") }),
+]);
+
 export async function POST(request: NextRequest) {
-  if (!BILLING_CONFIG.billingEnabled) return NextResponse.json(BILLING_DISABLED, { status: 404 });
-  const ctx = await getAuthenticatedSalonContext();
-  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!requireRole(ctx, ["owner", "admin"])) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const body = await request.json().catch(() => null);
-  const parsed = z.discriminatedUnion("action", [
-    z.object({ action: z.literal("upgrade"), plan: z.enum(["business", "multi_branch"]), months: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal(12)]).default(1) }),
-    z.object({ action: z.literal("cancel") }),
-z.object({ action: z.literal("pay_invoice"), invoiceId: z.string().uuid() }),
-    z.object({ action: z.literal("buy_sms"), quantity: z.number().int().min(BILLING_CONFIG.smsPackMinimum).max(100000) }),
-z.object({ action: z.literal("set_sms_cap"), amountGel: z.number().min(0).max(500) }),
-  ]).safeParse(body);
+  if (!billingOpen()) return NextResponse.json(BILLING_CLOSED, { status: 404 });
+  const { ctx, error } = await context();
+  if (error) return error;
+  const parsed = actionSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid billing action." }, { status: 400 });
+  const action = parsed.data;
   const db = createServiceClient();
   const { data: sub } = await db.from("subscriptions").select("id,plan_code,status").eq("salon_id", ctx.salonId).maybeSingle();
-  if (parsed.data.action === "pay_invoice") {
-    const { data: invoice } = await db.from("invoices").select("id,total_gel,status").eq("id", parsed.data.invoiceId).eq("salon_id", ctx.salonId).single();
-    if (!invoice || invoice.status !== "open") return NextResponse.json({ error: "Open invoice not found." }, { status: 404 });
-    try {
-      const checkout = await getPaymentProvider().createCheckout({ invoiceId: invoice.id, amountGel: Number(invoice.total_gel), currency: "GEL", baseUrl: getAppUrl() });
-      await db.from("payments").upsert({ salon_id: ctx.salonId, invoice_id: invoice.id, provider: "fake", provider_payment_id: checkout.providerPaymentId, status: "pending", amount_gel: invoice.total_gel, idempotency_key: invoice.id }, { onConflict: "salon_id,idempotency_key" });
-      return NextResponse.json({ checkoutUrl: checkout.checkoutUrl });
-    } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Payment provider unavailable." }, { status: 503 }); }
-  }
-  if (parsed.data.action === "cancel") {
+
+  if (action.action === "cancel") {
     if (sub) await db.from("subscriptions").update({ cancel_at_period_end: true }).eq("id", sub.id).eq("salon_id", ctx.salonId);
     return NextResponse.json({ success: true, cancelAtPeriodEnd: true });
   }
-  const isPack = parsed.data.action === "buy_sms";
-  const plan: PaidPlan | null = parsed.data.action === "upgrade" ? parsed.data.plan : null;
-  const months = parsed.data.action === "upgrade" ? parsed.data.months : 1;
-  const quantity = parsed.data.action === "buy_sms" ? parsed.data.quantity : 0;
-  if (plan) {
-    const cap = BILLING_CONFIG.plans[plan].staffLimit;
+
+  if (action.action === "pay_invoice") {
+    const { data: invoice } = await db.from("invoices").select("id,total_gel,status").eq("id", action.invoiceId).eq("salon_id", ctx.salonId).maybeSingle();
+    if (!invoice || invoice.status !== "open") return NextResponse.json({ error: "Open invoice not found." }, { status: 404 });
+    return checkout(db, ctx.salonId, invoice.id, Number(invoice.total_gel));
+  }
+
+  let kind: "plan" | "sms_pack";
+  let lines: QuoteLine[];
+  let total: number;
+  let planCode: PaidPlan | null = null;
+  let months = 1;
+  if (action.action === "upgrade") {
+    const pkg = planInfo(action.plan);
     const { count } = await db.from("staff").select("id", { count: "exact", head: true }).eq("salon_id", ctx.salonId).eq("is_active", true);
-    if ((count ?? 0) > BILLING_CONFIG.plans[plan].staffLimit) return NextResponse.json({ error: `This plan allows up to ${cap} active staff.` }, { status: 422 });
+    if ((count ?? 0) > pkg.staffLimit) {
+      return NextResponse.json({ error: `${pkg.name.ka} პაკეტში მაქსიმუმ ${pkg.staffLimit} აქტიური სპეციალისტია. ჯერ გამორთეთ ზედმეტი. / ${pkg.name.en} allows up to ${pkg.staffLimit} active specialists. Turn off the extra ones first.` }, { status: 422 });
+    }
+    const quote = quotePlan(action.plan, action.months, await earlyBirdPercent(db, ctx.salonId));
+    kind = "plan"; lines = quote.lines; total = quote.totalGel; planCode = action.plan; months = action.months;
+  } else {
+    const quote = quoteSmsPacks(action.packs);
+    kind = "sms_pack"; lines = quote.lines; total = quote.totalGel;
   }
-  const base = plan ? BILLING_CONFIG.plans[plan].monthlyGel * months * (1 - ((BILLING_CONFIG.prepaidDiscounts as Record<number, number>)[months] ?? 0) / 100) : 0;
-  const total = isPack ? quantity * BILLING_CONFIG.smsPackPriceGel : base;
-  const { data: invoice, error } = await db.from("invoices").insert({ salon_id: ctx.salonId, subscription_id: sub?.id ?? null, kind: isPack ? "sms_pack" : "plan", plan_code: plan, prepaid_months: months, idempotency_key: randomUUID(), status: "open", subtotal_gel: total, total_gel: total, currency: "GEL", due_at: new Date().toISOString() }).select("id").single();
-  if (error || !invoice) return NextResponse.json({ error: "Could not create invoice." }, { status: 500 });
-  const description = isPack ? `${quantity} prepaid SMS` : `${plan} plan, ${months} month(s)`;
-  const { error: lineError } = await db.from("invoice_lines").insert({ salon_id: ctx.salonId, invoice_id: invoice.id, line_type: isPack ? "sms_pack" : "plan", description, quantity: isPack ? quantity : months, unit_price_gel: isPack ? BILLING_CONFIG.smsPackPriceGel : BILLING_CONFIG.plans[plan!].monthlyGel, total_gel: total });
+
+  const subtotal = lines.filter((line) => line.type !== "adjustment").reduce((sum, line) => sum + line.totalGel, 0);
+  const { data: invoice, error: invoiceError } = await db.from("invoices").insert({
+    salon_id: ctx.salonId, subscription_id: sub?.id ?? null, kind, plan_code: planCode, prepaid_months: months,
+    idempotency_key: randomUUID(), status: "open", subtotal_gel: subtotal, total_gel: total, currency: "GEL", due_at: new Date().toISOString(),
+  }).select("id").single();
+  if (invoiceError || !invoice) return NextResponse.json({ error: "Could not create invoice." }, { status: 500 });
+  const { error: lineError } = await db.from("invoice_lines").insert(lines.map((line) => ({
+    salon_id: ctx.salonId, invoice_id: invoice.id, line_type: line.type, description: line.description,
+    quantity: line.quantity, unit_price_gel: line.unitPriceGel, total_gel: line.totalGel,
+  })));
   if (lineError) return NextResponse.json({ error: "Could not add invoice line." }, { status: 500 });
-  try {
-    const provider = getPaymentProvider();
-    const checkout = await provider.createCheckout({ invoiceId: invoice.id, amountGel: total, currency: "GEL", baseUrl: getAppUrl() });
-    await db.from("payments").insert({ salon_id: ctx.salonId, invoice_id: invoice.id, provider: "fake", provider_payment_id: checkout.providerPaymentId, status: "pending", amount_gel: total, idempotency_key: invoice.id });
-    return NextResponse.json({ invoiceId: invoice.id, checkoutUrl: checkout.checkoutUrl });
-  } catch (err) {
-    return NextResponse.json({ invoiceId: invoice.id, error: err instanceof Error ? err.message : "Payment provider unavailable." }, { status: 503 });
-  }
+  return checkout(db, ctx.salonId, invoice.id, total);
 }
 
-
-
-
-
-
-
+async function checkout(db: Db, salonId: string, invoiceId: string, amountGel: number) {
+  let provider;
+  try { provider = getPaymentProvider(); } catch {
+    return NextResponse.json({ invoiceId, error: "ბარათით გადახდა რამდენიმე დღეში ჩაირთვება. საცდელი პერიოდი გრძელდება. / Card payment opens in a few days. Your trial continues." }, { status: 503 });
+  }
+  try {
+    const result = await provider.createCheckout({ invoiceId, amountGel, currency: "GEL", baseUrl: getAppUrl() });
+    await db.from("payments").upsert({ salon_id: salonId, invoice_id: invoiceId, provider: "fake", provider_payment_id: result.providerPaymentId, status: "pending", amount_gel: amountGel, idempotency_key: invoiceId }, { onConflict: "salon_id,idempotency_key" });
+    return NextResponse.json({ invoiceId, checkoutUrl: result.checkoutUrl });
+  } catch (err) {
+    return NextResponse.json({ invoiceId, error: err instanceof Error ? err.message : "Payment provider unavailable." }, { status: 503 });
+  }
+}
