@@ -37,13 +37,15 @@ export const siteMetadata: Metadata = {
     telephone: false,
   },
   icons: {
+    // SVG for modern browsers, a 48px PNG for search results and older browsers.
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", type: "image/png", sizes: "48x48" },
     ],
     apple: [
-      { url: "/apple-icon.svg", type: "image/svg+xml" },
+      { url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" },
     ],
-    shortcut: "/icon.svg",
+    shortcut: "/favicon.ico",
   },
   openGraph: {
     type: "website",

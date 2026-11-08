@@ -1,8 +1,7 @@
 import PricingView from "@/components/marketing/PricingView";
-import { CHEAPEST_MONTHLY_GEL, PACKAGES, PRICING_STARTS_AT, currentOffer } from "@/lib/pricing";
+import { PACKAGES, currentOffer } from "@/lib/pricing";
 import { pricingFaq } from "@/lib/pricing-faq";
-import { breadcrumbJsonLd, faqJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
-import { getAppUrl } from "@/lib/app-url";
+import { breadcrumbJsonLd, faqJsonLd, jsonLdScript, pageMetadata, softwareJsonLd } from "@/lib/seo";
 
 // Rebuilt every hour so the November wording switches to the trial wording on 1 December by itself.
 export const revalidate = 3600;
@@ -16,26 +15,10 @@ export const metadata = pageMetadata({
 
 export default function PricingPage() {
   const offer = currentOffer();
-  const sellable = PACKAGES.filter((pkg) => pkg.available);
   const structured = [
     breadcrumbJsonLd([{ name: "moarge", path: "/" }, { name: "ფასები", path: "/pricing" }]),
     faqJsonLd(pricingFaq(offer).map((item) => ({ q: item.q.ka, a: item.a.ka }))),
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      name: "moarge",
-      url: getAppUrl(),
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Web, iOS, Android",
-      offers: {
-        "@type": "AggregateOffer",
-        priceCurrency: "GEL",
-        lowPrice: String(CHEAPEST_MONTHLY_GEL),
-        highPrice: String(Math.max(...sellable.map((pkg) => pkg.monthlyGel))),
-        offerCount: sellable.length,
-        validFrom: PRICING_STARTS_AT.toISOString(),
-      },
-    },
+    softwareJsonLd(metadata.description as string),
   ];
   return (
     <>

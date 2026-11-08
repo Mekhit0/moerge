@@ -29,12 +29,14 @@ export function organizationJsonLd() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${getAppUrl()}/#organization`,
-    name: "MOARGE",
-    alternateName: ["moarge", "მოარგე"],
+    name: "moarge",
+    alternateName: ["MOARGE", "მოარგე"],
     description: "სალონის მართვის პროგრამა საქართველოს სილამაზის სალონებისთვის, ბარბერშოპებისთვის და კოსმეტოლოგებისთვის.",
+    // Tells search engines this is not the Tbilisi car accessories shop with a similar name.
+    disambiguatingDescription: "moarge (მოარგე) is online salon management software for beauty salons in Georgia, run by IE WINST. It is not a car accessories shop.",
     legalName: `${COMPANY_LEGAL_NAME_KA} / ${COMPANY_LEGAL_NAME_EN}`,
     url: getAppUrl(),
-    logo: `${getAppUrl()}/icon.svg`,
+    logo: `${getAppUrl()}/logo.png`,
     sameAs: [INSTAGRAM_URL, FACEBOOK_URL],
     email: SUPPORT_EMAIL,
     telephone: SUPPORT_PHONE_TEL,
@@ -60,22 +62,24 @@ export function softwareJsonLd(description: string) {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
+    "@id": `${getAppUrl()}/#software`,
     name: "moarge",
     url: getAppUrl(),
     applicationCategory: "BusinessApplication",
     applicationSubCategory: "Salon management software",
-    operatingSystem: "Web, iOS, Android",
+    // Runs in the browser and can be added to the home screen; there are no store apps.
+    operatingSystem: "Web",
     inLanguage: ["ka", "en"],
     description,
-    offers: {
-      "@type": "AggregateOffer",
+    offers: PACKAGES.filter((pkg) => pkg.available).map((pkg) => ({
+      "@type": "Offer",
+      name: pkg.name.en,
+      price: String(pkg.monthlyGel),
       priceCurrency: "GEL",
-      lowPrice: String(CHEAPEST_MONTHLY_GEL),
-      highPrice: String(Math.max(...PACKAGES.filter((pkg) => pkg.available).map((pkg) => pkg.monthlyGel))),
-      offerCount: PACKAGES.filter((pkg) => pkg.available).length,
+      priceSpecification: { "@type": "UnitPriceSpecification", price: String(pkg.monthlyGel), priceCurrency: "GEL", unitCode: "MON" },
       url: `${getAppUrl()}/pricing`,
       validFrom: PRICING_STARTS_AT.toISOString(),
-    },
+    })),
     publisher: { "@id": `${getAppUrl()}/#organization` },
   };
 }
@@ -108,18 +112,33 @@ export function jsonLdScript(data: unknown): string {
 
 export function articleJsonLd(input: { path: string; title: string; description: string; published: string; updated: string }) {
   const url = `${getAppUrl()}${input.path}`;
+  const day = (date: string) => `${date}T09:00:00+04:00`;
   return {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": `${url}#article`,
     headline: input.title,
     description: input.description,
     inLanguage: "ka",
-    datePublished: input.published,
-    dateModified: input.updated,
-    mainEntityOfPage: url,
+    datePublished: day(input.published),
+    dateModified: day(input.updated),
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
     url,
     image: `${getAppUrl()}${SHARE_IMAGE.url}`,
     author: { "@id": `${getAppUrl()}/#organization` },
     publisher: { "@id": `${getAppUrl()}/#organization` },
+  };
+}
+
+export function blogJsonLd(posts: Array<{ path: string; title: string; published: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": `${getAppUrl()}/blog#blog`,
+    name: "moarge: რჩევები სალონის მფლობელებისთვის",
+    url: `${getAppUrl()}/blog`,
+    inLanguage: "ka",
+    publisher: { "@id": `${getAppUrl()}/#organization` },
+    blogPost: posts.map((post) => ({ "@type": "BlogPosting", headline: post.title, url: `${getAppUrl()}${post.path}`, datePublished: `${post.published}T09:00:00+04:00` })),
   };
 }

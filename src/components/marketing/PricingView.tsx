@@ -17,6 +17,8 @@ type Line = { text: string; included: boolean; soon?: boolean };
 
 export default function PricingView({ offer }: { offer: Offer }) {
   const { lang, t } = useLanguage();
+  const solo = PACKAGES.find((pkg) => pkg.code === "solo")!;
+  const business = PACKAGES.find((pkg) => pkg.code === "business")!;
   const [months, setMonths] = useState<BillingMonths>(1);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const faqs = pricingFaq(offer);
@@ -144,6 +146,39 @@ export default function PricingView({ offer }: { offer: Offer }) {
                   </article>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* The same prices as a plain table and one sentence, easy to read and to quote. */}
+        <section className="border-b border-stone-200/70 py-12 sm:py-16">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6">
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{t("პაკეტების შედარება", "Plans compared")}</h2>
+            <p className="mt-3 text-base leading-relaxed text-stone-600">
+              {t(
+                `სოლო ${solo.monthlyGel} ₾ თვეში: 1 სპეციალისტი და ${formatGel(solo.smsIncluded)} SMS. ბიზნესი ${business.monthlyGel} ₾ თვეში: ${business.staffIncluded} სპეციალისტი (ყოველი დამატებითი ${business.extraStaffGel} ₾), ${formatGel(business.smsIncluded)} SMS, გუნდი და საკომისიო. 6 თვით გადახდისას 10% ფასდაკლებაა, 12 თვით 20%.`,
+                `Solo is ${solo.monthlyGel} ₾ a month: 1 specialist and ${formatGel(solo.smsIncluded)} SMS. Business is ${business.monthlyGel} ₾ a month: ${business.staffIncluded} specialists (${business.extraStaffGel} ₾ for each extra), ${formatGel(business.smsIncluded)} SMS, team and commission. Paying for 6 months saves 10%, 12 months 20%.`
+              )}
+            </p>
+            <div className="mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-white">
+              <table className="w-full table-fixed text-left text-sm">
+                <thead className="bg-stone-50 text-stone-600">
+                  <tr><th scope="col" className="p-3 font-semibold"></th><th scope="col" className="p-3 font-bold text-stone-900">{solo.name[lang]}</th><th scope="col" className="p-3 font-bold text-stone-900">{business.name[lang]}</th></tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100 text-stone-800">
+                  {[
+                    [t("ფასი თვეში", "Price a month"), `${solo.monthlyGel} ₾`, `${business.monthlyGel} ₾`],
+                    [t("სპეციალისტები", "Specialists"), "1", t(`${business.staffIncluded}, დამატებითი ${business.extraStaffGel} ₾`, `${business.staffIncluded}, extra ${business.extraStaffGel} ₾ each`)],
+                    [t("SMS თვეში", "SMS a month"), formatGel(solo.smsIncluded), formatGel(business.smsIncluded)],
+                    [t("ონლაინ ჯავშანი და კალენდარი", "Online booking and calendar"), "✓", "✓"],
+                    [t("გუნდი, როლები, საკომისიო", "Team, roles, commission"), "—", "✓"],
+                    [t("6 თვე ერთად (−10%)", "6 months at once (−10%)"), `${formatGel(packagePrice(solo, 6).total)} ₾`, `${formatGel(packagePrice(business, 6).total)} ₾`],
+                    [t("12 თვე ერთად (−20%)", "12 months at once (−20%)"), `${formatGel(packagePrice(solo, 12).total)} ₾`, `${formatGel(packagePrice(business, 12).total)} ₾`],
+                  ].map(([label, a, b]) => (
+                    <tr key={label}><th scope="row" className="w-[42%] p-2.5 font-medium [overflow-wrap:anywhere] text-stone-600 sm:p-3">{label}</th><td className="p-2.5 sm:p-3">{a}</td><td className="p-2.5 sm:p-3">{b}</td></tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </section>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { ARTICLES, readingMinutes } from "@/lib/articles";
-import { breadcrumbJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
+import { blogJsonLd, breadcrumbJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
 import { MarketingFooter, MarketingHeader } from "@/components/marketing/MarketingChrome";
 
 export const metadata = pageMetadata({
@@ -13,7 +13,10 @@ export const metadata = pageMetadata({
 /** The list of articles, newest first. */
 export default function BlogIndexPage() {
   const items = [...ARTICLES].sort((a, b) => b.published.localeCompare(a.published));
-  const structured = [breadcrumbJsonLd([{ name: "moarge", path: "/" }, { name: "სტატიები", path: "/blog" }])];
+  const structured = [
+    breadcrumbJsonLd([{ name: "moarge", path: "/" }, { name: "სტატიები", path: "/blog" }]),
+    blogJsonLd(items.map((item) => ({ path: `/blog/${item.slug}`, title: item.h1, published: item.published }))),
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-ivory text-stone-900">
