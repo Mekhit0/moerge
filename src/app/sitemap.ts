@@ -2,10 +2,11 @@ import { MetadataRoute } from "next";
 import { getAppUrl } from "@/lib/app-url";
 import { SEO_PAGES } from "@/lib/seo-pages";
 import { ARTICLES } from "@/lib/articles";
+import { LEGAL_UPDATED as LEGAL_UPDATED_DAY } from "@/lib/legal";
 
 // Fixed dates: a sitemap that says "changed now" on every request teaches Google to ignore it.
 const SITE_UPDATED = new Date("2026-11-08");
-const LEGAL_UPDATED = new Date("2026-10-01");
+const LEGAL_UPDATED = new Date(LEGAL_UPDATED_DAY);
 const PRICING_UPDATED = new Date("2026-11-02");
 
 export default function sitemap(): MetadataRoute.Sitemap {
