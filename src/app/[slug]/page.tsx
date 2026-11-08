@@ -7,6 +7,8 @@ import { breadcrumbJsonLd, faqJsonLd, jsonLdScript, pageMetadata } from "@/lib/s
 import { CHEAPEST_MONTHLY_GEL, currentOffer } from "@/lib/pricing";
 import { MarketingFooter, MarketingHeader, SIGNUP_HREF } from "@/components/marketing/MarketingChrome";
 import ScenePreview from "@/components/marketing/ScenePreview";
+import ProductScreenshot from "@/components/marketing/ProductScreenshot";
+import { screenForScene } from "@/lib/screens";
 
 // Only the pages listed in SEO_PAGES exist; any other address is a 404.
 export const dynamicParams = false;
@@ -102,6 +104,9 @@ export default async function SeoLandingPage({ params }: { params: Promise<{ slu
                 </div>
               </div>
             ))}
+            <div className="flex justify-center pt-2">
+              <ProductScreenshot screen={screenForScene(page.scene)} className="mx-auto" />
+            </div>
           </div>
         </section>
 

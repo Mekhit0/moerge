@@ -6,12 +6,14 @@ import { ArrowRight, BarChart3, BellRing, CalendarDays, Check, Globe, Minus, Plu
 import { useLanguage } from "@/lib/i18n";
 import { DEMO_BOOKING_HREF, MarketingFooter, MarketingHeader, SIGNUP_HREF } from "./MarketingChrome";
 import ProductTour from "@/components/tour/ProductTour";
+import ProductScreenshot from "./ProductScreenshot";
+import { SCREENS } from "@/lib/screens";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
 import { CHEAPEST_MONTHLY_GEL, EARLY_BIRD, PACKAGES, SMS_PACK, SMS_PACK_PRICE_GEL, formatGel, type Offer } from "@/lib/pricing";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 
 export default function MoargeLandingPage({ offer }: { offer: Offer }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const { trialDays } = offer;
   const staffLimit = BILLING_CONFIG.trialStaffLimit;
@@ -174,6 +176,22 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Real screens */}
+        <section id="screens" className="py-14 sm:py-20 border-b border-stone-200/70 scroll-mt-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-stone-900">{t("ასე გამოიყურება", "What it looks like")}</h2>
+            <p className="mt-3 max-w-xl text-base text-stone-600 leading-relaxed">
+              {t("ნამდვილი ეკრანები სადემონსტრაციო სალონიდან. სახელები და ნომრები გამოგონილია.", "Real screens from a demo salon. Names and numbers are made up.")}
+            </p>
+            <div className="mt-8 -mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+              {[SCREENS.today, SCREENS.booking, SCREENS.calendar, SCREENS.earnings].map((screen) => (
+                <ProductScreenshot key={screen.src} screen={screen} lang={lang} sizes="(min-width: 1024px) 260px, (min-width: 640px) 45vw, 70vw" className="w-[70vw] shrink-0 snap-center sm:w-full sm:mx-auto" />
+              ))}
+            </div>
+            <ProductScreenshot screen={SCREENS.calendarDesktop} lang={lang} className="mt-10 hidden sm:block" />
           </div>
         </section>
 
