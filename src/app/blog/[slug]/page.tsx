@@ -57,7 +57,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           </nav>
           <h1 className="mt-4 text-3xl font-black leading-[1.15] tracking-tight text-stone-900 sm:text-[2.6rem]">{item.h1}</h1>
           <p className="mt-3 text-sm text-stone-500">
-            <time dateTime={item.updated}>{kaDate(item.updated)}</time> · {readingMinutes(item)} წუთი
+            <Link href="/about" className="font-semibold text-stone-700 hover:text-rose-700">moarge-ის გუნდი</Link> · <time dateTime={item.updated}>{kaDate(item.updated)}</time> · {readingMinutes(item)} წუთი
           </p>
           <p className="mt-6 text-lg leading-relaxed text-stone-700">{item.lead}</p>
 
