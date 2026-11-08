@@ -105,3 +105,21 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
 export function jsonLdScript(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
+
+export function articleJsonLd(input: { path: string; title: string; description: string; published: string; updated: string }) {
+  const url = `${getAppUrl()}${input.path}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: input.title,
+    description: input.description,
+    inLanguage: "ka",
+    datePublished: input.published,
+    dateModified: input.updated,
+    mainEntityOfPage: url,
+    url,
+    image: `${getAppUrl()}${SHARE_IMAGE.url}`,
+    author: { "@id": `${getAppUrl()}/#organization` },
+    publisher: { "@id": `${getAppUrl()}/#organization` },
+  };
+}

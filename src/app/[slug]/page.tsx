@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Check, ChevronRight, Plus } from "lucide-react";
 import { SEO_PAGES, seoPage } from "@/lib/seo-pages";
+import { articlesFor } from "@/lib/articles";
 import { breadcrumbJsonLd, faqJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
 import { CHEAPEST_MONTHLY_GEL, currentOffer } from "@/lib/pricing";
 import { MarketingFooter, MarketingHeader, SIGNUP_HREF } from "@/components/marketing/MarketingChrome";
@@ -30,6 +31,7 @@ export default async function SeoLandingPage({ params }: { params: Promise<{ slu
   const offer = currentOffer();
   const offerLine = offer.pilot ? "ნოემბერში უფასოდ, ბარათის გარეშე." : `${offer.trialDays} დღე უფასოდ, ბარათის გარეშე.`;
   const related = page.related.map((slug) => seoPage(slug)).filter((item) => item !== undefined);
+  const reading = articlesFor(page.slug);
   const structured = [
     breadcrumbJsonLd([{ name: "moarge", path: "/" }, { name: page.label, path: `/${page.slug}` }]),
     faqJsonLd(page.faq),
@@ -90,6 +92,19 @@ export default async function SeoLandingPage({ params }: { params: Promise<{ slu
           </div>
         </section>
 
+        <section className="border-b border-stone-200/70 py-12 sm:py-16">
+          <div className="mx-auto max-w-6xl space-y-10 px-4 sm:px-6">
+            {page.details.map((detail) => (
+              <div key={detail.heading} className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_2fr] lg:gap-14">
+                <h2 className="text-xl font-extrabold tracking-tight text-stone-900 sm:text-2xl">{detail.heading}</h2>
+                <div className="space-y-3">
+                  {detail.paragraphs.map((text) => <p key={text} className="text-base leading-relaxed text-stone-700 sm:text-[1.0625rem]">{text}</p>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="py-12 sm:py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="text-2xl font-extrabold tracking-tight text-stone-900 sm:text-3xl">როგორ დავიწყოთ</h2>
@@ -132,6 +147,21 @@ export default async function SeoLandingPage({ params }: { params: Promise<{ slu
                 </li>
               ))}
             </ul>
+
+            {reading.length > 0 && (
+              <>
+                <h2 className="mt-10 text-xl font-extrabold text-stone-900 sm:text-2xl">სასარგებლო სტატიები</h2>
+                <ul className="mt-4 grid grid-cols-1 border-t border-stone-200 sm:grid-cols-2 sm:gap-x-10">
+                  {reading.map((item) => (
+                    <li key={item.slug} className="border-b border-stone-200">
+                      <Link href={`/blog/${item.slug}`} className="group flex min-h-13 items-center justify-between gap-3 py-2 font-semibold text-stone-800 transition hover:text-rose-700">
+                        {item.h1}<ArrowRight className="h-4 w-4 shrink-0 text-rose-600 transition group-hover:translate-x-0.5" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             <div className="mt-12 flex flex-col gap-5 rounded-2xl bg-rose-600 px-6 py-8 text-white sm:flex-row sm:items-center sm:justify-between sm:px-10">
               <div>

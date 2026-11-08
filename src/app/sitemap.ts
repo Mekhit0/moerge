@@ -1,9 +1,10 @@
 import { MetadataRoute } from "next";
 import { getAppUrl } from "@/lib/app-url";
 import { SEO_PAGES } from "@/lib/seo-pages";
+import { ARTICLES } from "@/lib/articles";
 
 // Fixed dates: a sitemap that says "changed now" on every request teaches Google to ignore it.
-const SITE_UPDATED = new Date("2026-11-07");
+const SITE_UPDATED = new Date("2026-11-08");
 const LEGAL_UPDATED = new Date("2026-10-01");
 const PRICING_UPDATED = new Date("2026-11-02");
 
@@ -17,6 +18,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: SITE_UPDATED,
       changeFrequency: "monthly" as const,
       priority: page.slug === "salonis-programa" ? 0.9 : 0.8,
+    })),
+    { url: `${baseUrl}/blog`, lastModified: SITE_UPDATED, changeFrequency: "weekly", priority: 0.7 },
+    ...ARTICLES.map((item) => ({
+      url: `${baseUrl}/blog/${item.slug}`,
+      lastModified: new Date(item.updated),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
     })),
     { url: `${baseUrl}/pricing`, lastModified: PRICING_UPDATED, changeFrequency: "monthly", priority: 0.9 },
     { url: `${baseUrl}/terms`, lastModified: LEGAL_UPDATED, changeFrequency: "yearly", priority: 0.3 },
