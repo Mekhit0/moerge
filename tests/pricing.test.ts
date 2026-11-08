@@ -7,7 +7,7 @@ const [solo, business, multi] = PACKAGES;
 describe("public prices", () => {
   it("match the agreed packages", () => {
     expect([solo.monthlyGel, business.monthlyGel, multi.monthlyGel]).toEqual([19, 59, 149]);
-    expect(solo.smsIncluded).toBe(0);
+    expect(solo.smsIncluded).toBe(100);
     expect(business.staffIncluded).toBe(10);
     expect(multi.available).toBe(false);
     expect(SMS_PACK_PRICE_GEL).toBe(20);
@@ -26,9 +26,9 @@ describe("public prices", () => {
     expect(formatGel(11940.5)).toBe("11 940.50");
   });
 
-  it("switch from the free November to the 7-day trial at midnight Tbilisi time", () => {
+  it("switch from the free November to the 14-day trial at midnight Tbilisi time", () => {
     expect(currentOffer(new Date("2026-11-30T19:59:59Z"))).toMatchObject({ pilot: true, trialDays: 30, earlyBird: true, smsLive: false });
-    expect(currentOffer(new Date("2026-11-30T20:00:00Z"))).toMatchObject({ pilot: false, trialDays: 7, earlyBird: true, smsLive: true });
+    expect(currentOffer(new Date("2026-11-30T20:00:00Z"))).toMatchObject({ pilot: false, trialDays: 14, earlyBird: true, smsLive: true });
     expect(currentOffer(new Date("2026-12-31T20:00:00Z"))).toMatchObject({ pilot: false, earlyBird: false });
   });
 

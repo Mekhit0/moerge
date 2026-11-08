@@ -1,7 +1,8 @@
-import { EARLY_BIRD, PACKAGES, PILOT_TRIAL_DAYS, SMS_PACK, SMS_PACK_PRICE_GEL, TRIAL_DAYS, formatGel, type Offer } from "./pricing";
+import { EARLY_BIRD, PACKAGES, PILOT_TRIAL_DAYS, REFUND, SMS_PACK, SMS_PACK_PRICE_GEL, TRIAL_DAYS, formatGel, type Offer } from "./pricing";
 
 type Text = { ka: string; en: string };
 
+const solo = PACKAGES.find((pkg) => pkg.code === "solo")!;
 const business = PACKAGES.find((pkg) => pkg.code === "business")!;
 
 /** Questions people ask before paying. Used on the pricing page and in its structured data. */
@@ -60,8 +61,15 @@ export function pricingFaq(offer: Offer): Array<{ q: Text; a: Text }> {
     {
       q: { ka: "სოლოში SMS შედის?", en: "Does Solo include SMS?" },
       a: {
-        ka: `არა, მაგრამ შეგიძლიათ იყიდოთ: ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾.`,
-        en: `No, but you can buy them: ${formatGel(SMS_PACK.minimum)} SMS for ${formatGel(SMS_PACK_PRICE_GEL)} ₾.`,
+        ka: `დიახ, თვეში ${formatGel(solo.smsIncluded)} SMS. მეტი თუ დაგჭირდათ, იყიდით: ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾.${offer.smsLive ? "" : " SMS შეხსენებები ირთვება 1 დეკემბრიდან, ფასიან პაკეტებზე."}`,
+        en: `Yes, ${formatGel(solo.smsIncluded)} SMS a month. Need more? Buy ${formatGel(SMS_PACK.minimum)} SMS for ${formatGel(SMS_PACK_PRICE_GEL)} ₾.${offer.smsLive ? "" : " SMS reminders start on 1 December, on paid plans."}`,
+      },
+    },
+    {
+      q: { ka: "თანხას დამიბრუნებთ, თუ არ მომეწონა?", en: "Can I get my money back if it is not for me?" },
+      a: {
+        ka: `დიახ. პირველი გადახდიდან ${REFUND.withinDays} დღის განმავლობაში მოგვწერეთ და ${REFUND.percent}%-ს დაგიბრუნებთ იმავე ბარათზე. მიზეზის ახსნა არ გჭირდებათ.`,
+        en: `Yes. Write to us within ${REFUND.withinDays} days of your first payment and we refund ${REFUND.percent}% to the same card. No reason needed.`,
       },
     },
     {

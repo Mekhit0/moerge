@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { COMPANY_LEGAL_NAME_EN, COMPANY_LEGAL_NAME_KA, COMPANY_SHORT_NAME, SUPPORT_EMAIL } from "@/lib/contact";
 import { BILLING_CONFIG } from "@/lib/billing-plans";
+import { REFUND } from "@/lib/pricing";
 import {
   Sparkles,
   ArrowLeft,
@@ -234,6 +235,12 @@ export default function TermsOfServicePage() {
               {t(
                 "სატესტო პერიოდში გადახდა არ ხდება. ფასიანი გეგმები და გადახდის პირობები გამოქვეყნდება მათ ჩართვამდე, ხოლო სალონებს წინასწარ ვაცნობებთ.",
                 "No payment is taken during the test period. Paid plans and payment terms will be published before they start, and salons will be told in advance."
+              )}
+            </p>
+            <p>
+              {t(
+                `თუ პირველი გადახდიდან ${REFUND.withinDays} დღის განმავლობაში მოგვწერთ, რომ moarge არ გჭირდებათ, გადახდილი თანხის ${REFUND.percent}%-ს დაგიბრუნებთ იმავე ბარათზე. მიზეზის ახსნა საჭირო არ არის. ეს მოქმედებს მხოლოდ პირველ გადახდაზე.`,
+                `If you write to us within ${REFUND.withinDays} days of your first payment that moarge is not for you, we refund ${REFUND.percent}% of that payment to the same card. No reason is needed. This applies to the first payment only.`
               )}
             </p>
           </section>

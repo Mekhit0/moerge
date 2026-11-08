@@ -90,8 +90,8 @@ export default function MoargeLandingPage({ offer }: { offer: Offer }) {
     {
       q: t("შეხსენება SMS-ით მოდის?", "Do reminders come by SMS?"),
       a: t(
-        `SMS შეხსენებები ბიზნეს პაკეტშია, თვეში ${formatGel(business.smsIncluded)} SMS. დამატებით ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾ ღირს, ნებისმიერ პაკეტზე.${offer.smsLive ? "" : " SMS შეხსენებები ირთვება 1 დეკემბრიდან, ფასიან პაკეტებზე."}`,
-        `SMS reminders come with Business, ${formatGel(business.smsIncluded)} SMS a month. Extra ${formatGel(SMS_PACK.minimum)} SMS cost ${formatGel(SMS_PACK_PRICE_GEL)} ₾ on any package.${offer.smsLive ? "" : " SMS reminders start on 1 December, on paid plans."}`
+        `SMS შეხსენებები ორივე პაკეტშია: სოლოში თვეში ${formatGel(solo.smsIncluded)} SMS, ბიზნესში ${formatGel(business.smsIncluded)}. დამატებით ${formatGel(SMS_PACK.minimum)} SMS ${formatGel(SMS_PACK_PRICE_GEL)} ₾ ღირს, ნებისმიერ პაკეტზე.${offer.smsLive ? "" : " SMS შეხსენებები ირთვება 1 დეკემბრიდან, ფასიან პაკეტებზე."}`,
+        `SMS reminders come with both packages: ${formatGel(solo.smsIncluded)} SMS a month on Solo, ${formatGel(business.smsIncluded)} on Business. Extra ${formatGel(SMS_PACK.minimum)} SMS cost ${formatGel(SMS_PACK_PRICE_GEL)} ₾ on any package.${offer.smsLive ? "" : " SMS reminders start on 1 December, on paid plans."}`
       ),
     },
     {

@@ -33,7 +33,7 @@ export default function PricingView({ offer }: { offer: Offer }) {
       { text: t("1 სპეციალისტი", "1 specialist"), included: true },
       ...common,
       { text: t("თქვენი შემოსავალი", "Your own earnings"), included: true },
-      { text: t("SMS შეხსენებები: იყიდება ცალკე", "SMS reminders: bought separately"), included: false },
+      { text: t(`${formatGel(pkg.smsIncluded)} SMS შეხსენება თვეში`, `${formatGel(pkg.smsIncluded)} SMS reminders a month`), included: true, soon: smsSoon },
       { text: t("გუნდი, როლები, საკომისიო", "Team, roles, commission"), included: false },
     ];
     if (pkg.code === "business") return [

@@ -9,13 +9,13 @@ type Text = { ka: string; en: string };
 /** Paid packages start at midnight on 1 December, Tbilisi time (UTC+4, no daylight saving). */
 export const PRICING_STARTS_AT = new Date("2026-12-01T00:00:00+04:00");
 export const PILOT_TRIAL_DAYS = 30;
-export const TRIAL_DAYS = 7;
+export const TRIAL_DAYS = 14;
 
 /** The December early-bird offer is shown until the end of December. */
 export const EARLY_BIRD_ENDS_AT = new Date("2027-01-01T00:00:00+04:00");
 
 /**
- * Before 1 December new salons get the free test month; from then on, a 7-day trial.
+ * Before 1 December new salons get the free test month; from then on, a 14-day trial.
  * SMS reminders start with the paid packages on 1 December; nobody can send SMS before that.
  */
 export function currentOffer(now: Date = new Date()) {
@@ -55,7 +55,7 @@ export const PACKAGES: PricePackage[] = [
     extraStaffGel: null,
     branches: 1,
     extraBranchGel: null,
-    smsIncluded: 0,
+    smsIncluded: 100,
     available: true,
   },
   {
@@ -95,6 +95,9 @@ export const BILLING_PERIODS = [
   { months: 12, discountPercent: 20 },
 ] as const;
 export type BillingMonths = (typeof BILLING_PERIODS)[number]["months"];
+
+/** Refund: 75% of the first payment, if asked for within 14 days of paying. */
+export const REFUND = { percent: 75, withinDays: 14 } as const;
 
 /** Extra SMS: twice the provider cost, at least 1000 at a time. Bought SMS never expire. */
 export const SMS_PACK = { pricePerSmsGel: 0.02, minimum: 1000 } as const;

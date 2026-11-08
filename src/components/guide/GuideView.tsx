@@ -249,8 +249,8 @@ const OFFICE: Lesson[] = [
     title: { ka: "პაკეტი და ფასები", en: "Your package and prices" },
     intro: { ka: "რა ღირს moarge და რა შედის თითოეულ პაკეტში.", en: "What moarge costs and what each package includes." },
     steps: [
-      { ka: "ნოემბერში moarge უფასოა. 1 დეკემბრიდან ახალ სალონებს 7 დღე უფასოდ აქვთ.", en: "moarge is free in November. From 1 December new salons get 7 days free." },
-      { ka: "სოლო, 19 ₾ თვეში: ერთი სპეციალისტი, SMS ცალკე იყიდება.", en: "Solo, 19 ₾ a month: one specialist, SMS bought separately." },
+      { ka: "ნოემბერში moarge უფასოა. 1 დეკემბრიდან ახალ სალონებს 14 დღე უფასოდ აქვთ.", en: "moarge is free in November. From 1 December new salons get 14 days free." },
+      { ka: "სოლო, 19 ₾ თვეში: ერთი სპეციალისტი, 100 SMS თვეში.", en: "Solo, 19 ₾ a month: one specialist, 100 SMS a month." },
       { ka: "ბიზნესი, 59 ₾ თვეში: 10 სპეციალისტი, 1 000 SMS თვეში, გუნდი და საკომისიო.", en: "Business, 59 ₾ a month: 10 specialists, 1,000 SMS a month, team and commission." },
       { ka: "6 თვით გადახდისას 10% ფასდაკლებაა, 12 თვით 20%.", en: "Pay for 6 months for 10% off, 12 months for 20% off." },
     ],
