@@ -20,6 +20,7 @@ export function GET() {
     "## Main pages",
     `- [Home](${base}): what moarge does`,
     `- [Pricing](${base}/pricing): plans and what they include`,
+    `- [About](${base}/about): who runs moarge and what it promises`,
     ...SEO_PAGES.map((page) => `- [${page.label}](${base}/${page.slug}): ${page.description}`),
     "",
     "## Articles for salon owners",

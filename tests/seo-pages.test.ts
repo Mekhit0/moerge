@@ -4,7 +4,7 @@ import { ARTICLES, article, articlesFor, readingMinutes } from "../src/lib/artic
 import { jsonLdScript, organizationJsonLd, pageMetadata } from "../src/lib/seo";
 import { SCENES } from "../src/components/tour/Scenes";
 
-const RESERVED = ["blog", "book", "login", "register", "terms", "privacy", "pricing", "dashboard", "settings", "api", "guide", "platform"];
+const RESERVED = ["about", "blog", "book", "login", "register", "terms", "privacy", "pricing", "dashboard", "settings", "api", "guide", "platform"];
 
 describe("SEO landing pages", () => {
   it("have unique slugs, titles and descriptions", () => {

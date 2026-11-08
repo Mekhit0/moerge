@@ -68,6 +68,7 @@ export function MarketingFooter({ onHome = false }: { onHome?: boolean }) {
         { href: "/login", label: t("შესვლა", "Sign in") },
         { href: "/pricing", label: t("ფასები", "Pricing") },
         { href: "/blog", label: t("სტატიები", "Articles") },
+        { href: "/about", label: t("ჩვენ შესახებ", "About us") },
         { href: `${base}#faq`, label: t("კითხვები", "FAQ") },
       ],
     },

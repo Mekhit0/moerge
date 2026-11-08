@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: page.slug === "salonis-programa" ? 0.9 : 0.8,
     })),
+    { url: `${baseUrl}/about`, lastModified: SITE_UPDATED, changeFrequency: "yearly", priority: 0.5 },
     { url: `${baseUrl}/blog`, lastModified: SITE_UPDATED, changeFrequency: "weekly", priority: 0.7 },
     ...ARTICLES.map((item) => ({
       url: `${baseUrl}/blog/${item.slug}`,
