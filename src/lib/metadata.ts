@@ -60,7 +60,11 @@ export const siteMetadata: Metadata = {
     description:
       "სალონის მართვის პროგრამა ქართულად: ონლაინ ჯავშანი, კალენდარი, კლიენტების ბაზა, შეხსენებები და შემოსავალი.",
   },
-  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
+  // Bing Webmaster Tools ownership token: public by design (also in public/BingSiteAuth.xml).
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    other: { "msvalidate.01": "158B4EB50C84680543DA9FD33ED68C29" },
+  },
   robots: {
     index: true,
     follow: true,
