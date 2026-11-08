@@ -9,6 +9,7 @@ const PROTECTED_PREFIXES = [
   "/settings",
   "/reports",
   "/guide",
+  "/account",
 ];
 
 export async function middleware(request: NextRequest) {

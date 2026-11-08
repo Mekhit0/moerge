@@ -117,7 +117,7 @@ export const PRIVACY: LegalDocument = {
       list: [
         { ka: "გაიგოთ, რა მონაცემებს ვამუშავებთ, და მიიღოთ მათი ასლი.", en: "To know what data we process and get a copy." },
         { ka: "მოითხოვოთ არაზუსტი მონაცემის გასწორება.", en: "To have inaccurate data corrected." },
-        { ka: "მოითხოვოთ წაშლა ან დამუშავების შეჩერება, თუ კანონი შენახვას არ გვავალდებულებს.", en: "To ask for deletion or for processing to stop, unless the law requires us to keep it." },
+        { ka: "მოითხოვოთ წაშლა ან დამუშავების შეჩერება, თუ კანონი შენახვას არ გვავალდებულებს. სალონის მფლობელს სალონის წაშლა თავად შეუძლია „ჩემი ანგარიშის“ გვერდიდან, გუნდის წევრს კი საკუთარი შესვლის წაშლა.", en: "To ask for deletion or for processing to stop, unless the law requires us to keep it. A salon owner can delete the salon themselves on the My account page, and a team member can delete their own login." },
         { ka: "მიიღოთ მონაცემები ფაილად (სალონს შეუძლია კლიენტების ექსპორტი ნებისმიერ დროს).", en: "To get your data as a file (a salon can export its clients at any time)." },
         { ka: "გაიხმოთ თანხმობა: შეხსენებებზე სალონს უთხარით, შეთავაზებებზე SMS-ის ბმულით თქვით უარი.", en: "To withdraw consent: tell the salon for reminders; use the link in the SMS to stop offers." },
         { ka: "გაასაჩივროთ პერსონალურ მონაცემთა დაცვის სამსახურში (personaldata.ge).", en: "To complain to the Personal Data Protection Service (personaldata.ge)." },
@@ -227,7 +227,7 @@ export const TERMS: LegalDocument = {
     },
     {
       title: { ka: "14. ანგარიშის დახურვა", en: "14. Closing the account" },
-      paragraphs: [{ ka: `ანგარიშის დახურვა და მონაცემების წაშლა შეგიძლიათ მოითხოვოთ ${SUPPORT_EMAIL}-ზე. სანამ დავხურავთ, შეგიძლიათ კლიენტების ექსპორტი.`, en: `You can ask us to close the account and delete the data at ${SUPPORT_EMAIL}. Before we close it, you can export your clients.` }],
+      paragraphs: [{ ka: "სალონის მფლობელს შეუძლია სალონი თავად წაშალოს: „ჩემი ანგარიში“ → „სალონის წაშლა“. იშლება სალონის ყველა მონაცემი და გუნდის წევრების შესვლა, თუ სხვა სალონი არ აქვთ. გუნდის წევრს შეუძლია წაშალოს მხოლოდ საკუთარი შესვლა. წაშლა სამუდამოა; მანამდე ჩამოტვირთეთ კლიენტების სია. ინვოისები ინახება იმდენ ხანს, რამდენსაც საგადასახადო კანონი მოითხოვს, კლიენტების მონაცემების გარეშე. აქტიური პაკეტი წაშლისას წყდება.", en: "The salon owner can delete the salon themselves: My account → Delete the salon. All the salon's data is deleted, and so are team members' logins if they have no other salon. A team member can delete only their own login. Deletion is permanent; download your client list first. Invoices are kept as long as tax law requires, without client data. An active plan ends on deletion." }],
     },
     {
       title: { ka: "15. პირობების ცვლილება", en: "15. Changes to these terms" },

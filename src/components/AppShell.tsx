@@ -11,6 +11,7 @@ import {
   Settings,
   Wallet,
   LogOut,
+  UserCog,
   Menu,
   X,
   ShieldAlert,
@@ -154,6 +155,10 @@ export default function AppShell({
             <div className="text-xs text-stone-500 truncate">{staffEmail}</div>
             {testModeNote && <p className="mt-1.5 text-xs font-medium text-amber-700">{testModeNote}</p>}
           </div>
+          <Link href="/account" className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-stone-600 hover:bg-white">
+            <UserCog className="h-3.5 w-3.5 text-rose-500" />
+            {t("ჩემი ანგარიში", "My account")}
+          </Link>
           {isPlatformOwner && (
             <Link href="/platform" className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-stone-600 hover:bg-white">
               <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />
@@ -211,6 +216,10 @@ export default function AppShell({
             <Link href="/guide" className="flex min-h-11 items-center gap-3 px-4 rounded-xl text-sm font-medium text-stone-700 hover:bg-rose-50">
               <GraduationCap className="w-4 h-4 text-rose-500" />
               {t("გზამკვლევი", "Guide")}
+            </Link>
+            <Link href="/account" className="flex min-h-11 items-center gap-3 px-4 rounded-xl text-sm font-medium text-stone-700 hover:bg-rose-50">
+              <UserCog className="w-4 h-4 text-rose-500" />
+              {t("ჩემი ანგარიში", "My account")}
             </Link>
             {isPlatformOwner && (
               <Link href="/platform" className="flex min-h-11 items-center gap-3 px-4 rounded-xl text-sm font-medium text-stone-700 hover:bg-rose-50">
